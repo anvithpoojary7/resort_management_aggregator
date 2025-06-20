@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { FaUser } from 'react-icons/fa';
+import { FcGoogle } from 'react-icons/fc';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, provider } from '../firebase'; 
 
 const CombinedLoginRegister = () => {
   const [isLogin, setIsLogin] = useState(true); // toggle between login and register
@@ -10,6 +13,18 @@ const CombinedLoginRegister = () => {
       alert('Logging in...');
     } else {
       alert('Registering...');
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      console.log('User info:', user);
+      alert(`Logged in as ${user.displayName}`);
+    } catch (error) {
+      console.error('Google Auth Error:', error);
+      alert('Google authentication failed!');
     }
   };
 
@@ -50,6 +65,15 @@ const CombinedLoginRegister = () => {
             {isLogin ? 'Login' : 'Register'}
           </button>
         </form>
+
+        {/* Google Auth Button */}
+        <button
+          onClick={handleGoogleAuth}
+          className="mt-4 w-full flex items-center justify-center border py-2 rounded hover:bg-gray-100 transition"
+        >
+          <FcGoogle className="text-xl mr-2" />
+          Continue with Google
+        </button>
 
         <div className="mt-4 text-center text-sm text-gray-600">
           {isLogin ? (
