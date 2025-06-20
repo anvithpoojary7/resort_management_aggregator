@@ -4,6 +4,7 @@ import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import { FaStar, FaRegStar, FaHeart, FaMapMarkerAlt } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const retreats = [
   {
@@ -46,6 +47,7 @@ const retreats = [
 
 const FeaturedRetreatsCarousel = () => {
   const [favorites, setFavorites] = useState([]);
+  const navigate = useNavigate();
 
   const toggleFavorite = (id) => {
     setFavorites((prev) =>
@@ -61,12 +63,12 @@ const FeaturedRetreatsCarousel = () => {
             <h2 className="text-3xl font-semibold">Escape to These Stunning Retreats</h2>
             <p className="text-gray-500">Luxury stays with top-notch amenities and scenic views</p>
           </div>
-          <a
-            href="#"
-            className="absolute right-0 top-0 text-yellow-600 hover:underline font-medium text-sm"
+          <span
+            onClick={() => navigate('/resorts')}
+            className="absolute right-0 top-0 text-yellow-600 hover:underline font-medium text-sm cursor-pointer"
           >
             More &rarr;
-          </a>
+          </span>
         </div>
 
         <Swiper
@@ -82,7 +84,7 @@ const FeaturedRetreatsCarousel = () => {
           {retreats.map((retreat) => (
             <SwiperSlide key={retreat.id}>
               <div className="relative group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition duration-300">
-                
+
                 {/* Image container with hover dark overlay */}
                 <div className="relative">
                   <img
@@ -93,7 +95,10 @@ const FeaturedRetreatsCarousel = () => {
 
                   {/* View Details Button */}
                   <div className="absolute inset-x-0 bottom-0 opacity-0 group-hover:opacity-100 transition duration-300 flex justify-center mb-3">
-                    <button className="bg-yellow-400 text-white font-semibold px-4 py-1 rounded-full hover:bg-yellow-500 text-sm">
+                    <button
+                      className="bg-yellow-400 text-white font-semibold px-4 py-1 rounded-full hover:bg-yellow-500 text-sm"
+                      onClick={() => navigate(`/resorts/${retreat.id}`)}
+                    >
                       View Details
                     </button>
                   </div>
@@ -149,5 +154,6 @@ const FeaturedRetreatsCarousel = () => {
 };
 
 export default FeaturedRetreatsCarousel;
+
 
 

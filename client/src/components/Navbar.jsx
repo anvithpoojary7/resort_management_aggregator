@@ -1,72 +1,107 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { FaUser, FaHeart, FaBars } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
+import { FaUser, FaHeart, FaBars, FaTimes } from 'react-icons/fa';
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const dropdownRef = useRef();
-  
-  // Simulated auth check (replace with real auth check logic)
-  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'; // or from context/store
+  const panelRef = useRef();
+  const navigate = useNavigate();
 
-  // Close dropdown when clicking outside
+  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+
+  // Close panel when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (panelRef.current && !panelRef.current.contains(event.target)) {
         setMenuOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
+    if (menuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [menuOpen]);
+
+  const handleLogout = () => {
+    localStorage.setItem('isLoggedIn', 'false');
+    setMenuOpen(false);
+    navigate('/');
+  };
 
   return (
     <nav className="bg-white shadow p-4 flex justify-between items-center relative z-50">
       {/* Logo */}
-      <Link to="/" className="text-xl font-bold text-blue-600">ResortFinder</Link>
+      <Link to="/" className="text-xl font-bold text-blue-600">
+        ResortFinder
+      </Link>
 
-      {/* Right Side */}
+      {/* Icons */}
       <div className="flex items-center gap-4">
-        {/* Conditionally Render Favorites */}
-        <Link
-          to="/favorites"
-          className="text-black hover:text-red-600 transition"
-          title="Favorites"
-        >
+        {/* Favorites */}
+        <Link to="/favorites" className="text-black hover:text-red-600 transition" title="Favorites">
           <FaHeart className="text-xl" />
         </Link>
 
-
         {/* Login/Register */}
-        <Link
-          to="/auth"
-          className="flex items-center text-blue-600 font-medium hover:underline"
-        >
-          <FaUser className="mr-1" />
-          Login / Register
-        </Link>
+        {!isLoggedIn && (
+          <Link to="/auth" className="flex items-center text-blue-600 font-medium hover:underline">
+            <FaUser className="mr-1" />
+            Login / Register
+          </Link>
+        )}
 
         {/* Hamburger */}
         <button
-          onClick={() => setMenuOpen(!menuOpen)}
+          onClick={() => setMenuOpen(true)}
           className="text-2xl text-gray-700 focus:outline-none ml-2"
         >
           <FaBars />
         </button>
       </div>
 
-      {/* Animated Dropdown */}
+      {/* Sliding Menu */}
       <div
-        ref={dropdownRef}
-        className={`absolute right-4 top-16 bg-white shadow-md rounded-lg p-4 w-48 z-50 transform transition-all duration-300 origin-top ${
-          menuOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'
+        ref={panelRef}
+        className={`fixed top-0 right-0 h-full w-64 bg-white shadow-lg p-6 z-50 transform transition-transform duration-300 ease-in-out ${
+          menuOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <ul className="space-y-2 text-gray-700">
+        {/* Close button */}
+        <button
+          onClick={() => setMenuOpen(false)}
+          className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-xl"
+        >
+          <FaTimes />
+        </button>
+
+        {/* Navigation links */}
+        <ul className="mt-12 space-y-4 text-gray-800">
           <li><Link to="/" onClick={() => setMenuOpen(false)}>🏠 Home</Link></li>
           <li><Link to="/resorts" onClick={() => setMenuOpen(false)}>🌴 Browse Resorts</Link></li>
+          <li><Link to="/bookings" onClick={() => setMenuOpen(false)}>🧳 My Bookings</Link></li>
+          <li><Link to="/my-resorts" onClick={() => setMenuOpen(false)}>🏨 My Resorts</Link></li>
+          <li><Link to="/profile" onClick={() => setMenuOpen(false)}>👤 Profile</Link></li>
+          <li><Link to="/settings" onClick={() => setMenuOpen(false)}>⚙️ Settings</Link></li>
           <li><Link to="/contact" onClick={() => setMenuOpen(false)}>📞 Contact Us</Link></li>
           <li><Link to="/help" onClick={() => setMenuOpen(false)}>❓ Help & Support</Link></li>
+
+          {/* Auth Action */}
+          {isLoggedIn ? (
+            <li>
+              <button
+                onClick={handleLogout}
+                className="text-red-600 hover:underline"
+              >
+                🚪 Logout
+              </button>
+            </li>
+          ) : (
+            <li>
+              <Link to="/auth" onClick={() => setMenuOpen(false)}>🔐 Login / Register</Link>
+            </li>
+          )}
         </ul>
       </div>
     </nav>
