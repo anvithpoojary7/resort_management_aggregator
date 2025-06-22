@@ -1,11 +1,7 @@
 import React, { useState } from 'react';
 import { FaUser } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-} from 'firebase/auth';
+import { signInWithPopup } from 'firebase/auth';
 import { auth, provider } from '../firebase';
 
 const CombinedLoginRegister = () => {
@@ -16,42 +12,38 @@ const CombinedLoginRegister = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const endpoint = isLogin
+      ? 'http://localhost:5000/api/auth/login'
+      : 'http://localhost:5000/api/auth/register';
+
+    const payload = isLogin
+      ? { email, password }
+      : { name: fullName, email, password };
+
     try {
-      if (isLogin) {
-        // LOGIN FLOW
-        const result = await signInWithEmailAndPassword(auth, email, password);
-        const token = await result.user.getIdToken();
-        alert(`Logged in as ${result.user.email}`);
-        console.log('Firebase Token:', token);
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(
+          isLogin
+            ? `Welcome back, ${data.user.email}!`
+            : `Registered as ${data.user.email}`
+        );
+        console.log('User info:', data.user);
       } else {
-        // REGISTER FLOW
-        const result = await createUserWithEmailAndPassword(auth, email, password);
-        const token = await result.user.getIdToken();
-
-        const response = await fetch('http://localhost:5000/api/auth/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            // If your backend is checking Firebase token, include this:
-            // Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name: fullName,
-            email: email,
-            password: password, // this will be hashed by backend
-          }),
-        });
-
-        const data = await response.json();
-        if (response.ok) {
-          alert('User registered and saved to DB successfully!');
-        } else {
-          alert(data.message || 'Error saving user to DB');
-        }
+        alert(data.message || 'Something went wrong');
       }
     } catch (error) {
       console.error('Auth Error:', error);
-      alert(error.message);
+      alert('Error: ' + error.message);
     }
   };
 
@@ -59,8 +51,24 @@ const CombinedLoginRegister = () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      alert(`Logged in as ${user.displayName}`);
-      console.log('Google user info:', user);
+
+      const response = await fetch('http://localhost:5000/api/auth/google-login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: user.displayName,
+          email: user.email,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert(`Google login successful as ${data.user.email}`);
+        console.log('User info:', data.user);
+      } else {
+        alert(data.message || 'Google login failed');
+      }
     } catch (error) {
       console.error('Google Auth Error:', error);
       alert('Google authentication failed!');
