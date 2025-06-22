@@ -5,7 +5,7 @@ const User = require('../models/users');
 
 const router = express.Router();
 
-// Register
+
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -25,12 +25,41 @@ router.post('/register', async (req, res) => {
 
     await newUser.save();
 
-    res.status(201).json({ message: 'User registered successfully' });
+    // Create JWT payload
+    const payload = {
+      id: newUser._id,
+      email: newUser.email,
+      role: newUser.role,
+    };
+
+    // Sign the JWT
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: '3d',
+    });
+
+    // Set cookie with token
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
+    });
+
+    res.status(201).json({
+      message: 'User registered successfully',
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+      },
+    });
   } catch (err) {
     console.error('Registration Error:', err.message);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 // Login (optional cleanup)
 router.post('/login', async (req, res) => {
