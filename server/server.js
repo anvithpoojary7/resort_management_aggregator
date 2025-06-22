@@ -1,5 +1,14 @@
+
 const express=require('express');
 const connectdb=require('./config/db');
+const cors=require('cors');
+
+app.use(cors({
+  origin: 'http://localhost:3000', // replace with your frontend's origin (React/Next/etc.)
+  credentials: true               // if using cookies or sessions
+}));
+
+
 require('dotenv').config();
 
 const app=express();
