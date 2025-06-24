@@ -83,7 +83,7 @@ const Navbar = () => {
           <li><Link to="/bookings" onClick={() => setMenuOpen(false)}>🧳 My Bookings</Link></li>
           <li><Link to="/my-resorts" onClick={() => setMenuOpen(false)}>🏨 My Resorts</Link></li>
           <li><Link to="/profile" onClick={() => setMenuOpen(false)}>👤 Profile</Link></li>
-          <li><Link to="/settings" onClick={() => setMenuOpen(false)}>⚙️ Settings</Link></li>
+          <li><Link to="/settings" onClick={() => setMenuOpen(false)}>⚙ Settings</Link></li>
           <li><Link to="/contact" onClick={() => setMenuOpen(false)}>📞 Contact Us</Link></li>
           <li><Link to="/help" onClick={() => setMenuOpen(false)}>❓ Help & Support</Link></li>
 
@@ -109,5 +109,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
-

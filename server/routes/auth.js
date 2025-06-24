@@ -5,10 +5,18 @@ const User = require('../models/users');
 
 const router = express.Router();
 
-
+// Register
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
+
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ message: 'All fields are required.' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters.' });
+    }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -20,29 +28,25 @@ router.post('/register', async (req, res) => {
     const newUser = new User({
       name,
       email,
+      role,
       passwordHash: hashedPassword,
     });
 
     await newUser.save();
 
-    // Create JWT payload
     const payload = {
       id: newUser._id,
       email: newUser.email,
       role: newUser.role,
     };
 
-    // Sign the JWT
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: '3d',
-    });
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
 
-    // Set cookie with token
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
+      maxAge: 3 * 24 * 60 * 60 * 1000,
     });
 
     res.status(201).json({
@@ -55,19 +59,28 @@ router.post('/register', async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('Registration Error:', err.message);
+    console.error('Registration Error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-
+// Login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
+
+    if (!email || !password || !role) {
+      return res.status(400).json({ message: 'Email, password, and role are required.' });
+    }
+
     const user = await User.findOne({ email });
 
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    if (user.role !== role) {
+      return res.status(403).json({ message: 'Access denied: incorrect role' });
     }
 
     const payload = { id: user._id, email: user.email, role: user.role };
@@ -82,25 +95,28 @@ router.post('/login', async (req, res) => {
 
     res.json({ message: 'Login successful', user: payload });
   } catch (err) {
-    console.error('Login Error:', err.message);
+    console.error('Login Error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-
-// GOOGLE LOGIN
+// Google Login
 router.post('/google-login', async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, role } = req.body;
+
+    if (!name || !email || !role) {
+      return res.status(400).json({ message: 'Missing Google user info.' });
+    }
 
     let user = await User.findOne({ email });
 
-    // If user doesn't exist, register them
     if (!user) {
       user = new User({
         name,
         email,
-        passwordHash: '', // not needed for Google login
+        role,
+        passwordHash: '', // not needed for Google
       });
       await user.save();
     }
@@ -117,7 +133,7 @@ router.post('/google-login', async (req, res) => {
 
     res.json({ message: 'Google login successful', user: payload });
   } catch (err) {
-    console.error('Google Login Error:', err.message);
+    console.error('Google Login Error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
