@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin', 'owner'],
     default: 'user',
   },
+  isGoogleUser: { type: Boolean, default: false }, 
 });
 
 module.exports = mongoose.model('User', userSchema);
