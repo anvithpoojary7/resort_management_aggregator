@@ -90,33 +90,40 @@ const CombinedLoginRegister = () => {
     }
   };
 
-  const handleGoogleAuth = async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+const handleGoogleAuth = async () => {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
 
-      const response = await fetch('http://localhost:5000/api/auth/google-login', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: user.displayName,
-          email: user.email,
-          role,
-        }),
-      });
+    const endpoint = isLogin
+      ? 'http://localhost:5000/api/auth/google-login'
+      : 'http://localhost:5000/api/auth/google-signup';
 
-      const data = await response.json();
-      if (response.ok) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-        redirectToDashboard(data.user.role);
-      } else {
-        alert(data.message || 'Google login failed');
-      }
-    } catch (error) {
-      alert('Google authentication failed!');
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: user.displayName,
+        email: user.email,
+        role,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      localStorage.setItem('user', JSON.stringify(data.user));
+      redirectToDashboard(data.user.role);
+    } else {
+      alert(data.message || 'Google authentication failed');
     }
-  };
+  } catch (error) {
+    alert('Google authentication failed!');
+    console.error(error);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-[#f6f9ff] flex items-center justify-center px-4">
