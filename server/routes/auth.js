@@ -112,13 +112,11 @@ router.post('/google-login', async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
-      user = new User({
-        name,
-        email,
-        role,
-        passwordHash: '', // not needed for Google
-      });
-      await user.save();
+      return res.status(404).json({ message: 'No user found. Please sign up first.' });
+    }
+
+    if (user.role !== role) {
+      return res.status(403).json({ message: 'Access denied: incorrect role' });
     }
 
     const payload = { id: user._id, email: user.email, role: user.role };
@@ -137,5 +135,46 @@ router.post('/google-login', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+router.post('/google-signup', async (req, res) => {
+  try {
+    const { name, email, role } = req.body;
+
+    if (!name || !email || !role) {
+      return res.status(400).json({ message: 'Missing Google user info.' });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists. Try login instead.' });
+    }
+
+    const newUser = new User({
+      name,
+      email,
+      role,
+      isGoogleUser: true,
+      passwordHash: '', // Google accounts won't have passwords
+    });
+
+    await newUser.save();
+
+    const payload = { id: newUser._id, email: newUser.email, role: newUser.role };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 3 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(201).json({ message: 'Google signup successful', user: payload });
+  } catch (err) {
+    console.error('Google Signup Error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 module.exports = router;
