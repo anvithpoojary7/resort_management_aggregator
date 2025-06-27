@@ -12,8 +12,10 @@ import HelpSupport from '../pages/HelpSupport';
 
 // Owner Pages
 import OwnerDashboard from '../owner/OwnerDashboard';
-import AddResort from '../owner/AddResort';
+import OwnerMyResort from '../owner/OwnerMyResort';
 import OwnerBookings from '../owner/OwnerBookings';
+import OwnerProfile from '../owner/OwnerProfile';
+
 
 // Admin Pages
 import AdminDashboard from '../admin/AdminDashboard';
@@ -23,6 +25,8 @@ import AllBookings from '../admin/AllBookings';
 
 // Route Protection
 import ProtectedRoute from './ProtectedRoute';
+
+
 
 const AppRoutes = () => (
   <Routes>
@@ -42,9 +46,9 @@ const AppRoutes = () => (
         <OwnerDashboard />
       </ProtectedRoute>
     } />
-    <Route path="/owner/add-resort" element={
+    <Route path="/owner/my-resort" element={
       <ProtectedRoute role="owner">
-        <AddResort />
+        <OwnerMyResort />
       </ProtectedRoute>
     } />
     <Route path="/owner/bookings" element={
@@ -52,6 +56,14 @@ const AppRoutes = () => (
         <OwnerBookings />
       </ProtectedRoute>
     } />
+     
+      <Route path="/owner/profile" element={
+      <ProtectedRoute role="owner">
+        <OwnerProfile />
+      </ProtectedRoute>
+    } />
+
+
 
     {/* ✅ Admin Routes */}
     <Route path="/admin/dashboard" element={
