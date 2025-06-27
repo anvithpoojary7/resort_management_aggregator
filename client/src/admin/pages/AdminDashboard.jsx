@@ -1,10 +1,10 @@
 import React from 'react';
-import Sidebar from './components/Sidebar';
-import DashboardCards from './components/DashboardCards';
-import RevenueChart from './components/RevenueChart';
-import UserGrowthChart from './components/UserGrowthChart';
-import RecentActivity from './components/RecentActivity';
-import QuickActions from './components/QuickActions';
+import Sidebar from '../components/Sidebar';
+import DashboardCards from '../components/DashboardCards';
+import RevenueChart from '../components/RevenueChart';
+import UserGrowthChart from '../components/UserGrowthChart';
+import RecentActivity from '../components/RecentActivity';
+import QuickActions from '../components/QuickActions';
 
 const AdminDashboard = () => {
   return (

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
-// User Pages
+// ✅ Public / User Pages
 import Home from '../pages/Home';
 import ResortList from '../pages/ResortList';
 import ResortDetail from '../pages/ResortDetail';
@@ -10,23 +10,21 @@ import Settings from '../pages/Settings';
 import ContactUs from '../pages/ContactUs';
 import HelpSupport from '../pages/HelpSupport';
 
-// Owner Pages
+// ✅ Owner Pages
 import OwnerDashboard from '../owner/OwnerDashboard';
 import OwnerMyResort from '../owner/OwnerMyResort';
 import OwnerBookings from '../owner/OwnerBookings';
 import OwnerProfile from '../owner/OwnerProfile';
 
+// ✅ Admin Pages
+import AdminDashboard from '../admin/pages/AdminDashboard';
+import ModerationPage from '../admin/pages/ModerationPage'; // ✅ Replaces ManageResorts
+import ViewUsers from '../admin/pages/ViewUsers';
+import AllBookings from '../admin/pages/AllBookings';
+import AdminAddResort from '../admin/pages/AddResort';
 
-// Admin Pages
-import AdminDashboard from '../admin/AdminDashboard';
-import ManageResorts from '../admin/ManageResorts';
-import ViewUsers from '../admin/ViewUsers';
-import AllBookings from '../admin/AllBookings';
-
-// Route Protection
+// ✅ Route Protection Component
 import ProtectedRoute from './ProtectedRoute';
-
-
 
 const AppRoutes = () => (
   <Routes>
@@ -56,14 +54,11 @@ const AppRoutes = () => (
         <OwnerBookings />
       </ProtectedRoute>
     } />
-     
-      <Route path="/owner/profile" element={
+    <Route path="/owner/profile" element={
       <ProtectedRoute role="owner">
         <OwnerProfile />
       </ProtectedRoute>
     } />
-
-
 
     {/* ✅ Admin Routes */}
     <Route path="/admin/dashboard" element={
@@ -73,7 +68,7 @@ const AppRoutes = () => (
     } />
     <Route path="/admin/resorts" element={
       <ProtectedRoute role="admin">
-        <ManageResorts />
+        <ModerationPage />
       </ProtectedRoute>
     } />
     <Route path="/admin/users" element={
@@ -86,11 +81,17 @@ const AppRoutes = () => (
         <AllBookings />
       </ProtectedRoute>
     } />
+    <Route path="/admin/add-resort" element={
+      <ProtectedRoute role="admin">
+        <AdminAddResort />
+      </ProtectedRoute>
+    } />
 
-    {/* ⚠️ Optional: Fallback route for 404 */}
+    {/* ⚠️ Optional: Fallback Route for 404 */}
     {/* <Route path="*" element={<NotFound />} /> */}
 
   </Routes>
 );
 
 export default AppRoutes;
+
