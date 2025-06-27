@@ -60,6 +60,9 @@ const CombinedLoginRegister = () => {
       : { name, email, password, role };
 
     try {
+      console.log("isLogin:", isLogin); // ✅ Debug log
+      console.log("Endpoint:", endpoint); // ✅ Debug log
+
       const response = await fetch(endpoint, {
         method: 'POST',
         credentials: 'include',
@@ -67,7 +70,8 @@ const CombinedLoginRegister = () => {
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : {};
 
       if (response.ok) {
         if (isLogin) {
@@ -75,7 +79,7 @@ const CombinedLoginRegister = () => {
           redirectToDashboard(data.user.role);
         } else {
           alert('Registration successful! Please login.');
-          setIsLogin(true); // Switch to login form
+          setIsLogin(true); // Switch to login
           setFirstName('');
           setLastName('');
           setEmail('');
@@ -110,26 +114,23 @@ const handleGoogleAuth = async () => {
       }),
     });
 
-    const data = await response.json();
-
-    if (response.ok) {
-      localStorage.setItem('user', JSON.stringify(data.user));
-      redirectToDashboard(data.user.role);
-    } else {
-      alert(data.message || 'Google authentication failed');
+      const data = await response.json();
+      if (response.ok) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+        redirectToDashboard(data.user.role);
+      } else {
+        alert(data.message || 'Google login failed');
+      }
+    } catch (error) {
+      alert('Google authentication failed!');
     }
-  } catch (error) {
-    alert('Google authentication failed!');
-    console.error(error);
-  }
-};
-
+  };
 
   return (
     <div className="min-h-screen bg-[#f6f9ff] flex items-center justify-center px-4">
       <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-md relative">
         <div className="flex justify-center mb-4">
-          <div className="bg-blue-100 p-4 rounded-full">
+          <div class="bg-blue-100 p-4 rounded-full">
             {isLogin ? (
               <LogIn className="text-indigo-600 text-2xl" />
             ) : (
@@ -225,14 +226,6 @@ const handleGoogleAuth = async () => {
               >
                 {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
               </span>
-            </div>
-          )}
-
-          {isLogin && (
-            <div className="text-right">
-              <a href="#" className="text-blue-600 text-sm hover:underline">
-                Forgot Password?
-              </a>
             </div>
           )}
 
