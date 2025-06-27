@@ -1,12 +1,13 @@
+// client/src/admin/components/Sidebar.jsx
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 
 const Sidebar = () => {
   const navItems = [
     { name: 'Dashboard', icon: '📊', path: '/admin/dashboard' },
-    { name: 'Resort Moderation', icon: '🏢', path: '/admin/resorts', notification: 3 }, // Updated notification count
-    { name: 'User Management', icon: '👥', path: '/admin/users', active: true },
-    { name: 'Revenue Analytics', icon: '📈', path: '/admin/revenue' },
+    { name: 'Resort Moderation', icon: '🏢', path: '/admin/resorts', notification: 3 }, // Updated notification to 3 based on screenshot
+    { name: 'User Management', icon: '👥', path: '/admin/users' }, // No 'active' prop needed, NavLink handles it
+    { name: 'Revenue Analytics', icon: '📈', path: '/admin/revenue' }, //
   ];
 
   return (
@@ -30,7 +31,7 @@ const Sidebar = () => {
                   to={item.path}
                   className={({ isActive }) =>
                     `flex items-center p-3 rounded-lg transition-colors duration-200 ${
-                      isActive || (item.name === 'User Management' && window.location.pathname === '/admin/users') // Explicitly check for User Management as it's the default view for this page
+                      isActive
                         ? 'bg-purple-100 text-purple-700 font-semibold'
                         : 'text-gray-600 hover:bg-gray-100'
                     }`
@@ -47,6 +48,7 @@ const Sidebar = () => {
               </li>
             ))}
             <li className="mb-4">
+                {/* This button could navigate to an "Add Resort" form accessible by Admin or Owner */}
                 <button className="flex items-center p-3 w-full text-left rounded-lg text-gray-600 hover:bg-gray-100 transition-colors duration-200">
                     <span className="mr-3">➕</span> Add Resort
                 </button>
@@ -57,7 +59,7 @@ const Sidebar = () => {
 
       <div>
         <NavLink
-          to="/settings"
+          to="/settings" // Assuming a general settings page
           className={({ isActive }) =>
             `flex items-center p-3 rounded-lg transition-colors duration-200 ${
               isActive
