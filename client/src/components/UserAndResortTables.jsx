@@ -1,7 +1,7 @@
 // client/src/components/UserAndResortTables.jsx
 import React, { useState, useEffect } from 'react';
-import UserTable from '../admin/components/UserTable'; // Adjust path if UserTable.jsx is in a different location
-import ResortTable from '../admin/components/ResortTable'; // Adjust path if ResortTable.jsx is in a different location
+import UserTable from './UserTable'; // They are in the same directory
+import ResortTable from './ResortTable'; // They are in the same directory // Adjust path if ResortTable.jsx is in a different location
 
 const UserAndResortTables = ({ initialTab = 'users' }) => { // Default to 'users' tab if not specified
   const [activeTab, setActiveTab] = useState(initialTab);

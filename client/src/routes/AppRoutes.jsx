@@ -4,7 +4,7 @@ import { Routes, Route } from 'react-router-dom';
 // ✅ Public / User Pages
 import Home from '../pages/Home';
 import ResortList from '../pages/ResortList';
-
+import ResortDetail from '../pages/ResortDetail'; // ✅ Added this line
 import CombinedLoginRegister from '../pages/CombinedLoginRegister';
 import Settings from '../pages/Settings';
 import ContactUs from '../pages/ContactUs';
@@ -18,14 +18,14 @@ import OwnerProfile from '../owner/OwnerProfile';
 
 // ✅ Admin Pages
 import AdminDashboard from '../admin/pages/AdminDashboard';
-import ModerationPage from '../admin/pages/ModerationPage'; // ✅ Replaces ManageResorts
+import ModerationPage from '../admin/pages/ModerationPage';
 import ViewUsers from '../admin/pages/ViewUsers';
 import AllBookings from '../admin/pages/AllBookings';
 import AdminAddResort from '../admin/pages/AddResort';
+import RevenueAnalytics from '../admin/pages/RevenueAnalytics';
 
 // ✅ Route Protection Component
 import ProtectedRoute from './ProtectedRoute';
-import RevenueAnalytics from '../admin/pages/RevenueAnalytics';
 
 const AppRoutes = () => (
   <Routes>
@@ -33,7 +33,7 @@ const AppRoutes = () => (
     {/* ✅ Public / User Routes */}
     <Route path="/" element={<Home />} />
     <Route path="/resorts" element={<ResortList />} />
-  
+    <Route path="/resorts/:id" element={<ResortDetail />} /> {/* ✅ Newly added route */}
     <Route path="/auth" element={<CombinedLoginRegister />} />
     <Route path="/settings" element={<Settings />} />
     <Route path="/contact" element={<ContactUs />} />
@@ -82,9 +82,14 @@ const AppRoutes = () => (
         <AllBookings />
       </ProtectedRoute>
     } />
+    <Route path="/admin/add-resort" element={
+      <ProtectedRoute role="admin">
+        <AdminAddResort />
+      </ProtectedRoute>
+    } />
     <Route path="/admin/analytics" element={
       <ProtectedRoute role="admin">
-        <RevenueAnalytics  />
+        <RevenueAnalytics />
       </ProtectedRoute>
     } />
 
@@ -95,4 +100,3 @@ const AppRoutes = () => (
 );
 
 export default AppRoutes;
-
