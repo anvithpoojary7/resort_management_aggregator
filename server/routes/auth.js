@@ -7,24 +7,19 @@ const router = express.Router();
 
 // Register
 router.post('/register', async (req, res) => {
-  console.log("🛑 EARLY REGISTER HIT – body:", req.body);
-
   try {
     const { name, email, password, role } = req.body;
 
     if (!name || !email || !password || !role) {
-      console.log("❌ Missing fields");
       return res.status(400).json({ message: 'All fields are required.' });
     }
 
     if (password.length < 6) {
-      console.log("❌ Password too short");
       return res.status(400).json({ message: 'Password must be at least 6 characters.' });
     }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      console.log("❌ User already exists");
       return res.status(400).json({ message: 'User already exists' });
     }
 
@@ -45,13 +40,7 @@ router.post('/register', async (req, res) => {
       role: newUser.role,
     };
 
-    let token;
-    try {
-      token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
-    } catch (err) {
-      console.error("❌ JWT sign failed:", err);
-      return res.status(500).json({ message: "Token generation failed" });
-    }
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
 
     res.cookie('token', token, {
       httpOnly: true,
@@ -60,21 +49,23 @@ router.post('/register', async (req, res) => {
       maxAge: 3 * 24 * 60 * 60 * 1000,
     });
 
-    console.log("✅ Registration successful:", payload);
     res.status(201).json({
       message: 'User registered successfully',
-      user: payload,
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+      },
     });
-
   } catch (err) {
-    console.error('❌ Registration Error:', err);
+    console.error('Registration Error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Login
 router.post('/login', async (req, res) => {
-  console.log("👉 LOGIN HIT with:", req.body);
   try {
     const { email, password, role } = req.body;
 
@@ -89,19 +80,11 @@ router.post('/login', async (req, res) => {
     }
 
     if (user.role !== role) {
-      console.log("⚠️ Role mismatch: user role is", user.role, ", attempted login as", role);
       return res.status(403).json({ message: 'Access denied: incorrect role' });
     }
 
     const payload = { id: user._id, email: user.email, role: user.role };
-
-    let token;
-    try {
-      token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
-    } catch (err) {
-      console.error("❌ JWT sign failed:", err);
-      return res.status(500).json({ message: "Token generation failed" });
-    }
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
 
     res.cookie('token', token, {
       httpOnly: true,
@@ -110,11 +93,8 @@ router.post('/login', async (req, res) => {
       maxAge: 3 * 24 * 60 * 60 * 1000,
     });
 
-    console.log("✅ Login successful:", payload);
     res.json({ message: 'Login successful', user: payload });
-
   } catch (err) {
-<<<<<<< Updated upstream
     console.error('Login Error:', err);
     res.status(500).json({ message: 'Server error' });
   }
@@ -152,9 +132,6 @@ router.post('/google-login', async (req, res) => {
     res.json({ message: 'Google login successful', user: payload });
   } catch (err) {
     console.error('Google Login Error:', err);
-=======
-    console.error('❌ Login Error:', err);
->>>>>>> Stashed changes
     res.status(500).json({ message: 'Server error' });
   }
 });

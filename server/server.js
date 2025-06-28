@@ -1,40 +1,33 @@
 const express = require('express');
-const connectdb = require('./config/db');
 const cors = require('cors');
-const cookieParser = require('cookie-parser'); // ✅ Added
+const cookieParser = require('cookie-parser');
+const connectdb = require('./config/db');
+require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 
-require('dotenv').config();
 
 const app = express();
+
+// Connect to MongoDB
 connectdb();
 
+// Middleware
 app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true
+  origin:true,
+  
+  credentials: true,
 }));
 
-<<<<<<< Updated upstream
-app.use(express.json()); 
-=======
 app.use(express.json());
-app.use(cookieParser()); // ✅ Add this for reading cookies
->>>>>>> Stashed changes
+app.use(cookieParser());
 
-// Global Debug Middleware
-app.use((req, res, next) => {
-  console.log(`[${req.method}] ${req.url}`);
-  next();
-});
-
-<<<<<<< Updated upstream
-app.use('/api/auth', authRoutes); 
-=======
+// Routes
 app.use('/api/auth', authRoutes);
 
->>>>>>> Stashed changes
-const PORT = 5000;
+
+// Start Server
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });

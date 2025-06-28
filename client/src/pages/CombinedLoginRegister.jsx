@@ -52,17 +52,14 @@ const CombinedLoginRegister = () => {
 
     const name = `${firstName} ${lastName}`;
     const endpoint = isLogin
-      ? 'http://localhost:5000/api/auth/login'
-      : 'http://localhost:5000/api/auth/register';
+      ? 'http://localhost:8080/api/auth/login'
+      : 'http://localhost:8080/api/auth/register';
 
     const payload = isLogin
       ? { email, password, role }
       : { name, email, password, role };
 
     try {
-      console.log("isLogin:", isLogin); // ✅ Debug log
-      console.log("Endpoint:", endpoint); // ✅ Debug log
-
       const response = await fetch(endpoint, {
         method: 'POST',
         credentials: 'include',
@@ -70,8 +67,7 @@ const CombinedLoginRegister = () => {
         body: JSON.stringify(payload),
       });
 
-      const text = await response.text();
-      const data = text ? JSON.parse(text) : {};
+      const data = await response.json();
 
       if (response.ok) {
         if (isLogin) {
@@ -79,7 +75,7 @@ const CombinedLoginRegister = () => {
           redirectToDashboard(data.user.role);
         } else {
           alert('Registration successful! Please login.');
-          setIsLogin(true); // Switch to login
+          setIsLogin(true); // Switch to login form
           setFirstName('');
           setLastName('');
           setEmail('');
@@ -94,25 +90,21 @@ const CombinedLoginRegister = () => {
     }
   };
 
-const handleGoogleAuth = async () => {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
+  const handleGoogleAuth = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
 
-    const endpoint = isLogin
-      ? 'http://localhost:5000/api/auth/google-login'
-      : 'http://localhost:5000/api/auth/google-signup';
-
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: user.displayName,
-        email: user.email,
-        role,
-      }),
-    });
+      const response = await fetch('http://localhost:8080/api/auth/google-login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: user.displayName,
+          email: user.email,
+          role,
+        }),
+      });
 
       const data = await response.json();
       if (response.ok) {
@@ -130,7 +122,7 @@ const handleGoogleAuth = async () => {
     <div className="min-h-screen bg-[#f6f9ff] flex items-center justify-center px-4">
       <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-md relative">
         <div className="flex justify-center mb-4">
-          <div class="bg-blue-100 p-4 rounded-full">
+          <div className="bg-blue-100 p-4 rounded-full">
             {isLogin ? (
               <LogIn className="text-indigo-600 text-2xl" />
             ) : (
@@ -226,6 +218,14 @@ const handleGoogleAuth = async () => {
               >
                 {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
               </span>
+            </div>
+          )}
+
+          {isLogin && (
+            <div className="text-right">
+              <a href="#" className="text-blue-600 text-sm hover:underline">
+                Forgot Password?
+              </a>
             </div>
           )}
 
