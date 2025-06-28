@@ -52,16 +52,16 @@ const CombinedLoginRegister = () => {
 
     const name = `${firstName} ${lastName}`;
     const endpoint = isLogin
-      ? 'http://localhost:5000/api/auth/login'
-      : 'http://localhost:5000/api/auth/register';
+      ? 'http://localhost:8080/api/auth/login'
+      : 'http://localhost:8080/api/auth/register';
 
     const payload = isLogin
       ? { email, password, role }
       : { name, email, password, role };
 
     try {
-      console.log("isLogin:", isLogin); // ✅ Debug log
-      console.log("Endpoint:", endpoint); // ✅ Debug log
+      console.log("isLogin:", isLogin);
+      console.log("Endpoint:", endpoint); 
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -100,8 +100,8 @@ const handleGoogleAuth = async () => {
     const user = result.user;
 
     const endpoint = isLogin
-      ? 'http://localhost:5000/api/auth/google-login'
-      : 'http://localhost:5000/api/auth/google-signup';
+      ? 'http://localhost:8080/api/auth/google-login'
+      : 'http://localhost:8080/api/auth/google-signup';
 
     const response = await fetch(endpoint, {
       method: 'POST',
