@@ -1,3 +1,4 @@
+// Home.jsx (no changes needed from previous step if already applied)
 import React, { useState, useEffect } from 'react';
 import ResortSearchBar from '../components/ResortSearchBar';
 import TopDealsCarousel from '../components/TopDealsCarousel';
@@ -17,9 +18,8 @@ const Home = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      
-      {/* Slideshow Section */}
-      <div className="relative w-full h-[500px] overflow-hidden">
+      {/* Slideshow Section - pt-20 is crucial here to prevent content hiding under fixed navbar */}
+      <div className="relative w-full h-[500px] overflow-hidden pt-20"> {/* This pt-20 is necessary */}
         <div
           className="absolute top-0 left-0 w-full h-full bg-cover bg-center transition-all duration-1000"
           style={{ backgroundImage: `url(${backgrounds[current]})` }}
@@ -83,7 +83,6 @@ const Home = () => {
           </p>
         </div>
       </section>
-
     </div>
   );
 };

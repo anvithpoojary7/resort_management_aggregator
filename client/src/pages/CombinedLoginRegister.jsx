@@ -1,3 +1,4 @@
+// CombinedLoginRegister.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUser } from 'react-icons/fa';
@@ -20,6 +21,8 @@ const CombinedLoginRegister = () => {
   const navigate = useNavigate();
 
   const redirectToDashboard = (role) => {
+    // Make sure 'isLoggedIn' is true when navigating to dashboard
+    localStorage.setItem('isLoggedIn', 'true'); 
     if (role === 'admin') navigate('/admin/dashboard');
     else if (role === 'owner') navigate('/owner/dashboard');
     else navigate('/');
@@ -61,7 +64,7 @@ const CombinedLoginRegister = () => {
 
     try {
       console.log("isLogin:", isLogin);
-      console.log("Endpoint:", endpoint); 
+      console.log("Endpoint:", endpoint);
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -76,7 +79,7 @@ const CombinedLoginRegister = () => {
       if (response.ok) {
         if (isLogin) {
           localStorage.setItem('user', JSON.stringify(data.user));
-          redirectToDashboard(data.user.role);
+          redirectToDashboard(data.user.role); // This will also set isLoggedIn to 'true'
         } else {
           alert('Registration successful! Please login.');
           setIsLogin(true); // Switch to login
@@ -94,30 +97,38 @@ const CombinedLoginRegister = () => {
     }
   };
 
-const handleGoogleAuth = async () => {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
+  const handleGoogleAuth = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user; // Firebase user object
 
-    const endpoint = isLogin
-      ? 'http://localhost:8080/api/auth/google-login'
-      : 'http://localhost:8080/api/auth/google-signup';
+      const endpoint = isLogin
+        ? 'http://localhost:8080/api/auth/google-login'
+        : 'http://localhost:8080/api/auth/google-signup';
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: user.displayName,
-        email: user.email,
-        role,
-      }),
-    });
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: user.displayName, // Use displayName from Google
+          email: user.email,
+          role,
+          profileImage: user.photoURL, // Pass Google profile image URL
+        }),
+      });
 
       const data = await response.json();
       if (response.ok) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-        redirectToDashboard(data.user.role);
+        // Ensure the 'user' object stored includes name and profileImage
+        localStorage.setItem('user', JSON.stringify({
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          role: data.user.role,
+          profileImage: user.photoURL, // Store Google photo URL
+        }));
+        redirectToDashboard(data.user.role); // This will set isLoggedIn to 'true'
       } else {
         alert(data.message || 'Google login failed');
       }
