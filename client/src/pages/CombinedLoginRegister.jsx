@@ -60,6 +60,10 @@ const CombinedLoginRegister = () => {
       : { name, email, password, role };
 
     try {
+
+      console.log("isLogin:", isLogin);
+      console.log("Endpoint:", endpoint); 
+
       const response = await fetch(endpoint, {
         method: 'POST',
         credentials: 'include',
@@ -95,6 +99,7 @@ const CombinedLoginRegister = () => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
+
       const response = await fetch('http://localhost:8080/api/auth/google-login', {
         method: 'POST',
         credentials: 'include',
@@ -105,6 +110,22 @@ const CombinedLoginRegister = () => {
           role,
         }),
       });
+
+    const endpoint = isLogin
+      ? 'http://localhost:8080/api/auth/google-login'
+      : 'http://localhost:8080/api/auth/google-signup';
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: user.displayName,
+        email: user.email,
+        role,
+      }),
+    });
+
 
       const data = await response.json();
       if (response.ok) {

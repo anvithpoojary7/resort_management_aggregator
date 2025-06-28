@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaUser, FaHeart, FaBars, FaTimes } from 'react-icons/fa';
+import { FaUser, FaHeart, FaBars, FaTimes, FaGlobe, FaQuestionCircle } from 'react-icons/fa'; // Import FaQuestionCircle
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -37,34 +37,38 @@ const Navbar = () => {
         ResortFinder
       </Link>
 
-      {/* Icons */}
+      {/* Right-hand side elements: Become a host, Language, Hamburger */}
       <div className="flex items-center gap-4">
-        {/* Favorites */}
-        <Link to="/favorites" className="text-black hover:text-red-600 transition" title="Favorites">
-          <FaHeart className="text-xl" />
+        {/* Become a Host (Always visible, but action might change based on login) */}
+        <Link
+          to="/become-a-host"
+          className="text-black font-medium hover:bg-gray-100 py-2 px-3 rounded-full transition-colors duration-200"
+        >
+          Become a host
         </Link>
 
-        {/* Login/Register */}
-        {!isLoggedIn && (
-          <Link to="/auth" className="flex items-center text-blue-600 font-medium hover:underline">
-            <FaUser className="mr-1" />
-            Login / Register
-          </Link>
-        )}
+        {/* Language Icon */}
+        <button
+          className="text-gray-700 hover:bg-gray-100 p-3 rounded-full transition-colors duration-200"
+          title="Change language"
+        >
+          <FaGlobe className="text-xl" />
+        </button>
 
-        {/* Hamburger */}
+        {/* Combined User/Menu button (replaces separate Login/Register and Hamburger) */}
         <button
           onClick={() => setMenuOpen(true)}
-          className="text-2xl text-gray-700 focus:outline-none ml-2"
+          className="flex items-center gap-2 border rounded-full py-2 px-3 shadow-md hover:shadow-lg transition-shadow duration-200"
         >
-          <FaBars />
+          <FaBars className="text-lg text-gray-700" />
+          <FaUser className="text-xl text-gray-700" />
         </button>
       </div>
 
-      {/* Sliding Menu */}
+      {/* Sliding Menu (Panel) */}
       <div
         ref={panelRef}
-        className={`fixed top-0 right-0 h-full w-64 bg-white shadow-lg p-6 z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 h-full w-72 bg-white shadow-lg p-6 z-50 transform transition-transform duration-300 ease-in-out ${
           menuOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
@@ -76,33 +80,61 @@ const Navbar = () => {
           <FaTimes />
         </button>
 
-        {/* Navigation links */}
-        <ul className="mt-12 space-y-4 text-gray-800">
-          <li><Link to="/" onClick={() => setMenuOpen(false)}>🏠 Home</Link></li>
-          <li><Link to="/resorts" onClick={() => setMenuOpen(false)}>🌴 Browse Resorts</Link></li>
-          <li><Link to="/bookings" onClick={() => setMenuOpen(false)}>🧳 My Bookings</Link></li>
-          <li><Link to="/my-resorts" onClick={() => setMenuOpen(false)}>🏨 My Resorts</Link></li>
-          <li><Link to="/profile" onClick={() => setMenuOpen(false)}>👤 Profile</Link></li>
-          <li><Link to="/settings" onClick={() => setMenuOpen(false)}>⚙ Settings</Link></li>
-          <li><Link to="/contact" onClick={() => setMenuOpen(false)}>📞 Contact Us</Link></li>
-          <li><Link to="/help" onClick={() => setMenuOpen(false)}>❓ Help & Support</Link></li>
-
-          {/* Auth Action */}
-          {isLoggedIn ? (
+        {/* Conditional content based on login status */}
+        {!isLoggedIn ? (
+          // Content when NOT logged in (as per image_1512f6.png)
+          <div className="mt-12 space-y-4 text-gray-800">
+            <h3 className="font-bold text-lg mb-4">Welcome to ResortFinder</h3>
+            <div className="border-b pb-4 mb-4">
+              <Link to="/help" className="flex items-center hover:bg-gray-100 p-2 rounded" onClick={() => setMenuOpen(false)}>
+                <FaQuestionCircle className="mr-2 text-xl" /> Help Centre {/* Changed icon here */}
+              </Link>
+            </div>
+            <Link
+              to="/become-a-host"
+              className="flex items-center justify-between border rounded-lg p-3 hover:bg-gray-50 transition-colors"
+              onClick={() => setMenuOpen(false)}
+            >
+              <div>
+                <div className="font-semibold">Become a host</div>
+                <div className="text-sm text-gray-600">
+                  It's easy to start hosting and earn extra income.
+                </div>
+              </div>
+              {/* Replace with your actual house icon image path */}
+              <img src="/images/house-icon.png" alt="House icon" className="w-12 h-12 ml-4" /> 
+            </Link>
+         <Link to="/about" className="block mt-4 hover:bg-gray-100 p-2 rounded" onClick={() => setMenuOpen(false)}>
+    About ResortFinder
+</Link>
+          
+            <div className="border-t pt-4 mt-4">
+              <Link to="/auth" className="block hover:bg-gray-100 p-2 rounded font-semibold" onClick={() => setMenuOpen(false)}>
+                Log in or sign up
+              </Link>
+            </div>
+          </div>
+        ) : (
+          // Existing navigation links when logged in
+          <ul className="mt-12 space-y-4 text-gray-800">
+            <li><Link to="/" onClick={() => setMenuOpen(false)} className="hover:bg-gray-100 p-2 rounded block">🏠 Home</Link></li>
+            <li><Link to="/resorts" onClick={() => setMenuOpen(false)} className="hover:bg-gray-100 p-2 rounded block">🌴 Browse Resorts</Link></li>
+            <li><Link to="/bookings" onClick={() => setMenuOpen(false)} className="hover:bg-gray-100 p-2 rounded block">🧳 My Bookings</Link></li>
+            <li><Link to="/my-resorts" onClick={() => setMenuOpen(false)} className="hover:bg-gray-100 p-2 rounded block">🏨 My Resorts</Link></li>
+            <li><Link to="/profile" onClick={() => setMenuOpen(false)} className="hover:bg-gray-100 p-2 rounded block">👤 Profile</Link></li>
+            <li><Link to="/settings" onClick={() => setMenuOpen(false)} className="hover:bg-gray-100 p-2 rounded block">⚙ Settings</Link></li>
+            <li><Link to="/contact" onClick={() => setMenuOpen(false)} className="hover:bg-gray-100 p-2 rounded block">📞 Contact Us</Link></li>
+            <li><Link to="/help" onClick={() => setMenuOpen(false)} className="hover:bg-gray-100 p-2 rounded block">❓ Help & Support</Link></li>
             <li>
               <button
                 onClick={handleLogout}
-                className="text-red-600 hover:underline"
+                className="text-red-600 hover:underline hover:bg-gray-100 p-2 rounded w-full text-left"
               >
                 🚪 Logout
               </button>
             </li>
-          ) : (
-            <li>
-              <Link to="/auth" onClick={() => setMenuOpen(false)}>🔐 Login / Register</Link>
-            </li>
-          )}
-        </ul>
+          </ul>
+        )}
       </div>
     </nav>
   );

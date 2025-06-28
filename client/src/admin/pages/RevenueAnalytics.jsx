@@ -1,9 +1,8 @@
 import React from 'react';
 import DashboardCards from '../components/DashboardCards';
 import RevenueChart from '../components/RevenueChart';
-import RevenueByResortType from '../components/RevenueByResortType';
-import DetailedAnalyticsTable from '../components/DetailedAnalyticsTable';
-
+import RevenueByResortType from '../components/RevenueByResortType'; // New component
+import DetailedAnalyticsTable from '../components/DetailedAnalyticsTable'; // New component
 
 const RevenueAnalytics = () => {
   // Placeholder data - in a real application, you'd fetch this from an API
