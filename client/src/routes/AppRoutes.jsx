@@ -4,7 +4,7 @@ import { Routes, Route } from 'react-router-dom';
 // ✅ Public / User Pages
 import Home from '../pages/Home';
 import ResortList from '../pages/ResortList';
-import ResortDetail from '../pages/ResortDetail';
+import ResortDetail from '../pages/ResortDetail'; // ✅ Add this import
 import CombinedLoginRegister from '../pages/CombinedLoginRegister';
 import Settings from '../pages/Settings';
 import ContactUs from '../pages/ContactUs';
@@ -26,13 +26,16 @@ import AdminAddResort from '../admin/pages/AddResort';
 // ✅ Route Protection Component
 import ProtectedRoute from './ProtectedRoute';
 
+// ✅ Commented out unused import
+import RevenueAnalytics from '../pages/RevenueAnalytics';
+
 const AppRoutes = () => (
   <Routes>
 
     {/* ✅ Public / User Routes */}
     <Route path="/" element={<Home />} />
     <Route path="/resorts" element={<ResortList />} />
-    <Route path="/resorts/:id" element={<ResortDetail />} />
+    <Route path="/resorts/:id" element={<ResortDetail />} /> {/* ✅ This must be active */}
     <Route path="/auth" element={<CombinedLoginRegister />} />
     <Route path="/settings" element={<Settings />} />
     <Route path="/contact" element={<ContactUs />} />
@@ -87,6 +90,15 @@ const AppRoutes = () => (
       </ProtectedRoute>
     } />
 
+    {/* ✅ Commented out RevenueAnalytics Route */}
+    {
+    <Route path="/admin/analytics" element={
+      <ProtectedRoute role="admin">
+        <RevenueAnalytics />
+      </ProtectedRoute>
+    } />
+    }
+
     {/* ⚠️ Optional: Fallback Route for 404 */}
     {/* <Route path="*" element={<NotFound />} /> */}
 
@@ -94,4 +106,3 @@ const AppRoutes = () => (
 );
 
 export default AppRoutes;
-
