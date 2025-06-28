@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaMapMarkerAlt, FaStar, FaRegStar, FaSearch, FaFilter } from 'react-icons/fa';
 
 const resorts = [
@@ -41,6 +42,7 @@ const resorts = [
 ];
 
 const ResortList = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -137,7 +139,8 @@ const ResortList = () => {
             filteredResorts.map((resort) => (
               <div
                 key={resort.id}
-                className="bg-white rounded-xl shadow hover:shadow-lg overflow-hidden transition"
+                onClick={() => navigate(`/resorts/${resort.id}`)}
+                className="cursor-pointer bg-white rounded-xl shadow hover:shadow-lg overflow-hidden transition"
               >
                 <img
                   src={resort.image}
@@ -176,4 +179,3 @@ const ResortList = () => {
 };
 
 export default ResortList;
-
