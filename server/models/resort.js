@@ -6,7 +6,12 @@ const resortSchema = new mongoose.Schema({
   pricePerNight: Number,
   availableDates: [Date],
   amenities: [String],
-  images: [String],
+  images: [
+    {
+      data: Buffer,
+      contentType: String,
+    }
+  ],
   description: String,
   ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' }

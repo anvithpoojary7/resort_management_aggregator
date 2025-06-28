@@ -4,7 +4,7 @@ import { Routes, Route } from 'react-router-dom';
 // ✅ Public / User Pages
 import Home from '../pages/Home';
 import ResortList from '../pages/ResortList';
-import ResortDetail from '../pages/ResortDetail';
+
 import CombinedLoginRegister from '../pages/CombinedLoginRegister';
 import Settings from '../pages/Settings';
 import ContactUs from '../pages/ContactUs';
@@ -25,6 +25,7 @@ import AdminAddResort from '../admin/pages/AddResort';
 
 // ✅ Route Protection Component
 import ProtectedRoute from './ProtectedRoute';
+import RevenueAnalytics from '../admin/pages/RevenueAnalytics';
 
 const AppRoutes = () => (
   <Routes>
@@ -32,7 +33,7 @@ const AppRoutes = () => (
     {/* ✅ Public / User Routes */}
     <Route path="/" element={<Home />} />
     <Route path="/resorts" element={<ResortList />} />
-    <Route path="/resorts/:id" element={<ResortDetail />} />
+  
     <Route path="/auth" element={<CombinedLoginRegister />} />
     <Route path="/settings" element={<Settings />} />
     <Route path="/contact" element={<ContactUs />} />
@@ -81,9 +82,9 @@ const AppRoutes = () => (
         <AllBookings />
       </ProtectedRoute>
     } />
-    <Route path="/admin/add-resort" element={
+    <Route path="/admin/analytics" element={
       <ProtectedRoute role="admin">
-        <AdminAddResort />
+        <RevenueAnalytics  />
       </ProtectedRoute>
     } />
 
