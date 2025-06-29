@@ -166,6 +166,14 @@ const Navbar = () => {
                 <FaQuestionCircle className="mr-3 text-lg" /> Help Centre
               </Link>
             </li>
+             <li className="border-t pt-4 mt-4">
+              <button
+                onClick={handleLogout}
+                className="flex items-center text-red-600 hover:underline hover:bg-gray-100 p-2 rounded w-full text-left"
+              >
+                <FaSignOutAlt className="mr-3 text-lg" /> Logout {/* Using an icon for logout */}
+              </button>
+            </li>
 
             {/* "Become a host" section - always present in logged-in menu too */}
             <li className="border-t pt-4 mt-4">
@@ -195,14 +203,7 @@ const Navbar = () => {
               </Link>
             </li>
 
-            <li className="border-t pt-4 mt-4">
-              <button
-                onClick={handleLogout}
-                className="flex items-center text-red-600 hover:underline hover:bg-gray-100 p-2 rounded w-full text-left"
-              >
-                <FaSignOutAlt className="mr-3 text-lg" /> Logout {/* Using an icon for logout */}
-              </button>
-            </li>
+           
           </ul>
         ) : (
           // Content when NOT LOGGED IN (as per image_1512f6.png - modified with "About" link)
