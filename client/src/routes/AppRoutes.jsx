@@ -4,7 +4,8 @@ import { Routes, Route } from 'react-router-dom';
 // ✅ Public / User Pages
 import Home from '../pages/Home';
 import ResortList from '../pages/ResortList';
-import ResortDetail from '../pages/ResortDetail'; // ✅ Added this line
+import ResortDetail from '../pages/ResortDetail';
+import ReservationForm from '../pages/ReservationForm'; // ✅ ADDED
 import CombinedLoginRegister from '../pages/CombinedLoginRegister';
 import Settings from '../pages/Settings';
 import ContactUs from '../pages/ContactUs';
@@ -33,7 +34,8 @@ const AppRoutes = () => (
     {/* ✅ Public / User Routes */}
     <Route path="/" element={<Home />} />
     <Route path="/resorts" element={<ResortList />} />
-    <Route path="/resorts/:id" element={<ResortDetail />} /> {/* ✅ Newly added route */}
+    <Route path="/resorts/:id" element={<ResortDetail />} />
+    <Route path="/resorts/:id/reserve" element={<ReservationForm />} /> {/* ✅ NEWLY ADDED ROUTE */}
     <Route path="/auth" element={<CombinedLoginRegister />} />
     <Route path="/settings" element={<Settings />} />
     <Route path="/contact" element={<ContactUs />} />
