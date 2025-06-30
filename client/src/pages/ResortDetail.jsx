@@ -1,8 +1,9 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom'; // ✅ Added useNavigate
 
 const ResortDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate(); // ✅ Hook for navigation
 
   // Static data (you can later fetch this by ID from an API)
   const resort = {
@@ -116,7 +117,10 @@ const ResortDetail = () => {
                 <option>2 Guests</option>
                 <option>3 Guests</option>
               </select>
-              <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition">
+              <button
+                onClick={() => navigate(`/resorts/${id}/reserve`)} // ✅ Navigate to reservation page
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition"
+              >
                 Reserve Now
               </button>
               <p className="text-xs text-gray-500 mt-1">
