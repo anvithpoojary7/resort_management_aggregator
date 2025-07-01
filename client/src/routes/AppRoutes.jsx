@@ -16,6 +16,7 @@ import OwnerDashboard from '../owner/OwnerDashboard';
 import OwnerMyResort from '../owner/OwnerMyResort';
 import OwnerBookings from '../owner/OwnerBookings';
 import OwnerProfile from '../owner/OwnerProfile';
+import AddResort from '../admin/pages/AddResort';
 
 // ✅ Admin Pages
 import AdminDashboard from '../admin/pages/AdminDashboard';
@@ -27,6 +28,8 @@ import RevenueAnalytics from '../admin/pages/RevenueAnalytics';
 
 // ✅ Route Protection Component
 import ProtectedRoute from './ProtectedRoute';
+
+
 
 const AppRoutes = () => (
   <Routes>
@@ -60,6 +63,11 @@ const AppRoutes = () => (
     <Route path="/owner/profile" element={
       <ProtectedRoute role="owner">
         <OwnerProfile />
+      </ProtectedRoute>
+    } />
+     <Route path="/owner/add-resort" element={
+      <ProtectedRoute role="owner">
+        <AddResort />
       </ProtectedRoute>
     } />
 
