@@ -10,6 +10,7 @@ import CombinedLoginRegister from '../pages/CombinedLoginRegister';
 import Settings from '../pages/Settings';
 import ContactUs from '../pages/ContactUs';
 import HelpSupport from '../pages/HelpSupport';
+import ProfilePage from '../pages/ProfilePage';
 
 // ✅ Owner Pages
 import OwnerDashboard from '../owner/OwnerDashboard';
@@ -43,6 +44,7 @@ const AppRoutes = () => (
     <Route path="/settings" element={<Settings />} />
     <Route path="/contact" element={<ContactUs />} />
     <Route path="/help" element={<HelpSupport />} />
+    <Route path="/profile" element={<ProfilePage />} />
 
     {/* ✅ Owner Routes */}
     <Route path="/owner/dashboard" element={
