@@ -16,7 +16,8 @@ const resortSchema = new mongoose.Schema({
     enum: ['Beach', 'Mountain', 'Desert', 'City', 'Island', 'Adventure', 'Wellness', 'Other'],
   },
   ownerId: {
-    type: String, 
+    type: mongoose.Schema.Types.ObjectId, // <-- Change to ObjectId
+    ref: 'User', // <-- Reference your User model
     required: true,
   },
   status: {
