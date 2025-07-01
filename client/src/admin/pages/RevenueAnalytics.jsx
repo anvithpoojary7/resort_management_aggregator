@@ -3,6 +3,7 @@ import DashboardCards from '../components/DashboardCards';
 import RevenueChart from '../components/RevenueChart';
 import RevenueByResortType from '../components/RevenueByResortType'; // New component
 import DetailedAnalyticsTable from '../components/DetailedAnalyticsTable'; // New component
+import Sidebar from '../components/Sidebar'; // ✅ Add sidebar
 
 const RevenueAnalytics = () => {
   // Placeholder data - in a real application, you'd fetch this from an API
@@ -37,54 +38,59 @@ const RevenueAnalytics = () => {
     { period: 'Feb', revenue: '$42,500', bookings: 55, avgValue: '$773', growth: '+8%' },
   ];
 
-  return (
-    <div className="flex-1 p-6 bg-gray-100 min-h-screen">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
-        <div className="flex items-center gap-4">
-          {/* User/Admin Info - As seen in screenshot */}
-          <div className="flex items-center gap-2">
-            <span className="text-gray-600">Admin User</span>
-            <span className="font-semibold text-gray-800">Super Admin</span>
-            <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center text-blue-800 font-bold">A</div>
+return (
+    <div className="flex bg-gray-100 min-h-screen">
+      {/* ✅ Sidebar */}
+      <Sidebar />
+
+      {/* ✅ Main Content */}
+      <div className="flex-1 p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-gray-600">Admin User</span>
+              <span className="font-semibold text-gray-800">Super Admin</span>
+              <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center text-blue-800 font-bold">A</div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-semibold text-gray-800">Revenue Analytics</h2>
-          <div className="flex items-center gap-3">
-            <select className="border border-gray-300 rounded-md p-2">
-              <option>Last 30 days</option>
-              <option>Last 7 days</option>
-              <option>Last 90 days</option>
-            </select>
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
-              Export
-            </button>
-          </div>
-        </div>
-        <p className="text-gray-600 mb-6">Track your platform's financial performance</p>
-
-        <DashboardCards />
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          <RevenueChart data={revenueData} />
-          <RevenueByResortType data={resortTypeData} />
-        </div>
-
-        <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold text-gray-800">Detailed Analytics</h3>
-            <button className="flex items-center gap-1 text-blue-600 hover:text-blue-800 transition">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01.293.707L16.586 19H7.414L3.707 6.293A1 1 0 013 5.586V4z" />
-              </svg>
-              Filter
-            </button>
+            <h2 className="text-2xl font-semibold text-gray-800">Revenue Analytics</h2>
+            <div className="flex items-center gap-3">
+              <select className="border border-gray-300 rounded-md p-2">
+                <option>Last 30 days</option>
+                <option>Last 7 days</option>
+                <option>Last 90 days</option>
+              </select>
+              <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
+                Export
+              </button>
+            </div>
           </div>
-          <DetailedAnalyticsTable data={detailedAnalytics} />
+          <p className="text-gray-600 mb-6">Track your platform's financial performance</p>
+
+          <DashboardCards />
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <RevenueChart data={revenueData} />
+            <RevenueByResortType data={resortTypeData} />
+          </div>
+
+          <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-800">Detailed Analytics</h3>
+              <button className="flex items-center gap-1 text-blue-600 hover:text-blue-800 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01.293.707L16.586 19H7.414L3.707 6.293A1 1 0 013 5.586V4z" />
+                </svg>
+                Filter
+              </button>
+            </div>
+            <DetailedAnalyticsTable data={detailedAnalytics} />
+          </div>
         </div>
       </div>
     </div>
