@@ -128,12 +128,12 @@ const Navbar = () => {
               </Link>
             </li>
             <li>
-              <Link to="/trips" onClick={() => setMenuOpen(false)} className="flex items-center hover:bg-gray-100 p-2 rounded">
+              <Link to="/resorts" onClick={() => setMenuOpen(false)} className="flex items-center hover:bg-gray-100 p-2 rounded">
                 <FaSuitcase className="mr-3 text-lg" /> Trips
               </Link>
             </li>
             <li>
-              <Link to="/messages" onClick={() => setMenuOpen(false)} className="flex items-center hover:bg-gray-100 p-2 rounded">
+              <Link to="/contact" onClick={() => setMenuOpen(false)} className="flex items-center hover:bg-gray-100 p-2 rounded">
                 <FaComment className="mr-3 text-lg" /> Messages
               </Link>
             </li>
@@ -152,15 +152,16 @@ const Navbar = () => {
               </Link>
             </li>
             <li>
-              <Link to="/account-settings" onClick={() => setMenuOpen(false)} className="flex items-center hover:bg-gray-100 p-2 rounded">
+              <Link to="/settings" onClick={() => setMenuOpen(false)} className="flex items-center hover:bg-gray-100 p-2 rounded">
                 <FaCog className="mr-3 text-lg" /> Account settings
               </Link>
             </li>
-            <li>
-              <Link to="/languages-currency" onClick={() => setMenuOpen(false)} className="flex items-center hover:bg-gray-100 p-2 rounded">
-                <FaGlobe className="mr-3 text-lg" /> Languages & currency
+               <li>
+              <Link to="/settings" onClick={() => setMenuOpen(false)} className="flex items-center hover:bg-gray-100 p-2 rounded">
+                <FaCog className="mr-3 text-lg" /> Account settings
               </Link>
             </li>
+      
             <li>
               <Link to="/help" onClick={() => setMenuOpen(false)} className="flex items-center hover:bg-gray-100 p-2 rounded">
                 <FaQuestionCircle className="mr-3 text-lg" /> Help Centre
