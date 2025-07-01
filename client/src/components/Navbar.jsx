@@ -233,7 +233,7 @@ const Navbar = () => {
             <Link to="/find-a-co-host" className="block hover:bg-gray-100 p-2 rounded" onClick={() => setMenuOpen(false)}>
               Find a co-host
             </Link>
-            <Link to="/about" className="block mt-4 hover:bg-gray-100 p-2 rounded" onClick={() => setMenuOpen(false)}>
+            <Link to="/aboutus" className="block mt-4 hover:bg-gray-100 p-2 rounded" onClick={() => setMenuOpen(false)}>
               About ResortFinder
             </Link>
 
