@@ -5,16 +5,11 @@ import { Routes, Route } from 'react-router-dom';
 import Home from '../pages/Home';
 import ResortList from '../pages/ResortList';
 import ResortDetail from '../pages/ResortDetail';
-
 import ReservationForm from '../pages/ReservationForm'; // ✅ ADDED
-
 import CombinedLoginRegister from '../pages/CombinedLoginRegister';
 import Settings from '../pages/Settings';
 import ContactUs from '../pages/ContactUs';
 import HelpSupport from '../pages/HelpSupport';
-// Assuming you have a User Dashboard for regular users if you redirect them there
-// import UserDashboard from '../pages/UserDashboard'; // <--- You might need this if /user/dashboard exists
-
 
 // ✅ Owner Pages
 import OwnerDashboard from '../owner/OwnerDashboard';
@@ -22,7 +17,6 @@ import OwnerMyResort from '../owner/OwnerMyResort';
 import OwnerBookings from '../owner/OwnerBookings';
 import OwnerProfile from '../owner/OwnerProfile';
 import AddResort from '../admin/pages/AddResort';
-
 
 // ✅ Admin Pages
 import AdminDashboard from '../admin/pages/AdminDashboard';
@@ -44,21 +38,11 @@ const AppRoutes = () => (
     <Route path="/" element={<Home />} />
     <Route path="/resorts" element={<ResortList />} />
     <Route path="/resorts/:id" element={<ResortDetail />} />
-
     <Route path="/resorts/:id/reserve" element={<ReservationForm />} /> {/* ✅ NEWLY ADDED ROUTE */}
-
     <Route path="/auth" element={<CombinedLoginRegister />} />
     <Route path="/settings" element={<Settings />} />
     <Route path="/contact" element={<ContactUs />} />
     <Route path="/help" element={<HelpSupport />} />
-
-    {/* Optional: If you have a general user dashboard you want to redirect to for regular users */}
-    {/* <Route path="/user/dashboard" element={
-      <ProtectedRoute role="user">
-        <UserDashboard />
-      </ProtectedRoute>
-    } /> */}
-
 
     {/* ✅ Owner Routes */}
     <Route path="/owner/dashboard" element={
