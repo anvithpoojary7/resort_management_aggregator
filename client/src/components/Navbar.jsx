@@ -151,11 +151,7 @@ const Navbar = () => {
                 <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">1</span> {/* Notification badge */}
               </Link>
             </li>
-            <li>
-              <Link to="/settings" onClick={() => setMenuOpen(false)} className="flex items-center hover:bg-gray-100 p-2 rounded">
-                <FaCog className="mr-3 text-lg" /> Account settings
-              </Link>
-            </li>
+           
                <li>
               <Link to="/settings" onClick={() => setMenuOpen(false)} className="flex items-center hover:bg-gray-100 p-2 rounded">
                 <FaCog className="mr-3 text-lg" /> Account settings
