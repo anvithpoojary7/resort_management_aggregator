@@ -1,133 +1,93 @@
-const express = require('express');
-const Resort = require('../models/resort'); // IMPORTANT: Corrected to 'resorts' (plural) as per previous error
-const fs = require('fs');
+const express  = require("express");
+const fs       = require("fs");
+const multer   = require("multer");
+const Resort   = require("../models/resort");
+
 
 module.exports = (gfs, upload, gridfsBucket) => {
   const router = express.Router();
 
-  router.post('/', upload.array('images', 10), async (req, res) => {
+  /* single‑file upload: field "image" */
+  const uploadImage = upload.single("image");
+
+  const uploadMw = (req,res,next) => {
+    uploadImage(req,res,err=>{
+      if (err instanceof multer.MulterError) {
+        if (err.code==="LIMIT_UNEXPECTED_FILE")
+          return res.status(400).json({ message:`Unexpected file field "${err.field}". Expected "image".` });
+        return res.status(400).json({ message:err.message });
+      }
+      if (err) return res.status(500).json({ message:"Upload error", error:err });
+      next();
+    });
+  };
+
+  /* POST /api/resorts */
+  router.post("/", uploadMw, async (req,res)=>{
+    if (!req.file) return res.status(400).json({ message:"No image file uploaded." });
+
+    const { name, location, price, description, amenities, type, ownerId } = req.body;
+
     try {
-      if (!req.files || req.files.length === 0) {
-        return res.status(400).json({ message: 'No image files uploaded.' });
-      }
+      if (await Resort.findOne({ ownerId }))
+        return res.status(409).json({ message:"You have already submitted a resort." });
 
-      const { name, location, price, description, amenities, type, ownerId } = req.body;
-
-      const existing = await Resort.findOne({ ownerId });
-      if (existing) {
-        return res.status(400).json({ message: 'You have already submitted a resort.' });
-      }
-
-      let parsedAmenities = [];
-      if (amenities) {
-        parsedAmenities = JSON.parse(amenities);
-      }
-
-      const imageFilenames = [];
-
-      let completed = 0;
-      const total = req.files.length;
-      let errorOccurred = false;
-
-      req.files.forEach(file => {
-        const { filename, path: filePath, mimetype } = file;
-        const readStream = fs.createReadStream(filePath);
-        const uploadStream = gridfsBucket.openUploadStream(filename, {
-          contentType: mimetype,
+      /* push file to GridFS */
+      const { filename, path:tmp, mimetype } = req.file;
+      fs.createReadStream(tmp)
+        .pipe(gridfsBucket.openUploadStream(filename,{ contentType:mimetype }))
+        .on("error",()=>{ fs.unlink(tmp,()=>{}); res.status(500).json({ message:"Image upload failed." }); })
+        .on("finish", async ()=>{
+          fs.unlink(tmp,()=>{});
+          const resort = await Resort.create({
+            name, location, price, description,
+            amenities: amenities ? JSON.parse(amenities):[],
+            type, image: filename, ownerId
+          });
+          res.status(201).json({ message:"Resort submitted!", resort });
         });
-
-        readStream.pipe(uploadStream);
-
-        uploadStream.on('finish', async () => {
-          fs.unlink(filePath, () => {});
-          imageFilenames.push(filename);
-          completed++;
-
-          if (completed === total && !errorOccurred) {
-            const newResort = new Resort({
-              name,
-              location,
-              price,
-              images: imageFilenames,
-              description,
-              amenities: parsedAmenities,
-              type,
-              ownerId,
-              status: 'pending',
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            });
-
-            const savedResort = await newResort.save();
-            res.status(201).json({ message: 'Resort submitted successfully!', resort: savedResort });
-          }
-        });
-
-        uploadStream.on('error', (err) => {
-          if (!errorOccurred) {
-            console.error('Upload failed:', err);
-            fs.unlink(filePath, () => {});
-            errorOccurred = true;
-            res.status(500).json({ message: 'Image upload failed.' });
-          }
-        });
-      });
-    } catch (err) {
-      console.error('Resort add error:', err.message);
-      res.status(500).json({ message: 'Server error while adding resort.' });
+    } catch(err){
+      console.error(err); res.status(500).json({ message:"Server error while adding resort." });
+    }
+  });
+  /* --------------------------------------------------
+        C. GET /api/resorts          – list resorts
+     -------------------------------------------------- */
+  router.get("/", async (req, res) => {
+    try {
+      const { status } = req.query;               // optional filter
+      const query      = status ? { status } : {};
+      const resorts    = await Resort.find(query).sort({ createdAt: -1 });
+      res.json(resorts);
+    } catch {
+      res.status(500).json({ message: "Error fetching resorts." });
     }
   });
 
-  // ***** START OF THE ONLY CHANGE FOR THE FEATURE YOU REQUESTED *****
-  router.get('/', async (req, res) => {
+  /* --------------------------------------------------
+        D. GET /api/resorts/owner/:ownerId
+     -------------------------------------------------- */
+  router.get("/owner/:ownerId", async (req, res) => {
+     console.log("🔴 /owner/:ownerId received:", req.params.ownerId);
+    const { ownerId } = req.params;
     try {
-      const { status } = req.query;
-      let query = {}; // Initialize an empty query object
-
-      if (status) {
-        // If 'status' query parameter is provided (e.g., from ModerationPage: ?status=pending)
-        query.status = status;
-      } else {
-        // If 'status' query parameter is NOT provided (e.g., from Home.jsx),
-        // default to fetching ONLY 'approved' resorts.
-        query.status = 'approved';
-      }
-
-      const resorts = await Resort.find(query).sort({ createdAt: -1 });
-      res.status(200).json(resorts);
-    } catch (err) {
-      console.error('Error fetching resorts:', err); // Added console.error for better debugging
-      res.status(500).json({ message: 'Error fetching resorts.' });
-    }
-  });
-  // ***** END OF THE ONLY CHANGE FOR THE FEATURE YOU REQUESTED *****
-
-  router.get('/owner/:ownerId/has-resort', async (req, res) => {
-    try {
-      const { ownerId } = req.params;
-      const count = await Resort.countDocuments({ ownerId });
-      res.status(200).json({ hasResort: count > 0 });
-    } catch (err) {
-      res.status(500).json({ message: 'Error checking resorts.' });
+      const resort = await Resort.findOne({ ownerId });
+      res.json(resort ?? null);
+    } catch {
+      res.status(500).json({ message: "Server error." });
     }
   });
 
-  router.get('/owner/:ownerId', async (req, res) => {
+  /* --------------------------------------------------
+        E. PATCH /api/resorts/:id/status   (admin)
+     -------------------------------------------------- */
+  router.patch("/:id/status", async (req, res) => {
     try {
-      const resorts = await Resort.find({ ownerId: req.params.ownerId }).sort({ createdAt: -1 });
-      res.status(200).json(resorts);
-    } catch (err) {
-      res.status(500).json({ message: 'Error fetching owner resorts.' });
-    }
-  });
+      const { id }     = req.params;
+      const { status } = req.body; // "approved" | "rejected"
 
-  router.patch('/:id/status', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { status } = req.body;
-
-      if (!['approved', 'rejected', 'pending'].includes(status)) { // Added 'pending' as a valid status for updates
-        return res.status(400).json({ message: 'Invalid status.' });
+      if (!["approved", "rejected"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status." });
       }
 
       const updated = await Resort.findByIdAndUpdate(
@@ -137,12 +97,12 @@ module.exports = (gfs, upload, gridfsBucket) => {
       );
 
       if (!updated) {
-        return res.status(404).json({ message: 'Resort not found.' });
+        return res.status(404).json({ message: "Resort not found." });
       }
 
-      res.status(200).json({ message: `Resort ${status}.`, resort: updated });
+      res.json({ message: `Resort ${status}.`, resort: updated });
     } catch (err) {
-      res.status(500).json({ message: 'Error updating status.' });
+      res.status(500).json({ message: "Error updating status." });
     }
   });
 

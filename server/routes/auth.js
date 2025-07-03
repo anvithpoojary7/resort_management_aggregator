@@ -1,12 +1,23 @@
-
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/users');
+const Owner = require('../models/Owner');
+const Admin = require('../models/Admin');
+const requireAuth=require('../middleware/requireAuth');
 
 const router = express.Router();
 
-// Register
+router.get('/me', requireAuth, async (req, res) => {
+  try {
+    const { id, email, role } = req.user;
+    res.json({ user: { id, email, role } });
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching user' });
+  }
+});
+
+
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -35,12 +46,14 @@ router.post('/register', async (req, res) => {
 
     await newUser.save();
 
-    const payload = {
-      id: newUser._id,
-      email: newUser.email,
-      role: newUser.role,
-    };
+    // 🔥 Add to role-specific collection
+    if (role === 'owner') {
+      await Owner.create({ userId: newUser._id });
+    } else if (role === 'admin') {
+      await Admin.create({ userId: newUser._id });
+    }
 
+    const payload = { id: newUser._id, email: newUser.email, role: newUser.role };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
 
     res.cookie('token', token, {
@@ -65,7 +78,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Login
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password, role } = req.body;
@@ -101,7 +114,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Google Login
+
 router.post('/google-login', async (req, res) => {
   try {
     const { name, email, role } = req.body;
@@ -137,6 +150,7 @@ router.post('/google-login', async (req, res) => {
   }
 });
 
+
 router.post('/google-signup', async (req, res) => {
   try {
     const { name, email, role } = req.body;
@@ -155,10 +169,15 @@ router.post('/google-signup', async (req, res) => {
       email,
       role,
       isGoogleUser: true,
-      passwordHash: '', // Google accounts won't have passwords
+      passwordHash: '', 
     });
 
     await newUser.save();
+    if (role === 'owner') {
+      await Owner.create({ userId: newUser._id });
+    } else if (role === 'admin') {
+      await Admin.create({ userId: newUser._id });
+    }
 
     const payload = { id: newUser._id, email: newUser.email, role: newUser.role };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
@@ -176,6 +195,5 @@ router.post('/google-signup', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 
 module.exports = router;

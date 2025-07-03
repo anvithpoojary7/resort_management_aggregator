@@ -8,6 +8,8 @@ const path = require('path');
 const fs = require('fs');
 const Grid = require('gridfs-stream');
 
+const adminapproval=require('./routes/adminApproval');
+
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 
 const app = express();
@@ -16,7 +18,6 @@ let gfs;
 let upload;
 let gridfsBucket;
 
-// Middleware
 app.use(cors({
   origin: 'http://localhost:3000',
   credentials: true,
@@ -53,11 +54,13 @@ conn.once('open', () => {
   upload = multer({ storage });
   console.log('✅ Multer disk upload ready');
 
-  // Routes
+ 
   const authRoutes = require('./routes/auth');
   const resortRoutesModule = require('./routes/resortRoutes');
   app.use('/api/auth', authRoutes);
   app.use('/api/resorts', resortRoutesModule(gfs, upload, gridfsBucket));
+ /* app.use('/api/owner',ownerRoutes);*/
+  app.use('/api/adminapproval',adminapproval);
 
 
   app.get('/api/resorts/image/:filename', (req, res) => {
@@ -81,7 +84,7 @@ conn.once('open', () => {
 
   const PORT = process.env.PORT || 8080;
   app.listen(PORT, () => {
-    console.log(`🚀 Server running at http://localhost:${PORT}`);
+    console.log(`Server running at http://localhost:${PORT}`);
   });
 });
 
