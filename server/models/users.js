@@ -1,22 +1,34 @@
 const mongoose = require('mongoose');
 
-const ownerSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+
+  email: {
+    type: String,
     required: true,
     unique: true,
   },
 
-  phone: {
+  passwordHash: {
     type: String,
+    required: function () {
+      return !this.isGoogleUser;
+    },
   },
 
-  profileImage: {
+  role: {
     type: String,
+    enum: ['owner', 'admin'],
+    required: true,
   },
 
-  
+  isGoogleUser: {
+    type: Boolean,
+    default: false,
+  },
 }, { timestamps: true });
 
-module.exports = mongoose.model('Owner', ownerSchema);
+module.exports = mongoose.model('User', userSchema);
