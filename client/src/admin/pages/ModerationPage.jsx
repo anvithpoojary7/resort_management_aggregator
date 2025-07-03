@@ -1,25 +1,24 @@
 // client/src/pages/ModerationPage.jsx
 import React, { useEffect, useState } from 'react';
 import { FaMapMarkerAlt, FaUser, FaCalendarAlt, FaEye } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for redirection
+import { useNavigate } from 'react-router-dom'; 
 
-// If you do not intend to use a Sidebar on this *specific* page, remove this line:
-// import Sidebar from '../components/Sidebar';
+
 
 const ModerationPage = () => {
   const [resorts, setResorts] = useState([]);
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate(); 
   const API_BASE_URL = 'http://localhost:8080';
 
   useEffect(() => {
     const fetchPendingResorts = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/resorts?status=pending`, {
+        const res = await fetch(`${API_BASE_URL}/api/adminapproval?status=pending`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'include', // Essential for sending/receiving cookies
+          credentials: 'include', 
         });
 
         if (!res.ok) {
@@ -29,7 +28,7 @@ const ModerationPage = () => {
             const errorData = JSON.parse(errorText);
             if (res.status === 401 || res.status === 403) {
                 alert(errorData.message || 'You are not authorized to view this page. Please log in as an admin.');
-                navigate('/login'); // Redirect to login page
+                navigate('/login'); 
             } else {
                 throw new Error(errorData.message || `HTTP error! status: ${res.status}`);
             }
@@ -46,11 +45,11 @@ const ModerationPage = () => {
     };
 
     fetchPendingResorts();
-  }, [navigate]); // Add navigate to dependency array
+  }, [navigate]); 
 
   const handleModerationAction = async (resortId, action) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/resorts/${resortId}/status`, {
+      const res = await fetch(`${API_BASE_URL}/api/adminapproval/${resortId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -113,7 +112,7 @@ const ModerationPage = () => {
         </button>
       </div>
 
-      <div className="grid md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"> {/* Adjusted grid for flexibility */}
+      <div className="grid md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"> 
         {resorts.length === 0 ? (
           <p className="text-gray-600 text-center col-span-full">No pending resorts to moderate.</p>
         ) : (
