@@ -1,7 +1,16 @@
-// AddResort.jsx (Only the fetch URL is changed)
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+const API_BASE_URL = "http://localhost:8080";
 
 const AddResort = () => {
+  const navigate = useNavigate();
+  const currentOwnerId = JSON.parse(localStorage.getItem("user"))?.id;
+  console.log("🟢 currentOwnerId in AddResort.jsx:", currentOwnerId);
+  if (!currentOwnerId) navigate("/login");
+
+  const [loading, setLoading] = useState(true);
+  const [resortStatus, setResortStatus] = useState(null); // none | pending | approved | rejected
   const [resort, setResort] = useState({
     name: "",
     location: "",
@@ -10,153 +19,196 @@ const AddResort = () => {
     amenities: [],
     type: "",
   });
-  const [imageFile, setImageFile] = useState(null);
+  const [imageFile, setImageFile] = useState(null); // Only one file
+
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/resorts/owner/${currentOwnerId}`);
+        const data = await res.json();
+
+        if (!data) setResortStatus("none");
+        else {
+          setResortStatus(data.status);
+          if (["approved", "rejected"].includes(data.status)) {
+            navigate("/owner/dashboard");
+          }
+        }
+      } catch (err) {
+        console.error("Error checking resort status:", err);
+        setResortStatus("none");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkStatus();
+  }, [currentOwnerId, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setResort({ ...resort, [name]: value });
+    setResort((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleAmenityChange = (e) => {
-    const amenitiesArray = e.target.value.split(',').map(item => item.trim()).filter(item => item !== '');
-    setResort({ ...resort, amenities: amenitiesArray });
+    const arr = e.target.value
+      .split(",")
+      .map((a) => a.trim())
+      .filter(Boolean);
+    setResort((prev) => ({ ...prev, amenities: arr }));
   };
 
   const handleImageChange = (e) => {
-    setImageFile(e.target.files[0]);
+    const file = e.target.files[0];
+    if (!file) {
+      setImageFile(null);
+      return;
+    }
+    setImageFile(file);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!imageFile) {
-        alert("Please select an image file for the resort.");
-        return;
+      alert("Please choose one image.");
+      return;
     }
 
-    // This is the crucial part: Get the owner ID.
-    // In a real app, this would come from your authentication context (e.g., JWT).
-    // For now, it's hardcoded, but consider how you'd get it securely.
-    const ownerId = "some_owner_id_from_logged_in_user"; // Make sure this matches what's used in OwnerDashboard
-
     const formData = new FormData();
-    formData.append('name', resort.name);
-    formData.append('location', resort.location);
-    formData.append('price', resort.price);
-    formData.append('description', resort.description);
-    formData.append('amenities', JSON.stringify(resort.amenities));
-    formData.append('type', resort.type);
-    formData.append('ownerId', ownerId); // This sends the ownerId with the resort
-    formData.append('image', imageFile);
+    formData.append("image", imageFile); // Must match backend field name
+
+    Object.entries(resort).forEach(([k, v]) =>
+      formData.append(k, k === "amenities" ? JSON.stringify(v) : v)
+    );
+    formData.append("ownerId", currentOwnerId);
 
     try {
-      // THIS IS THE LINE THAT NEEDS TO BE CHANGED
-      const response = await fetch("http://localhost:8080/api/resorts", { // <--- ADDED 'http://' HERE
+      const res = await fetch(`${API_BASE_URL}/api/resorts`, {
         method: "POST",
         body: formData,
       });
+      const body = await res.json();
 
-      if (response.ok) {
-        alert("Resort submitted successfully for moderation!");
-        setResort({ name: "", location: "", price: "", description: "", amenities: [], type: "" });
-        setImageFile(null);
-        e.target.reset();
-        // Optional: Redirect to dashboard after successful submission
-        // navigate("/owner/dashboard");
+      if (res.ok) {
+        alert("Resort submitted successfully and is pending review!");
+        navigate("/owner/dashboard");
       } else {
-        const errorData = await response.json();
-        alert(`Error adding resort: ${errorData.message || "Something went wrong."}`);
+        alert(body.message || "Something went wrong.");
       }
-    } catch (error) {
-      console.error("Failed to submit resort:", error);
-      alert("Network error: Could not connect to the server.");
+    } catch (err) {
+      console.error("Submission error:", err);
+      alert("Server error while submitting resort.");
     }
   };
 
+  if (loading) {
+    return <div className="text-center mt-10 text-gray-500">Loading…</div>;
+  }
+
+  if (resortStatus === "pending") {
+    return (
+      <div className="p-6 max-w-xl mx-auto bg-white rounded shadow mt-8 text-center">
+        <h2 className="text-xl font-semibold mb-2">Awaiting Approval</h2>
+        <p className="text-gray-600 mb-4">
+          Your resort is under review by the admin.
+        </p>
+        <button
+          onClick={() => navigate("/owner/dashboard")}
+          className="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700"
+        >
+          Go to Dashboard
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 max-w-xl mx-auto bg-white rounded-xl shadow-md mt-8">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Add New Resort Listing</h2>
+    <div className="p-6 max-w-xl mx-auto bg-white rounded shadow mt-8">
+      <h2 className="text-2xl font-bold mb-4">Add New Resort Listing</h2>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
           name="name"
-          placeholder="Resort Name"
           value={resort.name}
           onChange={handleChange}
-          className="w-full border p-2 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Resort Name"
           required
+          className="w-full border p-2 rounded"
         />
+
         <input
           type="text"
           name="location"
-          placeholder="Location (e.g., Goa, India)"
           value={resort.location}
           onChange={handleChange}
-          className="w-full border p-2 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Location"
           required
+          className="w-full border p-2 rounded"
         />
+
         <input
           type="number"
           name="price"
-          placeholder="Price per night (in INR)"
           value={resort.price}
           onChange={handleChange}
-          className="w-full border p-2 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Price per night"
+          min="0"
           required
+          className="w-full border p-2 rounded"
         />
-        <div className="flex items-center space-x-2">
-            <label htmlFor="image-upload" className="block text-sm font-medium text-gray-700">Resort Image:</label>
-            <input
-                id="image-upload"
-                type="file"
-                name="image"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                required
-            />
-            {imageFile && (
-                <span className="text-sm text-gray-600 truncate">{imageFile.name}</span>
-            )}
-        </div>
+
         <textarea
           name="description"
-          placeholder="Provide a detailed description of your resort..."
           value={resort.description}
           onChange={handleChange}
-          className="w-full border p-2 rounded-lg h-28 resize-y focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Resort description…"
           required
-        ></textarea>
+          className="w-full border p-2 rounded h-28"
+        />
+
         <input
           type="text"
           name="amenities"
-          placeholder="Amenities (e.g., Pool, Free WiFi, Parking, Spa - comma separated)"
-          value={resort.amenities.join(', ')}
+          value={resort.amenities.join(", ")}
           onChange={handleAmenityChange}
-          className="w-full border p-2 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Amenities (comma separated)"
+          className="w-full border p-2 rounded"
         />
+
         <select
           name="type"
           value={resort.type}
           onChange={handleChange}
-          className="w-full border p-2 rounded-lg focus:ring-blue-500 focus:border-blue-500"
           required
+          className="w-full border p-2 rounded"
         >
           <option value="">Select Resort Type</option>
-          <option value="Beach">Beach Resort</option>
-          <option value="Mountain">Mountain Lodge</option>
-          <option value="Desert">Desert Oasis</option>
-          <option value="City">City Escape</option>
-          <option value="Island">Island Paradise</option>
-          <option value="Adventure">Adventure Resort</option>
-          <option value="Wellness">Wellness Retreat</option>
-          <option value="Other">Other</option>
+          <option>Beach</option>
+          <option>Mountain</option>
+          <option>Desert</option>
+          <option>City</option>
+          <option>Island</option>
+          <option>Adventure</option>
+          <option>Wellness</option>
+          <option>Other</option>
         </select>
+
+        <input
+          type="file"
+          name="image" // ← match backend
+          accept="image/*"
+          onChange={handleImageChange}
+          required
+          className="w-full border p-2 rounded"
+        />
+
         <button
           type="submit"
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-300 w-full"
+          className="bg-blue-600 text-white w-full py-3 rounded hover:bg-blue-700"
         >
-          Submit Resort for Review
+          Submit Resort
         </button>
       </form>
     </div>
