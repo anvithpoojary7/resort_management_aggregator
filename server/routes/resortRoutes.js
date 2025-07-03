@@ -1,194 +1,150 @@
-// server/routes/authRoutes.js
 const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const User = require('../models/users'); // Assuming your User model is named 'users.js'
+const Resort = require('../models/resort'); // IMPORTANT: Corrected to 'resorts' (plural) as per previous error
+const fs = require('fs');
 
-const router = express.Router();
+module.exports = (gfs, upload, gridfsBucket) => {
+  const router = express.Router();
 
-// Register
-router.post('/register', async (req, res) => {
-  try {
-    const { name, email, password, role } = req.body;
+  router.post('/', upload.array('images', 10), async (req, res) => {
+    try {
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ message: 'No image files uploaded.' });
+      }
 
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({ message: 'All fields are required.' });
+      const { name, location, price, description, amenities, type, ownerId } = req.body;
+
+      const existing = await Resort.findOne({ ownerId });
+      if (existing) {
+        return res.status(400).json({ message: 'You have already submitted a resort.' });
+      }
+
+      let parsedAmenities = [];
+      if (amenities) {
+        parsedAmenities = JSON.parse(amenities);
+      }
+
+      const imageFilenames = [];
+
+      let completed = 0;
+      const total = req.files.length;
+      let errorOccurred = false;
+
+      req.files.forEach(file => {
+        const { filename, path: filePath, mimetype } = file;
+        const readStream = fs.createReadStream(filePath);
+        const uploadStream = gridfsBucket.openUploadStream(filename, {
+          contentType: mimetype,
+        });
+
+        readStream.pipe(uploadStream);
+
+        uploadStream.on('finish', async () => {
+          fs.unlink(filePath, () => {});
+          imageFilenames.push(filename);
+          completed++;
+
+          if (completed === total && !errorOccurred) {
+            const newResort = new Resort({
+              name,
+              location,
+              price,
+              images: imageFilenames,
+              description,
+              amenities: parsedAmenities,
+              type,
+              ownerId,
+              status: 'pending',
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
+
+            const savedResort = await newResort.save();
+            res.status(201).json({ message: 'Resort submitted successfully!', resort: savedResort });
+          }
+        });
+
+        uploadStream.on('error', (err) => {
+          if (!errorOccurred) {
+            console.error('Upload failed:', err);
+            fs.unlink(filePath, () => {});
+            errorOccurred = true;
+            res.status(500).json({ message: 'Image upload failed.' });
+          }
+        });
+      });
+    } catch (err) {
+      console.error('Resort add error:', err.message);
+      res.status(500).json({ message: 'Server error while adding resort.' });
     }
+  });
 
-    if (password.length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters.' });
+  // ***** START OF THE ONLY CHANGE FOR THE FEATURE YOU REQUESTED *****
+  router.get('/', async (req, res) => {
+    try {
+      const { status } = req.query;
+      let query = {}; // Initialize an empty query object
+
+      if (status) {
+        // If 'status' query parameter is provided (e.g., from ModerationPage: ?status=pending)
+        query.status = status;
+      } else {
+        // If 'status' query parameter is NOT provided (e.g., from Home.jsx),
+        // default to fetching ONLY 'approved' resorts.
+        query.status = 'approved';
+      }
+
+      const resorts = await Resort.find(query).sort({ createdAt: -1 });
+      res.status(200).json(resorts);
+    } catch (err) {
+      console.error('Error fetching resorts:', err); // Added console.error for better debugging
+      res.status(500).json({ message: 'Error fetching resorts.' });
     }
+  });
+  // ***** END OF THE ONLY CHANGE FOR THE FEATURE YOU REQUESTED *****
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+  router.get('/owner/:ownerId/has-resort', async (req, res) => {
+    try {
+      const { ownerId } = req.params;
+      const count = await Resort.countDocuments({ ownerId });
+      res.status(200).json({ hasResort: count > 0 });
+    } catch (err) {
+      res.status(500).json({ message: 'Error checking resorts.' });
     }
+  });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = new User({
-      name,
-      email,
-      role,
-      passwordHash: hashedPassword, // Store as passwordHash
-    });
-
-    await newUser.save();
-
-    const payload = {
-      id: newUser._id,
-      email: newUser.email,
-      role: newUser.role,
-    };
-
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 3 * 24 * 60 * 60 * 1000,
-    });
-
-    res.status(201).json({
-      message: 'User registered successfully',
-      user: {
-        id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-      },
-    });
-  } catch (err) {
-    console.error('Registration Error:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Login
-router.post('/login', async (req, res) => {
-  try {
-    const { email, password, role } = req.body;
-
-    if (!email || !password || !role) {
-      return res.status(400).json({ message: 'Email, password, and role are required.' });
+  router.get('/owner/:ownerId', async (req, res) => {
+    try {
+      const resorts = await Resort.find({ ownerId: req.params.ownerId }).sort({ createdAt: -1 });
+      res.status(200).json(resorts);
+    } catch (err) {
+      res.status(500).json({ message: 'Error fetching owner resorts.' });
     }
+  });
 
-    const user = await User.findOne({ email });
+  router.patch('/:id/status', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
 
-    if (!user) { // Check if user exists first
-        return res.status(400).json({ message: 'Invalid credentials: User not found' });
+      if (!['approved', 'rejected', 'pending'].includes(status)) { // Added 'pending' as a valid status for updates
+        return res.status(400).json({ message: 'Invalid status.' });
+      }
+
+      const updated = await Resort.findByIdAndUpdate(
+        id,
+        { status, updatedAt: new Date() },
+        { new: true }
+      );
+
+      if (!updated) {
+        return res.status(404).json({ message: 'Resort not found.' });
+      }
+
+      res.status(200).json({ message: `Resort ${status}.`, resort: updated });
+    } catch (err) {
+      res.status(500).json({ message: 'Error updating status.' });
     }
+  });
 
-    // Use the matchPassword method from the User model if implemented
-    // If not, use bcrypt.compare directly
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-
-    if (!isPasswordValid) { // Then check password
-      return res.status(400).json({ message: 'Invalid credentials: Incorrect password' });
-    }
-
-    if (user.role !== role) {
-      return res.status(403).json({ message: 'Access denied: incorrect role for this login type' });
-    }
-
-    const payload = { id: user._id, email: user.email, role: user.role };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 3 * 24 * 60 * 60 * 1000,
-    });
-
-    res.json({ message: 'Login successful', user: payload });
-  } catch (err) {
-    console.error('Login Error:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Google Login (if already registered)
-router.post('/google-login', async (req, res) => {
-  try {
-    const { name, email, role } = req.body;
-
-    if (!name || !email || !role) {
-      return res.status(400).json({ message: 'Missing Google user info.' });
-    }
-
-    let user = await User.findOne({ email });
-
-    if (!user) {
-      // If user is not found, they should go to google-signup first
-      return res.status(404).json({ message: 'No user found. Please sign up first using Google signup.' });
-    }
-
-    if (user.role !== role) {
-      return res.status(403).json({ message: 'Access denied: incorrect role' });
-    }
-    // Also check if it's indeed a Google user if you want strict separation
-    if (!user.isGoogleUser) {
-        return res.status(403).json({ message: 'This email is registered with a password. Please use regular login.' });
-    }
-
-    const payload = { id: user._id, email: user.email, role: user.role };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 3 * 24 * 60 * 60 * 1000,
-    });
-
-    res.json({ message: 'Google login successful', user: payload });
-  } catch (err) {
-    console.error('Google Login Error:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Google Signup (for new users via Google)
-router.post('/google-signup', async (req, res) => {
-  try {
-    const { name, email, role } = req.body;
-
-    if (!name || !email || !role) {
-      return res.status(400).json({ message: 'Missing Google user info.' });
-    }
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists. Try login instead.' });
-    }
-
-    const newUser = new User({
-      name,
-      email,
-      role,
-      isGoogleUser: true,
-      passwordHash: '', // Google accounts won't have passwords, set as empty string
-    });
-
-    await newUser.save();
-
-    const payload = { id: newUser._id, email: newUser.email, role: newUser.role };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 3 * 24 * 60 * 60 * 1000,
-    });
-
-    res.status(201).json({ message: 'Google signup successful', user: payload });
-  } catch (err) {
-    console.error('Google Signup Error:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-module.exports = router;
+  return router;
+};
