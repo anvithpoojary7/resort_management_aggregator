@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const ownerSchema = new mongoose.Schema({
+const adminSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -12,11 +12,11 @@ const ownerSchema = new mongoose.Schema({
     type: String,
   },
 
-  profileImage: {
+  department: {
     type: String,
   },
 
-  
+  // Add any other admin-specific fields here
 }, { timestamps: true });
 
-module.exports = mongoose.model('Owner', ownerSchema);
+module.exports = mongoose.model('Admin', adminSchema);
