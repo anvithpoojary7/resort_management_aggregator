@@ -2,10 +2,35 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Simulated Resort Data (replace with MongoDB API later)
+const allResorts = [
+  {
+    id: '1',
+    name: 'Serenity Bay Resort',
+    image: '/c4.jpg',
+  },
+  {
+    id: '2',
+    name: 'Mountain View Inn',
+    image: '/c1.jpg',
+  },
+  {
+    id: '3',
+    name: 'Lakeside Paradise',
+    image: '/c2.jpg',
+  },
+  {
+    id: '4',
+    name: 'Royal Garden Stay',
+    image: '/c3.jpg',
+  },
+];
+
 const ReservationForm = () => {
   const { id } = useParams();
-
-  const resortName = 'Azure Paradise Resort';
+  const selectedResort = allResorts.find((r) => r.id === id);
+  const resortName = selectedResort ? selectedResort.name : 'Unknown Resort';
+  const resortImage = selectedResort ? selectedResort.image : '/default.jpg';
 
   const [formData, setFormData] = useState({
     name: '',
@@ -17,7 +42,6 @@ const ReservationForm = () => {
     roomType: '',
   });
 
-  const [selectedRoomDetails, setSelectedRoomDetails] = useState(null);
   const [showSummary, setShowSummary] = useState(false);
   const [showRoomPopup, setShowRoomPopup] = useState(null);
 
@@ -71,7 +95,8 @@ const ReservationForm = () => {
 
   return (
     <div className="bg-white text-gray-800 py-8 px-4 min-h-screen">
-      <h1 className="text-3xl font-bold text-center mb-6">{resortName}</h1>
+      <h1 className="text-3xl font-bold text-center mb-2">{resortName}</h1>
+      <p className="text-center text-gray-500 mb-6">Book your stay at our beautiful resort</p>
 
       <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-4">
         <div>
@@ -131,6 +156,7 @@ const ReservationForm = () => {
         <button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded transition">Confirm Reservation</button>
       </form>
 
+      {/* Popups */}
       <AnimatePresence>
         {showRoomPopup && (
           <motion.div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -155,7 +181,7 @@ const ReservationForm = () => {
               <button onClick={() => setShowSummary(false)} className="absolute top-3 right-4 text-gray-400 text-2xl hover:text-red-500">&times;</button>
               <h2 className="text-2xl font-bold text-center mb-4">{resortName}</h2>
               <div className="flex items-center gap-4 mb-4">
-                <img src="/img1.jpg" alt="Selected Room" className="w-20 h-20 rounded-lg object-cover" />
+                <img src={resortImage} alt="Selected Resort" className="w-20 h-20 rounded-lg object-cover" />
                 <div>
                   <h3 className="text-xl font-bold">{formData.roomType}</h3>
                   <p className="text-sm text-gray-600">Free cancellation available</p>
@@ -183,6 +209,5 @@ const ReservationForm = () => {
     </div>
   );
 };
-
 
 export default ReservationForm;
