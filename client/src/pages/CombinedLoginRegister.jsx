@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FaUser } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { signInWithPopup } from 'firebase/auth';
-import { auth, provider } from '../firebase';   // adjust path if needed
+import { auth, provider } from '../firebase';
 
 const CombinedLoginRegister = () => {
-  /* ────────────────────────── state ────────────────────────── */
   const [isLogin, setIsLogin] = useState(false);
   const [role, setRole] = useState('user');
+  const [isRoleLocked, setIsRoleLocked] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -19,8 +19,19 @@ const CombinedLoginRegister = () => {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
 
-  /* ─────────────────────── helpers/redirect ────────────────── */
+  // ✅ Detect ?role= from URL and lock role selector
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const roleFromURL = queryParams.get('role');
+
+    if (roleFromURL && ['user', 'admin', 'owner'].includes(roleFromURL)) {
+      setRole(roleFromURL);
+      setIsRoleLocked(true);
+    }
+  }, [location.search]);
+
   const redirectToDashboard = async (role, userId) => {
     localStorage.setItem('isLoggedIn', 'true');
 
@@ -31,20 +42,15 @@ const CombinedLoginRegister = () => {
 
     if (role === 'owner') {
       try {
-        const res = await fetch(
-          `http://localhost:8080/api/resorts/owner/${userId}`
-        );
+        const res = await fetch(`http://localhost:8080/api/resorts/owner/${userId}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
         const data = await res.json();
 
         if (data && data._id) {
-          // resort exists
           navigate('/owner/dashboard', {
             state: { resortStatus: data.status, resortExists: true },
           });
         } else {
-          // no resort yet
           navigate('/owner/addresort');
         }
       } catch (err) {
@@ -55,15 +61,12 @@ const CombinedLoginRegister = () => {
       return;
     }
 
-    // default (standard user)
     navigate('/');
   };
 
-  /* ───────────────────────── submit form ───────────────────── */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // basic validation
     if (!email || !password) {
       alert('Please fill all required fields.');
       return;
@@ -101,7 +104,7 @@ const CombinedLoginRegister = () => {
         body: JSON.stringify(payload),
       });
 
-      const text = await response.text();          // safely attempt JSON parse
+      const text = await response.text();
       const data = text ? JSON.parse(text) : {};
 
       if (response.ok) {
@@ -111,7 +114,6 @@ const CombinedLoginRegister = () => {
         } else {
           alert('Registration successful! Please login.');
           setIsLogin(true);
-          // clear form
           setFirstName('');
           setLastName('');
           setEmail('');
@@ -126,7 +128,6 @@ const CombinedLoginRegister = () => {
     }
   };
 
-  /* ────────────────────── Google one‑tap auth ──────────────── */
   const handleGoogleAuth = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
@@ -170,14 +171,12 @@ const CombinedLoginRegister = () => {
     }
   };
 
-  /* ─────────────────────────── render ──────────────────────── */
   const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
 
   return (
     <div className="min-h-screen bg-[#f6f9ff] flex items-center justify-center px-4">
       <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-md relative">
 
-        {/* header icon */}
         <div className="flex justify-center mb-4">
           <div className="bg-blue-100 p-4 rounded-full">
             {isLogin ? (
@@ -188,7 +187,6 @@ const CombinedLoginRegister = () => {
           </div>
         </div>
 
-        {/* titles */}
         <h2 className="text-2xl font-bold text-center mb-1">
           {isLogin ? 'Welcome Back' : 'Create Account'}
         </h2>
@@ -200,21 +198,26 @@ const CombinedLoginRegister = () => {
           <span className="text-blue-700 font-medium">{role}</span>
         </p>
 
-        {/* role selector */}
+        {/* Role selector (locked if from URL) */}
         <div className="mb-4">
           <label className="text-sm text-gray-600">Select Role</label>
           <select
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="w-full mt-1 px-3 py-2 border rounded text-sm focus:outline-none"
+            className="w-full mt-1 px-3 py-2 border rounded text-sm focus:outline-none bg-white disabled:bg-gray-100"
+            disabled={isRoleLocked}
           >
             <option value="user">User – Standard user</option>
             <option value="admin">Admin – Manage data</option>
             <option value="owner">Owner – List resort</option>
           </select>
+          {isRoleLocked && (
+            <p className="text-xs text-gray-500 mt-1">
+              Role selected as <strong>{role}</strong> via "Become a Host"
+            </p>
+          )}
         </div>
 
-        {/* form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <>
@@ -296,14 +299,12 @@ const CombinedLoginRegister = () => {
           </button>
         </form>
 
-        {/* separator */}
         <div className="flex items-center my-4">
           <hr className="flex-grow border-t border-gray-300" />
           <span className="mx-2 text-gray-400 text-sm">or continue with</span>
           <hr className="flex-grow border-t border-gray-300" />
         </div>
 
-        {/* Google login */}
         <button
           onClick={handleGoogleAuth}
           className="w-full flex items-center justify-center border py-2 rounded hover:bg-gray-100 transition text-sm"
@@ -312,7 +313,6 @@ const CombinedLoginRegister = () => {
           Continue with Google
         </button>
 
-        {/* switch login/register */}
         <p className="mt-4 text-center text-sm text-gray-600">
           {isLogin ? 'New here?' : 'Already have an account?'}{' '}
           <button
@@ -328,3 +328,4 @@ const CombinedLoginRegister = () => {
 };
 
 export default CombinedLoginRegister;
+
