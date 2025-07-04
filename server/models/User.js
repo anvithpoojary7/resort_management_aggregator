@@ -1,6 +1,6 @@
-// server/models/User.js
+
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs'); // Import bcryptjs for password hashing
+const bcrypt = require('bcryptjs'); // Import bcryptjs for p
 
 const UserSchema = new mongoose.Schema({
   name: { // Assuming 'name' from your authRoutes.js

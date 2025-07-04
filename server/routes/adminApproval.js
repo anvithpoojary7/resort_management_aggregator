@@ -1,24 +1,24 @@
 const express = require("express");
 const router=express.Router();
+const Resort=require('../models/resort');
 
  router.get('/', async (req, res) => {
     try {
       const { status } = req.query;
-      let query = {}; // Initialize an empty query object
+      let query = {}; 
 
       if (status) {
-        // If 'status' query parameter is provided (e.g., from ModerationPage: ?status=pending)
+        
         query.status = status;
       } else {
-        // If 'status' query parameter is NOT provided (e.g., from Home.jsx),
-        // default to fetching ONLY 'approved' resorts.
+       
         query.status = 'approved';
       }
-
+  
       const resorts = await Resort.find(query).sort({ createdAt: -1 });
       res.status(200).json(resorts);
     } catch (err) {
-      console.error('Error fetching resorts:', err); // Added console.error for better debugging
+      console.error('Error fetching resorts:', err); 
       res.status(500).json({ message: 'Error fetching resorts.' });
     }
   });
@@ -29,7 +29,7 @@ const router=express.Router();
       const { id } = req.params;
       const { status } = req.body;
 
-      if (!['approved', 'rejected', 'pending'].includes(status)) { // Added 'pending' as a valid status for updates
+      if (!['approved', 'rejected', 'pending'].includes(status)) { 
         return res.status(400).json({ message: 'Invalid status.' });
       }
 
@@ -48,7 +48,7 @@ const router=express.Router();
       res.status(500).json({ message: 'Error updating status.' });
     }
   });
-
+  
 
 
 

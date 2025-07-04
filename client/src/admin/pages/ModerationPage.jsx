@@ -1,4 +1,3 @@
-// client/src/pages/ModerationPage.jsx
 import React, { useEffect, useState } from 'react';
 import { FaMapMarkerAlt, FaUser, FaCalendarAlt, FaEye } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom'; 
