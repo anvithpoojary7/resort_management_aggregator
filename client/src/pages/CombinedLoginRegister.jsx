@@ -1,10 +1,11 @@
+// client/src/CombinedLoginRegister.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUser } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { signInWithPopup } from 'firebase/auth';
-import { auth, provider } from '../firebase';   // adjust path if needed
+import { auth, provider } from '../firebase'; // adjust path if needed
 
 const CombinedLoginRegister = () => {
   /* ────────────────────────── state ────────────────────────── */
@@ -31,9 +32,8 @@ const CombinedLoginRegister = () => {
 
     if (role === 'owner') {
       try {
-        const res = await fetch(
-          `http://localhost:8080/api/resorts/owner/${userId}`
-        );
+        // CHANGE THIS LINE: Use relative path for owner resort check
+        const res = await fetch(`/api/resorts/owner/${userId}`); // <--- CHANGED HERE
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
@@ -85,9 +85,8 @@ const CombinedLoginRegister = () => {
     }
 
     const name = `${firstName} ${lastName}`;
-    const endpoint = isLogin
-      ? 'http://localhost:8080/api/auth/login'
-      : 'http://localhost:8080/api/auth/register';
+    // CHANGE THIS LINE: Use relative path for auth endpoint
+    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register'; // <--- CHANGED HERE
 
     const payload = isLogin
       ? { email, password, role }
@@ -101,7 +100,7 @@ const CombinedLoginRegister = () => {
         body: JSON.stringify(payload),
       });
 
-      const text = await response.text();          // safely attempt JSON parse
+      const text = await response.text(); // safely attempt JSON parse
       const data = text ? JSON.parse(text) : {};
 
       if (response.ok) {
@@ -132,9 +131,10 @@ const CombinedLoginRegister = () => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
+      // CHANGE THIS LINE: Use relative path for Google auth endpoint
       const endpoint = isLogin
-        ? 'http://localhost:8080/api/auth/google-login'
-        : 'http://localhost:8080/api/auth/google-signup';
+        ? '/api/auth/google-login' // <--- CHANGED HERE
+        : '/api/auth/google-signup'; // <--- CHANGED HERE
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -176,7 +176,6 @@ const CombinedLoginRegister = () => {
   return (
     <div className="min-h-screen bg-[#f6f9ff] flex items-center justify-center px-4">
       <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-md relative">
-
         {/* header icon */}
         <div className="flex justify-center mb-4">
           <div className="bg-blue-100 p-4 rounded-full">
@@ -328,3 +327,4 @@ const CombinedLoginRegister = () => {
 };
 
 export default CombinedLoginRegister;
+
