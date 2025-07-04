@@ -4,26 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 // Simulated Resort Data (replace with MongoDB API later)
 const allResorts = [
-  {
-    id: '1',
-    name: 'Serenity Bay Resort',
-    image: '/c4.jpg',
-  },
-  {
-    id: '2',
-    name: 'Mountain View Inn',
-    image: '/c1.jpg',
-  },
-  {
-    id: '3',
-    name: 'Lakeside Paradise',
-    image: '/c2.jpg',
-  },
-  {
-    id: '4',
-    name: 'Royal Garden Stay',
-    image: '/c3.jpg',
-  },
+  { id: '1', name: 'Serenity Bay Resort', image: '/c4.jpg' },
+  { id: '2', name: 'Mountain View Inn', image: '/c1.jpg' },
+  { id: '3', name: 'Lakeside Paradise', image: '/c2.jpg' },
+  { id: '4', name: 'Royal Garden Stay', image: '/c3.jpg' },
 ];
 
 const ReservationForm = () => {
@@ -64,6 +48,15 @@ const ReservationForm = () => {
 
   const handlePayment = () => {
     alert("Redirecting to Razorpay...");
+  };
+
+  const calculateNights = () => {
+    if (!formData.checkIn || !formData.checkOut) return 0;
+    const checkInDate = new Date(formData.checkIn);
+    const checkOutDate = new Date(formData.checkOut);
+    const diffTime = checkOutDate - checkInDate;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
   };
 
   const rooms = [
@@ -192,11 +185,19 @@ const ReservationForm = () => {
                 <p><strong>Guests:</strong> {formData.guestsAdult} adults, {formData.guestsChild} children</p>
                 <p><strong>Name:</strong> {formData.name}</p>
                 <p><strong>Email:</strong> {formData.email}</p>
-                <p><strong>Room:</strong> ₹{rooms.find(r => r.name === formData.roomType)?.price ?? '--'}</p>
+                <p><strong>Price per night:</strong> ₹{rooms.find(r => r.name === formData.roomType)?.price ?? '--'}</p>
+                <p><strong>Nights:</strong> {calculateNights()}</p>
               </div>
               <div className="mt-4">
                 <input type="text" placeholder="Enter a coupon" className="w-full px-4 py-2 border rounded mb-2" />
-                <p className="font-semibold">Total: ₹{rooms.find(r => r.name === formData.roomType)?.price ?? '--'}</p>
+                <p className="font-semibold">
+                  Total: ₹
+                  {(() => {
+                    const nights = calculateNights();
+                    const pricePerNight = rooms.find(r => r.name === formData.roomType)?.price ?? 0;
+                    return nights > 0 ? nights * pricePerNight : '--';
+                  })()}
+                </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 justify-between mt-6">
                 <button onClick={() => setShowSummary(false)} className="w-full sm:w-1/2 px-4 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium transition">Edit Details</button>
