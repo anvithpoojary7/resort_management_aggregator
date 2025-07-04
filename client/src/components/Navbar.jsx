@@ -188,19 +188,6 @@ const Navbar = () => {
                 {/* Replace with your actual house icon image path */}
                 <img src="/images/house-icon.png" alt="House icon" className="w-12 h-12 ml-4" />
               </Link>
-            </li>
-            <li>
-              <Link to="/refer-a-host" onClick={() => setMenuOpen(false)} className="block hover:bg-gray-100 p-2 rounded">
-                Refer a host
-              </Link>
-            </li>
-            <li>
-              <Link to="/find-a-co-host" onClick={() => setMenuOpen(false)} className="block hover:bg-gray-100 p-2 rounded">
-                Find a co-host
-              </Link>
-            </li>
-
-           
           </ul>
         ) : (
           // Content when NOT LOGGED IN (as per image_1512f6.png - modified with "About" link)
