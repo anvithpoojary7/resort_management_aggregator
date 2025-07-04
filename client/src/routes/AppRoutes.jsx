@@ -5,11 +5,12 @@ import { Routes, Route } from 'react-router-dom';
 import Home from '../pages/Home';
 import ResortList from '../pages/ResortList';
 import ResortDetail from '../pages/ResortDetail';
-import ReservationForm from '../pages/ReservationForm'; // ✅ ADDED
+import ReservationForm from '../pages/ReservationForm';
 import CombinedLoginRegister from '../pages/CombinedLoginRegister';
 import Settings from '../pages/Settings';
 import ContactUs from '../pages/ContactUs';
 import HelpSupport from '../pages/HelpSupport';
+import DealDetails from '../components/DealDetails'; // ✅ NEWLY ADDED
 
 // ✅ Owner Pages
 import OwnerDashboard from '../owner/OwnerDashboard';
@@ -23,13 +24,10 @@ import AdminDashboard from '../admin/pages/AdminDashboard';
 import ModerationPage from '../admin/pages/ModerationPage';
 import ViewUsers from '../admin/pages/ViewUsers';
 import AllBookings from '../admin/pages/AllBookings';
-
 import RevenueAnalytics from '../admin/pages/RevenueAnalytics';
 
 // ✅ Route Protection Component
 import ProtectedRoute from './ProtectedRoute';
-
-
 
 const AppRoutes = () => (
   <Routes>
@@ -38,11 +36,12 @@ const AppRoutes = () => (
     <Route path="/" element={<Home />} />
     <Route path="/resorts" element={<ResortList />} />
     <Route path="/resorts/:id" element={<ResortDetail />} />
-    <Route path="/resorts/:id/reserve" element={<ReservationForm />} /> {/* ✅ NEWLY ADDED ROUTE */}
+    <Route path="/resorts/:id/reserve" element={<ReservationForm />} />
     <Route path="/auth" element={<CombinedLoginRegister />} />
     <Route path="/settings" element={<Settings />} />
     <Route path="/contact" element={<ContactUs />} />
     <Route path="/help" element={<HelpSupport />} />
+    <Route path="/deal/:id" element={<DealDetails />} /> {/* ✅ ADDED for Top Deals Detail Page */}
 
     {/* ✅ Owner Routes */}
     <Route path="/owner/dashboard" element={
@@ -65,7 +64,7 @@ const AppRoutes = () => (
         <OwnerProfile />
       </ProtectedRoute>
     } />
-     <Route path="/owner/addresort" element={
+    <Route path="/owner/addresort" element={
       <ProtectedRoute role="owner">
         <AddResort />
       </ProtectedRoute>
@@ -92,14 +91,13 @@ const AppRoutes = () => (
         <AllBookings />
       </ProtectedRoute>
     } />
-   
     <Route path="/admin/analytics" element={
       <ProtectedRoute role="admin">
         <RevenueAnalytics />
       </ProtectedRoute>
     } />
 
-    {/* ⚠️ Optional: Fallback Route for 404 */}
+    {/* ⚠️ Optional: Fallback 404 Route */}
     {/* <Route path="*" element={<NotFound />} /> */}
 
   </Routes>
