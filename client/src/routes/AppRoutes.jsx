@@ -11,6 +11,7 @@ import Settings from '../pages/Settings';
 import ContactUs from '../pages/ContactUs';
 import HelpSupport from '../pages/HelpSupport';
 import DealDetails from '../components/DealDetails'; // ✅ NEWLY ADDED
+import AmenityResortsList from '../pages/AmenityResortsList'; // ✅ NEWLY ADDED
 
 // ✅ Owner Pages
 import OwnerDashboard from '../owner/OwnerDashboard';
@@ -42,6 +43,7 @@ const AppRoutes = () => (
     <Route path="/contact" element={<ContactUs />} />
     <Route path="/help" element={<HelpSupport />} />
     <Route path="/deal/:id" element={<DealDetails />} /> {/* ✅ ADDED for Top Deals Detail Page */}
+    <Route path="/amenity/:amenityName" element={<AmenityResortsList />} /> {/* ✅ NEWLY ADDED for Amenity Filter Page */}
 
     {/* ✅ Owner Routes */}
     <Route path="/owner/dashboard" element={
