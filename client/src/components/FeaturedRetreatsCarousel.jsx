@@ -1,4 +1,4 @@
-// client/src/components/FeaturedRetreatsCarousel.jsx
+
 import React, { useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper/modules';
@@ -18,17 +18,17 @@ const FeaturedRetreatsCarousel = () => {
       try {
         // This fetch call correctly leverages the backend's default 'approved' status filter.
         // No need for 'credentials: include' if this is a public endpoint not relying on cookies.
-        const res = await fetch(`${API_BASE_URL}/api/resorts`);
+        const res = await fetch(`${API_BASE_URL}/api/adminapproval?status=approved`);
         if (!res.ok) {
           const errorText = await res.text();
           console.error('Raw error response for fetching featured resorts:', errorText);
           throw new Error(`HTTP error! status: ${res.status}, response: ${errorText.substring(0, 100)}...`);
         }
         const data = await res.json();
-        setFeaturedResorts(data.slice(0, 6)); // Display first 6 approved resorts
+        setFeaturedResorts(data.slice(0, 6)); 
       } catch (err) {
         console.error('Error fetching featured resorts:', err);
-        // Optionally, set an error state to display a message to the user
+        
       }
     };
 
@@ -41,7 +41,7 @@ const FeaturedRetreatsCarousel = () => {
     );
   };
 
-  // Helper function to render stars (optional, could be a separate component)
+
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 0; i < 5; i++) {
