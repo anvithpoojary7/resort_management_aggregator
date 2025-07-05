@@ -8,7 +8,7 @@ import { signInWithPopup } from 'firebase/auth';
 import { auth, provider } from '../firebase'; // adjust path if needed
 
 const CombinedLoginRegister = () => {
-  /* ────────────────────────── state ────────────────────────── */
+
   const [isLogin, setIsLogin] = useState(false);
   const [role, setRole] = useState('user');
   const [firstName, setFirstName] = useState('');
@@ -21,19 +21,15 @@ const CombinedLoginRegister = () => {
 
   const navigate = useNavigate();
 
-  /* ─────────────────────── helpers/redirect ────────────────── */
   const redirectToDashboard = async (role, userId) => {
     localStorage.setItem('isLoggedIn', 'true');
 
-    if (role === 'admin') {
-      navigate('/admin/dashboard');
-      return;
-    }
+ 
 
     if (role === 'owner') {
       try {
         // CHANGE THIS LINE: Use relative path for owner resort check
-        const res = await fetch(`/api/resorts/owner/${userId}`); // <--- CHANGED HERE
+        const res = await fetch(`/api/resorts/owner/${userId}`); 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
@@ -170,7 +166,7 @@ const CombinedLoginRegister = () => {
     }
   };
 
-  /* ─────────────────────────── render ──────────────────────── */
+
   const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
 
   return (

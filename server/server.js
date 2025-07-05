@@ -8,6 +8,8 @@ const path = require('path');
 const fs = require('fs');
 const Grid = require('gridfs-stream');
 
+const resortsearch=require('./routes/resortSearch');
+const adminlogin=require('./routes/adminAuth');
 const adminapproval=require('./routes/adminApproval');
 
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
@@ -61,6 +63,8 @@ conn.once('open', () => {
   app.use('/api/resorts', resortRoutesModule(gfs, upload, gridfsBucket));
  /* app.use('/api/owner',ownerRoutes);*/
   app.use('/api/adminapproval',adminapproval);
+ app.use('/api/resortsearch', resortsearch);
+ app.use('/api/admin/login',adminlogin);
 
 
   app.get('/api/resorts/image/:filename', (req, res) => {
