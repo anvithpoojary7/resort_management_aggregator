@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Simulated Resort Data (replace with MongoDB API later)
+
 const allResorts = [
   { id: '1', name: 'Serenity Bay Resort', image: '/c4.jpg' },
   { id: '2', name: 'Mountain View Inn', image: '/c1.jpg' },
