@@ -11,6 +11,8 @@ const Grid = require('gridfs-stream');
 const resortsearch=require('./routes/resortSearch');
 const adminlogin=require('./routes/adminAuth');
 const adminapproval=require('./routes/adminApproval');
+const wishlistRoutes= require('./routes/wishlistRoutes');
+
 
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 
@@ -27,6 +29,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
 
 
 connectdb();
@@ -65,6 +68,7 @@ conn.once('open', () => {
   app.use('/api/adminapproval',adminapproval);
  app.use('/api/resortsearch', resortsearch);
  app.use('/api/admin/login',adminlogin);
+ app.use('/api/wishlist',wishlistRoutes);
 
 
   app.get('/api/resorts/image/:filename', (req, res) => {
