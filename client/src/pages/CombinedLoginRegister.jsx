@@ -204,7 +204,7 @@ const CombinedLoginRegister = () => {
             className="w-full mt-1 px-3 py-2 border rounded text-sm focus:outline-none"
           >
             <option value="user">User – Standard user</option>
-            <option value="admin">Admin – Manage data</option>
+          
             <option value="owner">Owner – List resort</option>
           </select>
         </div>

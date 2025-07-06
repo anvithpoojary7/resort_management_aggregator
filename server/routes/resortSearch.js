@@ -22,7 +22,7 @@ router.get('/search', async (req, res) => {
     if (petFriendly === '1')
       q.amenities = { $in: ['Pet‑Friendly'] }; 
 
-    /* exclude resorts already booked in that range */
+   
     if (checkIn && checkOut) {
       const unavailable = await Reservation
         .find({

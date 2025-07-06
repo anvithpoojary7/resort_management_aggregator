@@ -16,8 +16,7 @@ const FeaturedRetreatsCarousel = () => {
   useEffect(() => {
     const fetchApprovedResorts = async () => {
       try {
-        // This fetch call correctly leverages the backend's default 'approved' status filter.
-        // No need for 'credentials: include' if this is a public endpoint not relying on cookies.
+      
         const res = await fetch(`${API_BASE_URL}/api/adminapproval?status=approved`);
         if (!res.ok) {
           const errorText = await res.text();
@@ -93,12 +92,12 @@ const FeaturedRetreatsCarousel = () => {
                   {/* Image container with hover dark overlay */}
                   <div className="relative">
                     <img
-                      src={`${API_BASE_URL}/api/resorts/image/${retreat.image}`}
+                      src={`${API_BASE_URL}/api/resorts/image/${encodeURIComponent(retreat.image)}`}
                       alt={retreat.name}
                       className="w-full h-64 object-cover group-hover:brightness-75 transition duration-300" // Corrected
                     />
 
-                    {/* View Details Button */}
+                  
                     <div className="absolute inset-x-0 bottom-0 opacity-0 group-hover:opacity-100 transition duration-300 flex justify-center mb-3">
                       <button
                         className="bg-yellow-400 text-white font-semibold px-4 py-1 rounded-full hover:bg-yellow-500 text-sm" // Corrected
@@ -108,7 +107,7 @@ const FeaturedRetreatsCarousel = () => {
                       </button>
                     </div>
 
-                    {/* Favorite Heart */}
+           
                     <div
                       className="absolute top-3 right-3 text-xl p-1 bg-white/70 rounded-full cursor-pointer hover:scale-110 transition" // Corrected
                       onClick={() => toggleFavorite(retreat._id)}
@@ -119,11 +118,11 @@ const FeaturedRetreatsCarousel = () => {
                     </div>
                   </div>
 
-                  {/* Resort Info */}
+                
                   <div className="p-4">
                     <h3 className="text-lg font-bold mb-1">{retreat.name}</h3>
 
-                    {/* Location with icon */}
+                 
                     <div className="flex items-center text-sm text-gray-500 mb-1">
                       <FaMapMarkerAlt className="mr-1 text-red-400" /> {/* Corrected */}
                       <span>{retreat.location}</span>
@@ -131,7 +130,7 @@ const FeaturedRetreatsCarousel = () => {
 
                     <p className="text-sm text-gray-600 mb-2">${retreat.price}/night</p>
 
-                    {/* Star Rating - Assuming 'rating' is a field in your resort schema */}
+                   
                     <div className="flex items-center mb-2">
                         {renderStars(retreat.rating || 4)} {/* Assuming a default rating of 4 if not provided */}
                     </div>
