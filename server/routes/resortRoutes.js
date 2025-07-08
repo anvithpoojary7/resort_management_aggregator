@@ -110,7 +110,16 @@ router.get('/admin/resorts', async (req, res) => {
   }
 });
 
-
+router.get('/:id', async (req, res) => {
+  try {
+    const resort = await Resort.findById(req.params.id).populate('owner'); 
+    if (!resort) return res.status(404).json({ error: 'Resort not found' });
+    res.json(resort);
+  } catch (err) {
+    console.error('Error fetching resort:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
   
   return router;
 };

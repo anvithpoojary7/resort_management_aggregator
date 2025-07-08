@@ -1,8 +1,21 @@
+
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { FaHotel, FaUsers, FaChartBar, FaSignOutAlt, FaHome } from 'react-icons/fa';
 
 const Sidebar = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // ✅ Remove login data from localStorage
+    localStorage.removeItem('user');
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('token'); // if used
+
+    // ✅ Redirect to admin login page
+    navigate(`/${process.env.REACT_APP_ADMIN_URL_PATH || 'admin-portal-secret/login'}`);
+  };
+
   const navLinkClass =
     'flex items-center gap-2 px-3 py-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition';
 
@@ -26,18 +39,16 @@ const Sidebar = () => {
         <NavLink to="/admin/analytics" className={activeClass}>
           <FaChartBar /> Analytics
         </NavLink>
-        <NavLink
-          to="/login"
-          onClick={() => localStorage.removeItem('user')}
+
+        <button
+          onClick={handleLogout}
           className="flex items-center gap-2 px-3 py-2 mt-6 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-md transition"
         >
           <FaSignOutAlt /> Logout
-        </NavLink>
+        </button>
       </nav>
     </div>
   );
 };
 
 export default Sidebar;
-
-
