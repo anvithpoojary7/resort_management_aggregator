@@ -14,9 +14,9 @@ const ResortSearchBar = () => {
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [showCheckOut, setShowCheckOut] = useState(false);
   const [guestsOpen, setGuestsOpen] = useState(false);
-  const [adults, setAdults] = useState(2);
+  const [adults, setAdults] = useState(0);
   const [children, setChildren] = useState(0);
-  const [rooms, setRooms] = useState(1);
+  const [rooms, setRooms] = useState(0);
   const [petFriendly, setPetFriendly] = useState(false);
   const [sortOrder, setSortOrder] = useState('');
   const wrapperRef = useRef(null);
@@ -37,19 +37,22 @@ const ResortSearchBar = () => {
   }, []);
 
 
-  const handleSearch = () => {
-    const params = new URLSearchParams();
-    if (query)       params.append('location', query);
-    if (checkIn)     params.append('checkIn',  checkIn.toISOString());
-    if (checkOut)    params.append('checkOut', checkOut.toISOString());
-    if (petFriendly) params.append('petFriendly', '1');
-    if (sortOrder)   params.append('sort', sortOrder);
-    params.append('adults',   adults);
-    params.append('children', children);
-    params.append('rooms',    rooms);
+const handleSearch = () => {
+  const params = new URLSearchParams();
+  if (query)         params.append('location', query);
+  if (checkIn)       params.append('checkIn',  checkIn.toISOString()); // Sends ISO string
+  if (checkOut)      params.append('checkOut', checkOut.toISOString());// Sends ISO string
+  if (petFriendly) params.append('petFriendly', '1');
+  if (sortOrder)   params.append('sort', sortOrder);
+  params.append('adults',     adults);
+  params.append('children', children);
+  params.append('rooms',     rooms);
+  if (adults   > 0) params.append('adults',   adults);
+ if (children > 0) params.append('children', children);
+ if (rooms    > 0) params.append('rooms',    rooms);
 
-    navigate(`/resorts?${params.toString()}`);
-  };
+  navigate(`/resorts?${params.toString()}`);
+};
 
 
   return (
