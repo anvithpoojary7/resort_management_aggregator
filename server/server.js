@@ -13,6 +13,8 @@ const adminlogin=require('./routes/adminAuth');
 const adminapproval=require('./routes/adminApproval');
 const filterResorts=require('./routes/resortSearch');
 
+const adminRoutes = require('./routes/adminRoutes');
+
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 
 const app = express();
@@ -69,6 +71,8 @@ conn.once('open', () => {
  
  app.use('/api/admin/login',adminlogin);
 
+ app.use('/api/admin', adminRoutes);
+ 
 app.get("/api/resorts/image/:filename", async (req, res) => {
   try {
     const file = await gfs.files.findOne({ filename: req.params.filename });
