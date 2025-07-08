@@ -6,11 +6,9 @@ const API_BASE_URL = "http://localhost:8080";
 const AddResort = () => {
   const navigate = useNavigate();
   const currentOwnerId = JSON.parse(localStorage.getItem("user"))?.id;
-  console.log("🟢 currentOwnerId in AddResort.jsx:", currentOwnerId);
-  if (!currentOwnerId) navigate("/login");
 
   const [loading, setLoading] = useState(true);
-  const [resortStatus, setResortStatus] = useState(null); // none | pending | approved | rejected
+  const [resortStatus, setResortStatus] = useState(null);
   const [resort, setResort] = useState({
     name: "",
     location: "",
@@ -19,9 +17,17 @@ const AddResort = () => {
     amenities: [],
     type: "",
   });
-  const [imageFile, setImageFile] = useState(null); // Only one file
+
+  const [resortImage, setResortImage] = useState(null);
+  const [roomImage1, setRoomImage1] = useState(null);
+  const [roomImage2, setRoomImage2] = useState(null);
 
   useEffect(() => {
+    if (!currentOwnerId) {
+      navigate("/login");
+      return;
+    }
+
     const checkStatus = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/api/resorts/owner/${currentOwnerId}`);
@@ -58,28 +64,30 @@ const AddResort = () => {
     setResort((prev) => ({ ...prev, amenities: arr }));
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = (e, imageSetter) => {
     const file = e.target.files[0];
-    if (!file) {
-      setImageFile(null);
-      return;
+    if (file && file.type.startsWith("image/")) {
+      imageSetter(file);
+    } else {
+      alert("Please select a valid image file.");
     }
-    setImageFile(file);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!imageFile) {
-      alert("Please choose one image.");
+    if (!resortImage || !roomImage1 || !roomImage2) {
+      alert("Please upload all 3 images (1 resort, 2 rooms).");
       return;
     }
 
     const formData = new FormData();
-    formData.append("image", imageFile); // Must match backend field name
+    formData.append("resortImage", resortImage);
+    formData.append("roomImage1", roomImage1);
+    formData.append("roomImage2", roomImage2);
 
-    Object.entries(resort).forEach(([k, v]) =>
-      formData.append(k, k === "amenities" ? JSON.stringify(v) : v)
+    Object.entries(resort).forEach(([key, val]) =>
+      formData.append(key, key === "amenities" ? JSON.stringify(val) : val)
     );
     formData.append("ownerId", currentOwnerId);
 
@@ -88,6 +96,7 @@ const AddResort = () => {
         method: "POST",
         body: formData,
       });
+
       const body = await res.json();
 
       if (res.ok) {
@@ -108,11 +117,9 @@ const AddResort = () => {
 
   if (resortStatus === "pending") {
     return (
-      <div className="p-6 max-w-xl mx-auto bg-white rounded shadow mt-8 text-center">
+      <div className="p-6 max-w-xl mx-auto bg-white rounded shadow mt-10 text-center">
         <h2 className="text-xl font-semibold mb-2">Awaiting Approval</h2>
-        <p className="text-gray-600 mb-4">
-          Your resort is under review by the admin.
-        </p>
+        <p className="text-gray-600 mb-4">Your resort is under review by the admin.</p>
         <button
           onClick={() => navigate("/owner/dashboard")}
           className="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700"
@@ -124,40 +131,42 @@ const AddResort = () => {
   }
 
   return (
-    <div className="p-6 max-w-xl mx-auto bg-white rounded shadow mt-8">
-      <h2 className="text-2xl font-bold mb-4">Add New Resort Listing</h2>
+    <div className="p-6 max-w-2xl mx-auto bg-white rounded-xl shadow-lg mt-10">
+      <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">
+        Add New Resort Listing
+      </h2>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="text"
-          name="name"
-          value={resort.name}
-          onChange={handleChange}
-          placeholder="Resort Name"
-          required
-          className="w-full border p-2 rounded"
-        />
-
-        <input
-          type="text"
-          name="location"
-          value={resort.location}
-          onChange={handleChange}
-          placeholder="Location"
-          required
-          className="w-full border p-2 rounded"
-        />
-
-        <input
-          type="number"
-          name="price"
-          value={resort.price}
-          onChange={handleChange}
-          placeholder="Price per night"
-          min="0"
-          required
-          className="w-full border p-2 rounded"
-        />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid gap-4">
+          <input
+            type="text"
+            name="name"
+            value={resort.name}
+            onChange={handleChange}
+            placeholder="Resort Name"
+            required
+            className="w-full border border-gray-300 rounded px-4 py-2"
+          />
+          <input
+            type="text"
+            name="location"
+            value={resort.location}
+            onChange={handleChange}
+            placeholder="Location"
+            required
+            className="w-full border border-gray-300 rounded px-4 py-2"
+          />
+          <input
+            type="number"
+            name="price"
+            value={resort.price}
+            onChange={handleChange}
+            placeholder="Price per night"
+            min="0"
+            required
+            className="w-full border border-gray-300 rounded px-4 py-2"
+          />
+        </div>
 
         <textarea
           name="description"
@@ -165,48 +174,97 @@ const AddResort = () => {
           onChange={handleChange}
           placeholder="Resort description…"
           required
-          className="w-full border p-2 rounded h-28"
+          className="w-full border border-gray-300 rounded px-4 py-2 h-32 resize-none"
         />
 
-        <input
-          type="text"
-          name="amenities"
-          value={resort.amenities.join(", ")}
-          onChange={handleAmenityChange}
-          placeholder="Amenities (comma separated)"
-          className="w-full border p-2 rounded"
-        />
+        <div>
+          <label className="block mb-1 text-sm font-medium">Amenities (comma separated)</label>
+          <input
+            type="text"
+            name="amenities"
+            value={resort.amenities.join(", ")}
+            onChange={handleAmenityChange}
+            placeholder="WiFi, Pool, Spa, Parking"
+            className="w-full border border-gray-300 rounded px-4 py-2"
+          />
+          <div className="flex flex-wrap gap-2 mt-2">
+            {resort.amenities.map((item, i) => (
+              <span key={i} className="bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded-full">
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
 
-        <select
-          name="type"
-          value={resort.type}
-          onChange={handleChange}
-          required
-          className="w-full border p-2 rounded"
-        >
-          <option value="">Select Resort Type</option>
-          <option>Beach</option>
-          <option>Mountain</option>
-          <option>Desert</option>
-          <option>City</option>
-          <option>Island</option>
-          <option>Adventure</option>
-          <option>Wellness</option>
-          <option>Other</option>
-        </select>
+        <div>
+          <label className="block mb-1 text-sm font-medium">Resort Type</label>
+          <select
+            name="type"
+            value={resort.type}
+            onChange={handleChange}
+            required
+            className="w-full border border-gray-300 rounded px-4 py-2"
+          >
+            <option value="">Select Resort Type</option>
+            <option>Beach</option>
+            <option>Mountain</option>
+            <option>Desert</option>
+            <option>City</option>
+            <option>Island</option>
+            <option>Adventure</option>
+            <option>Wellness</option>
+            <option>Other</option>
+          </select>
+        </div>
 
-        <input
-          type="file"
-          name="image" // ← match backend
-          accept="image/*"
-          onChange={handleImageChange}
-          required
-          className="w-full border p-2 rounded"
-        />
+        {/* Resort Image */}
+        <div>
+          <label className="block mb-1 text-sm font-medium">Main Resort Image *</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleImageChange(e, setResortImage)}
+            required
+            className="w-full border border-gray-300 rounded px-4 py-2"
+          />
+          {resortImage && (
+            <p className="text-sm text-green-600 mt-1">Selected: {resortImage.name}</p>
+          )}
+        </div>
+
+        {/* Room Image 1 */}
+        <div>
+          <label className="block mb-1 text-sm font-medium">Room Image 1 *</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleImageChange(e, setRoomImage1)}
+            required
+            className="w-full border border-gray-300 rounded px-4 py-2"
+          />
+          {roomImage1 && (
+            <p className="text-sm text-green-600 mt-1">Selected: {roomImage1.name}</p>
+          )}
+        </div>
+
+        {/* Room Image 2 */}
+        <div>
+          <label className="block mb-1 text-sm font-medium">Room Image 2 *</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleImageChange(e, setRoomImage2)}
+            required
+            className="w-full border border-gray-300 rounded px-4 py-2"
+          />
+          {roomImage2 && (
+            <p className="text-sm text-green-600 mt-1">Selected: {roomImage2.name}</p>
+          )}
+        </div>
 
         <button
           type="submit"
-          className="bg-blue-600 text-white w-full py-3 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-white w-full py-3 rounded-lg font-semibold hover:bg-blue-700"
         >
           Submit Resort
         </button>
