@@ -114,7 +114,7 @@ const ProfilePage = () => {
           {/* Form Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="text-gray-600">First Name</label>
+              <label className="text-gray-600">Full Name</label>
               <input
                 name="fullName"
                 disabled={!editing}
@@ -275,6 +275,7 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
+
 
 
 
