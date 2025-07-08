@@ -30,7 +30,6 @@ const OwnerDashboard = () => {
     })();
   }, [currentOwnerId]);
 
-  // ───────── UI branches ─────────
   if (loading) return <p className="p-6">Loading...</p>;
 
   // 1️⃣ No resort

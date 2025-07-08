@@ -1,4 +1,3 @@
-// client/src/admin/components/UserTable.jsx
 import React from 'react';
 
 const UserTable = ({ users }) => {
@@ -17,34 +16,42 @@ const UserTable = ({ users }) => {
         </thead>
         <tbody>
           {users.map((user) => (
-            <tr key={user.id} className="border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
+            <tr key={user._id} className="border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
               <td className="py-3 px-4">
                 <div className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3 ${
-                    user.role === 'Guest' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
-                  }`}>
-                    {user.avatar}
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3 ${
+                      user.role === 'Guest' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                    }`}
+                  >
+                    {user.name ? user.name[0].toUpperCase() : '?'}
                   </div>
                   <div>
-                    <p className="font-medium text-gray-800">{user.name}</p>
-                    <p className="text-sm text-gray-500">{user.role}</p>
+                    <p className="font-medium text-gray-800">{user.name || 'Unnamed'}</p>
+                    <p className="text-sm text-gray-500">{user.role || 'User'}</p>
                   </div>
                 </div>
               </td>
               <td className="py-3 px-4 text-gray-700">
-                <p className="text-sm">{user.email}</p>
-                <p className="text-xs text-gray-500">{user.phone}</p>
+                <p className="text-sm">{user.email || 'N/A'}</p>
+                <p className="text-xs text-gray-500">{user.phone || 'No phone'}</p>
               </td>
-              <td className="py-3 px-4 text-gray-700 text-sm">{user.joinDate}</td>
               <td className="py-3 px-4 text-gray-700 text-sm">
-                <p>{user.activityBookings} bookings</p>
-                <p className="text-xs text-gray-500">{user.activitySpent}</p>
+                {new Date(user.createdAt || Date.now()).toLocaleDateString()}
+              </td>
+              <td className="py-3 px-4 text-gray-700 text-sm">
+                <p>{user.activityBookings || 0} bookings</p>
+                <p className="text-xs text-gray-500">{user.activitySpent || '₹0'}</p>
               </td>
               <td className="py-3 px-4">
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                  user.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                }`}>
-                  {user.status}
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    user.status === 'Active'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-700'
+                  }`}
+                >
+                  {user.status || 'Inactive'}
                 </span>
               </td>
               <td className="py-3 px-4 flex items-center justify-center space-x-2">

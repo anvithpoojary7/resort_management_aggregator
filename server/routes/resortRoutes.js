@@ -100,5 +100,17 @@ module.exports = (gfs, upload, gridfsBucket) => {
     }
   });
 
+router.get('/admin/resorts', async (req, res) => {
+  try {
+    const resorts = await Resort.find({ status: 'approved' }).populate('ownerId', 'name email');
+    res.json(resorts);
+  } catch (err) {
+    console.error('Error fetching approved resorts:', err);
+    res.status(500).json({ message: 'Server error fetching resorts' });
+  }
+});
+
+
+  
   return router;
 };
