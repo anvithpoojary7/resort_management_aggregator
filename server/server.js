@@ -8,7 +8,10 @@ const path = require('path');
 const fs = require('fs');
 const Grid = require('gridfs-stream');
 
+
+const adminlogin=require('./routes/adminAuth');
 const adminapproval=require('./routes/adminApproval');
+const filterResorts=require('./routes/resortSearch');
 
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 
@@ -60,27 +63,26 @@ conn.once('open', () => {
   app.use('/api/auth', authRoutes);
   app.use('/api/resorts', resortRoutesModule(gfs, upload, gridfsBucket));
  /* app.use('/api/owner',ownerRoutes);*/
+ app.use('/api/fiteresort',filterResorts);
+ 
   app.use('/api/adminapproval',adminapproval);
+ 
+ app.use('/api/admin/login',adminlogin);
 
+app.get("/api/resorts/image/:filename", async (req, res) => {
+  try {
+    const file = await gfs.files.findOne({ filename: req.params.filename });
+    if (!file) return res.status(404).json({ err: "No file exists" });
 
-  app.get('/api/resorts/image/:filename', (req, res) => {
-    gfs.files.findOne({ filename: req.params.filename }, (err, file) => {
-      if (!file || file.length === 0) {
-        return res.status(404).json({ err: 'No file exists' });
-      }
+    res.set("Content-Type", file.contentType);
+    const readstream = gridfsBucket.openDownloadStreamByName(file.filename);
+    readstream.pipe(res);
+  } catch (err) {
+    console.error("Image fetch error:", err);
+    res.sendStatus(500);
+  }
+});
 
-      if (
-        file.contentType === 'image/jpeg' ||
-        file.contentType === 'image/png' ||
-        file.contentType === 'image/gif'
-      ) {
-        const readstream = gridfsBucket.openDownloadStreamByName(file.filename);
-        readstream.pipe(res);
-      } else {
-        res.status(404).json({ err: 'Not an image' });
-      }
-    });
-  });
 
   const PORT = process.env.PORT || 8080;
   app.listen(PORT, () => {
