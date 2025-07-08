@@ -22,7 +22,7 @@ module.exports = (gfs, upload, gridfsBucket) => {
     });
   };
 
-  /* POST /api/resorts */
+
   router.post("/", uploadMw, async (req,res)=>{
     if (!req.file) return res.status(400).json({ message:"No image file uploaded." });
 
@@ -32,7 +32,7 @@ module.exports = (gfs, upload, gridfsBucket) => {
       if (await Resort.findOne({ ownerId }))
         return res.status(409).json({ message:"You have already submitted a resort." });
 
-      /* push file to GridFS */
+   
       const { filename, path:tmp, mimetype } = req.file;
       fs.createReadStream(tmp)
         .pipe(gridfsBucket.openUploadStream(filename,{ contentType:mimetype }))
@@ -50,12 +50,10 @@ module.exports = (gfs, upload, gridfsBucket) => {
       console.error(err); res.status(500).json({ message:"Server error while adding resort." });
     }
   });
-  /* --------------------------------------------------
-        C. GET /api/resorts          – list resorts
-     -------------------------------------------------- */
-  router.get("/", async (req, res) => {
+ 
+  router.get("/allresorts", async (req, res) => {
     try {
-      const { status } = req.query;               // optional filter
+      const { status } = req.query;             
       const query      = status ? { status } : {};
       const resorts    = await Resort.find(query).sort({ createdAt: -1 });
       res.json(resorts);
@@ -64,9 +62,7 @@ module.exports = (gfs, upload, gridfsBucket) => {
     }
   });
 
-  /* --------------------------------------------------
-        D. GET /api/resorts/owner/:ownerId
-     -------------------------------------------------- */
+  
   router.get("/owner/:ownerId", async (req, res) => {
      console.log("🔴 /owner/:ownerId received:", req.params.ownerId);
     const { ownerId } = req.params;
@@ -78,13 +74,11 @@ module.exports = (gfs, upload, gridfsBucket) => {
     }
   });
 
-  /* --------------------------------------------------
-        E. PATCH /api/resorts/:id/status   (admin)
-     -------------------------------------------------- */
+ 
   router.patch("/:id/status", async (req, res) => {
     try {
       const { id }     = req.params;
-      const { status } = req.body; // "approved" | "rejected"
+      const { status } = req.body; 
 
       if (!["approved", "rejected"].includes(status)) {
         return res.status(400).json({ message: "Invalid status." });

@@ -35,10 +35,7 @@ const CombinedLoginRegister = () => {
   const redirectToDashboard = async (role, userId) => {
     localStorage.setItem('isLoggedIn', 'true');
 
-    if (role === 'admin') {
-      navigate('/admin/dashboard');
-      return;
-    }
+ 
 
     if (role === 'owner') {
       try {
@@ -88,9 +85,8 @@ const CombinedLoginRegister = () => {
     }
 
     const name = `${firstName} ${lastName}`;
-    const endpoint = isLogin
-      ? 'http://localhost:8080/api/auth/login'
-      : 'http://localhost:8080/api/auth/register';
+    // CHANGE THIS LINE: Use relative path for auth endpoint
+    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register'; // <--- CHANGED HERE
 
     const payload = isLogin
       ? { email, password, role }
@@ -133,9 +129,10 @@ const CombinedLoginRegister = () => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
+      // CHANGE THIS LINE: Use relative path for Google auth endpoint
       const endpoint = isLogin
-        ? 'http://localhost:8080/api/auth/google-login'
-        : 'http://localhost:8080/api/auth/google-signup';
+        ? '/api/auth/google-login' // <--- CHANGED HERE
+        : '/api/auth/google-signup'; // <--- CHANGED HERE
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -176,7 +173,6 @@ const CombinedLoginRegister = () => {
   return (
     <div className="min-h-screen bg-[#f6f9ff] flex items-center justify-center px-4">
       <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-md relative">
-
         <div className="flex justify-center mb-4">
           <div className="bg-blue-100 p-4 rounded-full">
             {isLogin ? (
@@ -208,7 +204,7 @@ const CombinedLoginRegister = () => {
             disabled={isRoleLocked}
           >
             <option value="user">User – Standard user</option>
-            <option value="admin">Admin – Manage data</option>
+          
             <option value="owner">Owner – List resort</option>
           </select>
           {isRoleLocked && (

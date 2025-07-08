@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/users');
 const Owner = require('../models/Owner');
-const Admin = require('../models/Admin');
+
 const requireAuth=require('../middleware/requireAuth');
 
 const router = express.Router();
@@ -46,12 +46,10 @@ router.post('/register', async (req, res) => {
 
     await newUser.save();
 
-    // 🔥 Add to role-specific collection
+
     if (role === 'owner') {
       await Owner.create({ userId: newUser._id });
-    } else if (role === 'admin') {
-      await Admin.create({ userId: newUser._id });
-    }
+    } 
 
     const payload = { id: newUser._id, email: newUser.email, role: newUser.role };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
@@ -175,9 +173,7 @@ router.post('/google-signup', async (req, res) => {
     await newUser.save();
     if (role === 'owner') {
       await Owner.create({ userId: newUser._id });
-    } else if (role === 'admin') {
-      await Admin.create({ userId: newUser._id });
-    }
+    } 
 
     const payload = { id: newUser._id, email: newUser.email, role: newUser.role };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
