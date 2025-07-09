@@ -12,7 +12,11 @@ import ContactUs from '../pages/ContactUs';
 import HelpSupport from '../pages/HelpSupport';
 import DealDetails from '../components/DealDetails'; 
 import AmenityResortsList from '../pages/AmenityResortsList'; 
+
 import ProfilePage from '../pages/ProfilePage'; 
+
+
+
 
 
 //  Owner Pages
