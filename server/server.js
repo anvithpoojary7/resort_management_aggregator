@@ -8,20 +8,16 @@ const path = require('path');
 const fs = require('fs');
 const Grid = require('gridfs-stream');
 
-
+const resortsearch=require('./routes/resortSearch');
 const adminlogin=require('./routes/adminAuth');
 const adminapproval=require('./routes/adminApproval');
-const filterResorts=require('./routes/resortSearch');
-
-const adminRoutes = require('./routes/adminRoutes');
 
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 
 const app = express();
 
-let gfs;
-let upload;
-let gridfsBucket;
+// Connect MongoDB
+connectdb();
 
 app.use(cors({
   origin: 'http://localhost:3000',
@@ -31,22 +27,24 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+let gfs;
+let gridfsBucket;
+let upload;
 
-connectdb();
+// Wait for MongoDB connection
 const conn = mongoose.connection;
-
 conn.once('open', () => {
   console.log('✅ MongoDB connected');
 
+  // Initialize GridFS
   gridfsBucket = new mongoose.mongo.GridFSBucket(conn.db, {
     bucketName: 'uploads',
   });
   gfs = Grid(conn.db, mongoose.mongo);
   gfs.collection('uploads');
-
   console.log('✅ GridFS initialized');
 
-  
+  // Set up Multer for file uploads
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       cb(null, 'uploads/');
@@ -55,25 +53,28 @@ conn.once('open', () => {
       cb(null, `image-${Date.now()}-${file.originalname}`);
     },
   });
-
   upload = multer({ storage });
   console.log('✅ Multer disk upload ready');
 
- 
+  // Import route files
   const authRoutes = require('./routes/auth');
   const resortRoutesModule = require('./routes/resortRoutes');
+  const imageRoutes = require('./routes/image'); // ✅ new
+  const adminLoginRoutes = require('./routes/adminAuth');
+  const adminApprovalRoutes = require('./routes/adminApproval');
+  const filterResortsRoutes = require('./routes/resortSearch');
+  const ownerProfile=require('./routes/ownerProfile');
+
+  // Use routes
   app.use('/api/auth', authRoutes);
   app.use('/api/resorts', resortRoutesModule(gfs, upload, gridfsBucket));
  /* app.use('/api/owner',ownerRoutes);*/
- app.use('/api/fiteresort',filterResorts);
- 
   app.use('/api/adminapproval',adminapproval);
- 
+ app.use('/api/resortsearch', resortsearch);
  app.use('/api/admin/login',adminlogin);
 
- app.use('/api/admin', adminRoutes);
- 
-app.get("/api/resorts/image/:filename", async (req, res) => {
+
+  app.get("/api/resorts/image/:filename", async (req, res) => {
   try {
     const file = await gfs.files.findOne({ filename: req.params.filename });
     if (!file) return res.status(404).json({ err: "No file exists" });
@@ -87,13 +88,13 @@ app.get("/api/resorts/image/:filename", async (req, res) => {
   }
 });
 
-
   const PORT = process.env.PORT || 8080;
   app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+    console.log(`🚀 Server running at http://localhost:${PORT}`);
   });
 });
 
+// Handle MongoDB connection errors
 conn.on('error', (err) => {
   console.error('❌ MongoDB error:', err);
   process.exit(1);

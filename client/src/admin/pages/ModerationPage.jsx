@@ -118,9 +118,13 @@ const ModerationPage = () => {
                 className="bg-white rounded-xl shadow hover:shadow-md transition duration-200 overflow-hidden relative"
               >
                 <img
-                  src={`${API_BASE_URL}/api/resorts/image/${resort.image}`}
+                  src={`${API_BASE_URL}/api/image/${encodeURIComponent(resort.image)}`}
                   alt={resort.name}
                   className="h-48 w-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'https://via.placeholder.com/400x300?text=No+Image';
+                  }}
                 />
                 <div className="absolute top-2 right-2 bg-orange-100 text-orange-700 text-sm px-3 py-1 rounded-full font-medium">
                   Pending
