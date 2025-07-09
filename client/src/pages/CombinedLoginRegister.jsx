@@ -21,11 +21,29 @@ const CombinedLoginRegister = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // ✅ Redirect if already logged in
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      redirectToDashboard(parsedUser.role, parsedUser.id);
+    }
+  }, []);
+
+  // ✅ Optional: Block browser back navigation to login
+  useEffect(() => {
+    window.history.pushState(null, '', window.location.href);
+    const blockBack = () => {
+      window.history.pushState(null, '', window.location.href);
+    };
+    window.addEventListener('popstate', blockBack);
+    return () => window.removeEventListener('popstate', blockBack);
+  }, []);
+
   // ✅ Detect ?role= from URL and lock role selector
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const roleFromURL = queryParams.get('role');
-
     if (roleFromURL && ['user', 'admin', 'owner'].includes(roleFromURL)) {
       setRole(roleFromURL);
       setIsRoleLocked(true);
@@ -34,8 +52,6 @@ const CombinedLoginRegister = () => {
 
   const redirectToDashboard = async (role, userId) => {
     localStorage.setItem('isLoggedIn', 'true');
-
- 
 
     if (role === 'owner') {
       try {
@@ -46,19 +62,20 @@ const CombinedLoginRegister = () => {
         if (data && data._id) {
           navigate('/owner/dashboard', {
             state: { resortStatus: data.status, resortExists: true },
+            replace: true,
           });
         } else {
-          navigate('/owner/addresort');
+          navigate('/owner/addresort', { replace: true });
         }
       } catch (err) {
         console.error('Error checking owner resort:', err);
         alert('Could not verify resort status. Please try again.');
-        navigate('/owner/addresort');
+        navigate('/owner/addresort', { replace: true });
       }
       return;
     }
 
-    navigate('/');
+    navigate('/', { replace: true });
   };
 
   const handleSubmit = async (e) => {
@@ -85,8 +102,7 @@ const CombinedLoginRegister = () => {
     }
 
     const name = `${firstName} ${lastName}`;
-    // CHANGE THIS LINE: Use relative path for auth endpoint
-    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register'; // <--- CHANGED HERE
+    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
 
     const payload = isLogin
       ? { email, password, role }
@@ -129,10 +145,9 @@ const CombinedLoginRegister = () => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // CHANGE THIS LINE: Use relative path for Google auth endpoint
       const endpoint = isLogin
-        ? '/api/auth/google-login' // <--- CHANGED HERE
-        : '/api/auth/google-signup'; // <--- CHANGED HERE
+        ? '/api/auth/google-login'
+        : '/api/auth/google-signup';
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -194,7 +209,6 @@ const CombinedLoginRegister = () => {
           <span className="text-blue-700 font-medium">{role}</span>
         </p>
 
-        {/* Role selector (locked if from URL) */}
         <div className="mb-4">
           <label className="text-sm text-gray-600">Select Role</label>
           <select
@@ -204,7 +218,6 @@ const CombinedLoginRegister = () => {
             disabled={isRoleLocked}
           >
             <option value="user">User – Standard user</option>
-          
             <option value="owner">Owner – List resort</option>
           </select>
           {isRoleLocked && (
@@ -324,4 +337,3 @@ const CombinedLoginRegister = () => {
 };
 
 export default CombinedLoginRegister;
-

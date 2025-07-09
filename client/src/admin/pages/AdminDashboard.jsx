@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import Sidebar from '../components/Sidebar';
 import DashboardCards from '../components/DashboardCards';
 import RevenueChart from '../components/RevenueChart';
@@ -7,6 +9,36 @@ import RecentActivity from '../components/RecentActivity';
 import QuickActions from '../components/QuickActions';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
+
+  // 🔐 Route Guard for admin
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    if (!isLoggedIn || !user || user.role !== 'admin') {
+      navigate('/admin/login', { replace: true });
+    }
+  }, [navigate]);
+
+  // ⛔ Prevent back navigation
+  useEffect(() => {
+    // Push the same route multiple times to the history stack
+    for (let i = 0; i < 10; i++) {
+      window.history.pushState(null, '', '/admin/dashboard');
+    }
+
+    const blockBack = () => {
+      window.history.pushState(null, '', '/admin/dashboard');
+    };
+
+    window.addEventListener('popstate', blockBack);
+
+    return () => {
+      window.removeEventListener('popstate', blockBack);
+    };
+  }, []);
+
   return (
     <div className="flex bg-gray-100 min-h-screen">
       {/* Sidebar */}
