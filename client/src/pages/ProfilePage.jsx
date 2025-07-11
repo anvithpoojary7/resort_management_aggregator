@@ -1,22 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaUserCircle } from 'react-icons/fa';
 import { FiEdit, FiX } from 'react-icons/fi';
 
 const ProfilePage = () => {
   const [editing, setEditing] = useState(false);
-  const [imageUrl, setImageUrl] = useState(""); // No image initially
+  const [imageUrl, setImageUrl] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState('');
+  const [userRole, setUserRole] = useState('');
 
   const [formData, setFormData] = useState({
-    fullName: "Alexa Rawles",
-    nickName: "",
-    gender: "",
-    country: "",
-    language: "",
-    timeZone: "",
-    email: "alexarawles@gmail.com"
+    firstName: '',
+    lastName: '',
+    gender: '',
+    country: '',
+    language: '',
+    timeZone: '',
+    email: ''
   });
+
+  // Load user info from localStorage
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+
+    if (storedUser) {
+      let firstName = '';
+      let lastName = '';
+
+      if (storedUser.name) {
+        const parts = storedUser.name.trim().split(' ');
+        firstName = parts[0];
+        lastName = parts.slice(1).join(' ');
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        firstName,
+        lastName,
+        email: storedUser.email || '',
+      }));
+
+      if (storedUser.profileImage) {
+        setImageUrl(storedUser.profileImage);
+      }
+
+      if (storedUser.role) {
+        setUserRole(storedUser.role);
+      }
+    }
+  }, []);
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -38,7 +70,7 @@ const ProfilePage = () => {
   };
 
   const handleDeletePhoto = () => {
-    setImageUrl(""); // Reset to default
+    setImageUrl('');
     setModalOpen(false);
   };
 
@@ -47,7 +79,7 @@ const ProfilePage = () => {
       alert("Password must be at least 6 characters.");
     } else {
       alert("Password updated successfully (dummy logic)");
-      setPassword("");
+      setPassword('');
     }
   };
 
@@ -57,6 +89,20 @@ const ProfilePage = () => {
       alert("Account deleted (dummy logic)");
       window.location.href = "/auth";
     }
+  };
+
+  const handleToggleEdit = () => {
+    if (editing) {
+      // Save changes back to localStorage
+      const updatedUser = {
+        ...JSON.parse(localStorage.getItem('user')),
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        profileImage: imageUrl,
+      };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+    setEditing(!editing);
   };
 
   return (
@@ -74,8 +120,8 @@ const ProfilePage = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-xl font-semibold">Welcome, Amanda</h1>
-            <p className="text-sm text-gray-500">Tue, 07 June 2022</p>
+            <h1 className="text-xl font-semibold">Welcome, {formData.firstName || 'Guest'}</h1>
+            <p className="text-sm text-gray-500 capitalize">Role: {userRole || 'N/A'}</p>
           </div>
           <FaUserCircle className="text-3xl text-gray-500" />
         </div>
@@ -96,14 +142,14 @@ const ProfilePage = () => {
 
               {/* Name and Email */}
               <div>
-                <h2 className="text-xl font-bold">{formData.fullName}</h2>
+                <h2 className="text-xl font-bold">{formData.firstName} {formData.lastName}</h2>
                 <p className="text-gray-500">{formData.email}</p>
               </div>
             </div>
 
             {/* Edit Button */}
             <button
-              onClick={() => setEditing(!editing)}
+              onClick={handleToggleEdit}
               className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition"
             >
               <FiEdit />
@@ -114,11 +160,11 @@ const ProfilePage = () => {
           {/* Form Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="text-gray-600">Full Name</label>
+              <label className="text-gray-600">First Name</label>
               <input
-                name="fullName"
+                name="firstName"
                 disabled={!editing}
-                value={formData.fullName}
+                value={formData.firstName}
                 onChange={handleChange}
                 className="w-full mt-1 p-3 border rounded-xl bg-gray-50"
               />
@@ -126,9 +172,9 @@ const ProfilePage = () => {
             <div>
               <label className="text-gray-600">Last Name</label>
               <input
-                name="nickName"
+                name="lastName"
                 disabled={!editing}
-                value={formData.nickName}
+                value={formData.lastName}
                 onChange={handleChange}
                 className="w-full mt-1 p-3 border rounded-xl bg-gray-50"
               />
@@ -275,6 +321,7 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
+
 
 
 

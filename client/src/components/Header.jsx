@@ -10,7 +10,7 @@ const Header = ({ onMenuClick, isLoggedIn, user }) => {
     <div className="flex justify-between items-center w-full">
       <Link to="/" className="text-xl font-bold text-blue-600">ResortFinder</Link>
       <div className="flex items-center gap-4">
-        <Link to="/become-a-host" className="text-black font-medium hover:bg-gray-100 py-2 px-3 rounded-full transition-colors duration-200">Become a host</Link>
+        <Link to="/auth?role=owner" className="text-black font-medium hover:bg-gray-100 py-2 px-3 rounded-full transition-colors duration-200">Become a host</Link>
         <button className="text-gray-700 hover:bg-gray-100 p-3 rounded-full transition-colors duration-200"><FaGlobe className="text-xl" /></button>
         <button onClick={onMenuClick} className="flex items-center gap-2 border rounded-full py-2 px-3 shadow-md hover:shadow-lg transition-shadow duration-200">
           <FaBars className="text-lg text-gray-700" />
