@@ -28,7 +28,9 @@ const ResortDetail = () => {
   return (
     <div className="bg-gray-50 py-8 px-4 min-h-screen">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Resort Info and Room Types */}
         <div className="col-span-2">
+          {/* Main Resort Image */}
           <div className="grid grid-cols-2 gap-2 mb-4">
             <img
               src={`/api/resorts/image/${resort.image}`}
@@ -50,6 +52,7 @@ const ResortDetail = () => {
             </span>
           </div>
 
+          {/* Amenities */}
           <div className="mb-6">
             <h2 className="text-xl font-semibold mb-2">Amenities</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -61,6 +64,7 @@ const ResortDetail = () => {
             </div>
           </div>
 
+          {/* Room Types */}
           <div>
             <h2 className="text-xl font-semibold mb-2">Room Types</h2>
             <div className="grid gap-4">
@@ -76,7 +80,7 @@ const ResortDetail = () => {
                       <h4 className="text-lg font-semibold">{room.roomName}</h4>
                       <p className="text-gray-600 text-sm">{room.roomDescription}</p>
                       <div className="text-green-600 mt-2 font-medium">
-                        ${room.roomPrice} per night
+                        ₹{room.roomPrice} per night
                       </div>
                     </div>
                   </div>
@@ -89,7 +93,7 @@ const ResortDetail = () => {
         {/* Right Booking Sidebar */}
         <div className="col-span-1 mt-6 lg:mt-0">
           <div className="sticky top-6 bg-white border p-4 rounded-lg shadow">
-            <div className="text-2xl font-semibold mb-2">${resort.price} <span className="text-sm text-gray-600">per night</span></div>
+            <div className="text-2xl font-semibold mb-2">₹{resort.price} <span className="text-sm text-gray-600">per night</span></div>
             <div className="text-sm text-yellow-500 mb-4">⭐ Excellent location</div>
             <div className="flex flex-col gap-3">
               <input type="date" className="border rounded px-3 py-2" />
@@ -99,7 +103,9 @@ const ResortDetail = () => {
                 <option>2 Guests</option>
               </select>
               <button
-                onClick={() => navigate(`/resorts/${id}/reserve`)}
+                onClick={() => navigate(`/resorts/${id}/reserve`, {
+                  state: { resort, rooms }
+                })}
                 className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition"
               >
                 Reserve Now
