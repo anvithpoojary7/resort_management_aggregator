@@ -1,20 +1,16 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-
-
-const allResorts = [
-  { id: '1', name: 'Serenity Bay Resort', image: '/c4.jpg' },
-  { id: '2', name: 'Mountain View Inn', image: '/c1.jpg' },
-  { id: '3', name: 'Lakeside Paradise', image: '/c2.jpg' },
-  { id: '4', name: 'Royal Garden Stay', image: '/c3.jpg' },
-];
 
 const ReservationForm = () => {
   const { id } = useParams();
-  const selectedResort = allResorts.find((r) => r.id === id);
-  const resortName = selectedResort ? selectedResort.name : 'Unknown Resort';
-  const resortImage = selectedResort ? selectedResort.image : '/default.jpg';
+  const location = useLocation();
+  const { resort, rooms } = location.state || {};
+
+  const resortName = resort?.name || 'Unknown Resort';
+  const resortImage = resort?.image
+    ? `/api/resorts/image/${resort.image}`
+    : '/default.jpg';
 
   const [formData, setFormData] = useState({
     name: '',
@@ -59,33 +55,6 @@ const ReservationForm = () => {
     return diffDays > 0 ? diffDays : 0;
   };
 
-  const rooms = [
-    {
-      name: 'Overwater Villa',
-      price: 850,
-      image: '/img1.jpg',
-      description: 'A luxurious villa built over the lagoon, offering ultimate privacy and stunning ocean views.',
-      features: ['King Bed', 'Private Deck', 'Glass Floor Panels', 'Butler Service', 'Direct Water Access'],
-      moreImages: ['/img1.jpg', '/img1-alt.jpg'],
-    },
-    {
-      name: 'Beach Villa',
-      price: 650,
-      image: '/img2.jpg',
-      description: 'A beachfront villa with panoramic sea views and direct access to the beach.',
-      features: ['King Bed', 'Private Beach Access', 'Outdoor Shower', 'Mini Bar'],
-      moreImages: ['/img2.jpg', '/img2-alt.jpg'],
-    },
-    {
-      name: 'Garden Suite',
-      price: 450,
-      image: '/main.jpg',
-      description: 'Elegant suite surrounded by tropical gardens, perfect for nature lovers.',
-      features: ['Queen Bed', 'Jacuzzi', 'Private Balcony', 'Garden View'],
-      moreImages: ['/main.jpg', '/main-alt.jpg'],
-    }
-  ];
-
   return (
     <div className="bg-white text-gray-800 py-8 px-4 min-h-screen">
       <h1 className="text-3xl font-bold text-center mb-2">{resortName}</h1>
@@ -123,21 +92,18 @@ const ReservationForm = () => {
 
         <div className="space-y-4">
           <label className="block text-lg font-semibold">Choose a Room</label>
-          {rooms.map((room, idx) => (
-            <div key={idx} className={`border rounded-lg p-4 shadow ${formData.roomType === room.name ? 'border-green-500' : 'border-gray-300'}`}>
+          {rooms?.map((room, idx) => (
+            <div key={idx} className={`border rounded-lg p-4 shadow ${formData.roomType === room.roomName ? 'border-green-500' : 'border-gray-300'}`}>
               <div className="flex flex-col md:flex-row gap-4">
-                <img src={room.image} alt={room.name} className="w-full md:w-60 h-40 object-cover rounded-lg" />
+                <img src={`/api/resorts/image/${room.roomImages[0]}`} alt={room.roomName} className="w-full md:w-60 h-40 object-cover rounded-lg" />
                 <div className="flex-1">
                   <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-bold">{room.name}</h3>
+                    <h3 className="text-xl font-bold">{room.roomName}</h3>
                     <button type="button" onClick={() => setShowRoomPopup(room)} className="text-sm text-blue-600 hover:underline">View Details</button>
                   </div>
-                  <p className="text-gray-700 text-sm my-1">{room.description}</p>
-                  <ul className="text-sm text-gray-600 list-disc list-inside">
-                    {room.features.map((f, i) => <li key={i}>{f}</li>)}
-                  </ul>
-                  <div className="mt-2 font-semibold text-green-600">₹{room.price} per night</div>
-                  <button type="button" onClick={() => setFormData({ ...formData, roomType: room.name })} className="mt-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md">
+                  <p className="text-gray-700 text-sm my-1">{room.roomDescription}</p>
+                  <div className="mt-2 font-semibold text-green-600">₹{room.roomPrice} per night</div>
+                  <button type="button" onClick={() => setFormData({ ...formData, roomType: room.roomName })} className="mt-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md">
                     Select Room
                   </button>
                 </div>
@@ -149,25 +115,25 @@ const ReservationForm = () => {
         <button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded transition">Confirm Reservation</button>
       </form>
 
-      {/* Popups */}
+      {/* Room Detail Popup */}
       <AnimatePresence>
         {showRoomPopup && (
           <motion.div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <motion.div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl relative" initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }}>
               <button onClick={() => setShowRoomPopup(null)} className="absolute top-3 right-4 text-gray-500 hover:text-red-500 text-xl">&times;</button>
-              <h2 className="text-2xl font-bold mb-2">{showRoomPopup.name}</h2>
+              <h2 className="text-2xl font-bold mb-2">{showRoomPopup.roomName}</h2>
               <div className="grid grid-cols-2 gap-4 mb-4">
-                {showRoomPopup.moreImages.map((img, i) => <img key={i} src={img} className="w-full h-40 object-cover rounded" alt="Room Detail" />)}
+                {showRoomPopup.roomImages.map((img, i) => (
+                  <img key={i} src={`/api/resorts/image/${img}`} className="w-full h-40 object-cover rounded" alt="Room Detail" />
+                ))}
               </div>
-              <p className="text-gray-700 mb-2">{showRoomPopup.description}</p>
-              <ul className="text-sm text-gray-600 list-disc list-inside mb-3">
-                {showRoomPopup.features.map((f, i) => <li key={i}>{f}</li>)}
-              </ul>
-              <div className="text-green-600 font-bold">Price: ₹{showRoomPopup.price}</div>
+              <p className="text-gray-700 mb-2">{showRoomPopup.roomDescription}</p>
+              <div className="text-green-600 font-bold">Price: ₹{showRoomPopup.roomPrice}</div>
             </motion.div>
           </motion.div>
         )}
 
+        {/* Summary Modal */}
         {showSummary && (
           <motion.div id="summaryModal" className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} transition={{ duration: 0.3 }} className="bg-white text-black rounded-2xl shadow-2xl p-6 w-full max-w-lg relative">
@@ -185,7 +151,7 @@ const ReservationForm = () => {
                 <p><strong>Guests:</strong> {formData.guestsAdult} adults, {formData.guestsChild} children</p>
                 <p><strong>Name:</strong> {formData.name}</p>
                 <p><strong>Email:</strong> {formData.email}</p>
-                <p><strong>Price per night:</strong> ₹{rooms.find(r => r.name === formData.roomType)?.price ?? '--'}</p>
+                <p><strong>Price per night:</strong> ₹{rooms.find(r => r.roomName === formData.roomType)?.roomPrice ?? '--'}</p>
                 <p><strong>Nights:</strong> {calculateNights()}</p>
               </div>
               <div className="mt-4">
@@ -194,7 +160,7 @@ const ReservationForm = () => {
                   Total: ₹
                   {(() => {
                     const nights = calculateNights();
-                    const pricePerNight = rooms.find(r => r.name === formData.roomType)?.price ?? 0;
+                    const pricePerNight = rooms.find(r => r.roomName === formData.roomType)?.roomPrice ?? 0;
                     return nights > 0 ? nights * pricePerNight : '--';
                   })()}
                 </p>
