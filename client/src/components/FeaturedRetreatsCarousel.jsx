@@ -15,7 +15,7 @@ const FeaturedRetreatsCarousel = () => {
   useEffect(() => {
     const fetchApprovedResorts = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/resorts`);
+        const res = await fetch(`${API_BASE_URL}/api/resorts/admin/resorts`);
         if (!res.ok) {
           const errorText = await res.text();
           console.error('Raw error response for fetching featured resorts:', errorText);
