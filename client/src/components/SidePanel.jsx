@@ -59,7 +59,7 @@ const SidePanel = ({ isOpen, setIsOpen, isLoggedIn, user }) => {
           <div className="border-b pb-4 mb-4">
             <Link to="/help" onClick={() => setIsOpen(false)} className="flex items-center hover:bg-gray-100 p-2 rounded"><FaQuestionCircle className="mr-2" />Help Centre</Link>
           </div>
-          <Link to="/become-a-host" onClick={() => setIsOpen(false)} className="flex items-center justify-between border rounded-lg p-3 hover:bg-gray-50"><div><div className="font-semibold">Become a host</div><div className="text-sm text-gray-600">It's easy to start hosting and earn extra income.</div></div><img src="/images/house-icon.png" alt="House" className="w-12 h-12 ml-4" /></Link>
+          <Link to="/auth?role=owner" onClick={() => setIsOpen(false)} className="flex items-center justify-between border rounded-lg p-3 hover:bg-gray-50"><div><div className="font-semibold">Become a host</div><div className="text-sm text-gray-600">It's easy to start hosting and earn extra income.</div></div><img src="/images/house-icon.png" alt="House" className="w-12 h-12 ml-4" /></Link>
           <Link to="/refer-a-host" className="block mt-4 hover:bg-gray-100 p-2 rounded" onClick={() => setIsOpen(false)}>Refer a host</Link>
           <Link to="/find-a-co-host" className="block hover:bg-gray-100 p-2 rounded" onClick={() => setIsOpen(false)}>Find a co-host</Link>
           <Link to="/aboutus" className="block mt-4 hover:bg-gray-100 p-2 rounded" onClick={() => setIsOpen(false)}>About ResortFinder</Link>
