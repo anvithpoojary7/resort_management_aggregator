@@ -9,6 +9,7 @@ const AddResort = () => {
 
   const [loading, setLoading] = useState(true);
   const [resortStatus, setResortStatus] = useState(null);
+  const [resortImage, setResortImage] = useState(null);
   const [resort, setResort] = useState({
     name: "",
     location: "",
@@ -18,9 +19,20 @@ const AddResort = () => {
     type: "",
   });
 
-  const [resortImage, setResortImage] = useState(null);
-  const [roomImage1, setRoomImage1] = useState(null);
-  const [roomImage2, setRoomImage2] = useState(null);
+  const [rooms, setRooms] = useState([
+    {
+      roomName: "",
+      roomPrice: "",
+      roomDescription: "",
+      roomImages: [], // This will store File objects
+    },
+    {
+      roomName: "",
+      roomPrice: "",
+      roomDescription: "",
+      roomImages: [], // This will store File objects
+    },
+  ]);
 
   useEffect(() => {
     if (!currentOwnerId) {
@@ -32,7 +44,6 @@ const AddResort = () => {
       try {
         const res = await fetch(`${API_BASE_URL}/api/resorts/owner/${currentOwnerId}`);
         const data = await res.json();
-
         if (!data) setResortStatus("none");
         else {
           setResortStatus(data.status);
@@ -57,39 +68,119 @@ const AddResort = () => {
   };
 
   const handleAmenityChange = (e) => {
-    const arr = e.target.value
-      .split(",")
-      .map((a) => a.trim())
-      .filter(Boolean);
+    const arr = e.target.value.split(",").map((a) => a.trim()).filter(Boolean);
     setResort((prev) => ({ ...prev, amenities: arr }));
   };
 
-  const handleImageChange = (e, imageSetter) => {
-    const file = e.target.files[0];
-    if (file && file.type.startsWith("image/")) {
-      imageSetter(file);
-    } else {
-      alert("Please select a valid image file.");
+  const handleRoomChange = (index, field, value) => {
+    const updatedRooms = [...rooms];
+    updatedRooms[index][field] = value;
+    setRooms(updatedRooms);
+  };
+
+  const handleRoomImageChange = (index, fileList) => {
+    const newFiles = Array.from(fileList).filter((f) => f.type.startsWith("image/"));
+
+    setRooms((prevRooms) => {
+      const updated = [...prevRooms];
+      // Concatenate the new files with the existing files for the specific room
+      const combinedFiles = [...updated[index].roomImages, ...newFiles];
+
+      // Deduplicate files to prevent adding the exact same file twice
+      const uniqueFiles = combinedFiles.reduce((acc, current) => {
+        const x = acc.find(item => item.name === current.name && item.size === current.size);
+        if (!x) {
+          return acc.concat([current]);
+        } else {
+          return acc;
+        }
+      }, []);
+
+      // Ensure we don't exceed the 5 image limit
+      if (uniqueFiles.length > 5) {
+        alert(`You can select a maximum of 5 images per room. Only the first 5 will be kept for Room ${index + 1}.`);
+        updated[index].roomImages = uniqueFiles.slice(0, 5); // Take only the first 5
+      } else {
+        updated[index].roomImages = uniqueFiles;
+      }
+
+      return updated;
+    });
+  };
+
+  const addNewRoom = () => {
+    if (rooms.length >= 5) {
+      alert("You can add a maximum of 5 rooms.");
+      return;
     }
+    setRooms([...rooms, {
+      roomName: "",
+      roomPrice: "",
+      roomDescription: "",
+      roomImages: [],
+    }]);
+  };
+
+  const removeRoom = (index) => {
+    if (rooms.length <= 2) {
+      alert("At least 2 rooms are required.");
+      return;
+    }
+    const updated = [...rooms];
+    updated.splice(index, 1);
+    setRooms(updated);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!resortImage || !roomImage1 || !roomImage2) {
-      alert("Please upload all 3 images (1 resort, 2 rooms).");
+    if (!resortImage) {
+      alert("Main resort image is required.");
       return;
+    }
+
+    if (rooms.length < 2 || rooms.length > 5) {
+      alert("You must add between 2 and 5 rooms.");
+      return;
+    }
+
+    for (let i = 0; i < rooms.length; i++) {
+      const room = rooms[i];
+      if (
+        !room.roomName ||
+        !room.roomPrice ||
+        !room.roomDescription ||
+        room.roomImages.length < 2 ||
+        room.roomImages.length > 5
+      ) {
+        alert(`Room ${i + 1} must have all details and 2 to 5 images. Currently selected: ${room.roomImages.length}`);
+        return;
+      }
     }
 
     const formData = new FormData();
     formData.append("resortImage", resortImage);
-    formData.append("roomImage1", roomImage1);
-    formData.append("roomImage2", roomImage2);
 
     Object.entries(resort).forEach(([key, val]) =>
       formData.append(key, key === "amenities" ? JSON.stringify(val) : val)
     );
     formData.append("ownerId", currentOwnerId);
+
+    // Append room data (excluding images for now, as they are appended separately)
+    formData.append("rooms", JSON.stringify(
+      rooms.map(({ roomName, roomPrice, roomDescription }) => ({
+        roomName,
+        roomPrice,
+        roomDescription,
+      }))
+    ));
+
+    // Append room images
+    rooms.forEach((room, i) => {
+      room.roomImages.forEach((file, j) => {
+        formData.append(`roomImage_${i}_${j}`, file);
+      });
+    });
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/resorts`, {
@@ -98,7 +189,6 @@ const AddResort = () => {
       });
 
       const body = await res.json();
-
       if (res.ok) {
         alert("Resort submitted successfully and is pending review!");
         navigate("/owner/dashboard");
@@ -111,9 +201,7 @@ const AddResort = () => {
     }
   };
 
-  if (loading) {
-    return <div className="text-center mt-10 text-gray-500">Loading…</div>;
-  }
+  if (loading) return <div className="text-center mt-10 text-gray-500">Loading…</div>;
 
   if (resortStatus === "pending") {
     return (
@@ -132,140 +220,57 @@ const AddResort = () => {
 
   return (
     <div className="p-6 max-w-2xl mx-auto bg-white rounded-xl shadow-lg mt-10">
-      <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">
-        Add New Resort Listing
-      </h2>
+      <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Add New Resort Listing</h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid gap-4">
-          <input
-            type="text"
-            name="name"
-            value={resort.name}
-            onChange={handleChange}
-            placeholder="Resort Name"
-            required
-            className="w-full border border-gray-300 rounded px-4 py-2"
-          />
-          <input
-            type="text"
-            name="location"
-            value={resort.location}
-            onChange={handleChange}
-            placeholder="Location"
-            required
-            className="w-full border border-gray-300 rounded px-4 py-2"
-          />
-          <input
-            type="number"
-            name="price"
-            value={resort.price}
-            onChange={handleChange}
-            placeholder="Price per night"
-            min="0"
-            required
-            className="w-full border border-gray-300 rounded px-4 py-2"
-          />
-        </div>
+        <input type="text" name="name" value={resort.name} onChange={handleChange} placeholder="Resort Name" required className="w-full border px-4 py-2 rounded" />
+        <input type="text" name="location" value={resort.location} onChange={handleChange} placeholder="Location" required className="w-full border px-4 py-2 rounded" />
+        <input type="number" name="price" value={resort.price} onChange={handleChange} placeholder="Price per night" min="0" required className="w-full border px-4 py-2 rounded" />
+        <textarea name="description" value={resort.description} onChange={handleChange} placeholder="Resort description…" required className="w-full border px-4 py-2 h-32 resize-none rounded" />
 
-        <textarea
-          name="description"
-          value={resort.description}
-          onChange={handleChange}
-          placeholder="Resort description…"
-          required
-          className="w-full border border-gray-300 rounded px-4 py-2 h-32 resize-none"
-        />
+        <input type="text" name="amenities" value={resort.amenities.join(", ")} onChange={handleAmenityChange} placeholder="WiFi, Pool, Spa..." className="w-full border px-4 py-2 rounded" />
+
+        <select name="type" value={resort.type} onChange={handleChange} required className="w-full border px-4 py-2 rounded">
+          <option value="">Select Resort Type</option>
+          <option>Beach</option>
+          <option>Mountain</option>
+          <option>City</option>
+          <option>Island</option>
+          <option>Adventure</option>
+          <option>Wellness</option>
+          <option>Other</option>
+        </select>
 
         <div>
-          <label className="block mb-1 text-sm font-medium">Amenities (comma separated)</label>
-          <input
-            type="text"
-            name="amenities"
-            value={resort.amenities.join(", ")}
-            onChange={handleAmenityChange}
-            placeholder="WiFi, Pool, Spa, Parking"
-            className="w-full border border-gray-300 rounded px-4 py-2"
-          />
-          <div className="flex flex-wrap gap-2 mt-2">
-            {resort.amenities.map((item, i) => (
-              <span key={i} className="bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded-full">
-                {item}
-              </span>
-            ))}
-          </div>
+          <label className="block mb-1">Main Resort Image *</label>
+          <input type="file" accept="image/*" required onChange={(e) => setResortImage(e.target.files[0])} className="w-full border px-4 py-2 rounded" />
         </div>
 
-        <div>
-          <label className="block mb-1 text-sm font-medium">Resort Type</label>
-          <select
-            name="type"
-            value={resort.type}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 rounded px-4 py-2"
-          >
-            <option value="">Select Resort Type</option>
-            <option>Beach</option>
-            <option>Mountain</option>
-            <option>Desert</option>
-            <option>City</option>
-            <option>Island</option>
-            <option>Adventure</option>
-            <option>Wellness</option>
-            <option>Other</option>
-          </select>
+        <div className="space-y-6">
+          <h3 className="text-xl font-semibold">Room Details</h3>
+          {rooms.map((room, index) => (
+            <div key={index} className="border p-4 rounded-lg bg-gray-50 space-y-2">
+              <input type="text" placeholder="Room Name" value={room.roomName} onChange={(e) => handleRoomChange(index, "roomName", e.target.value)} required className="w-full border px-3 py-2 rounded" />
+              <input type="number" placeholder="Room Price" value={room.roomPrice} onChange={(e) => handleRoomChange(index, "roomPrice", e.target.value)} required className="w-full border px-3 py-2 rounded" />
+              <textarea placeholder="Room Description" value={room.roomDescription} onChange={(e) => handleRoomChange(index, "roomDescription", e.target.value)} required className="w-full border px-3 py-2 rounded h-24" />
+              <label className="block text-sm text-gray-700">Add Room Images (2-5 images)</label>
+              <input type="file" multiple accept="image/*" onChange={(e) => handleRoomImageChange(index, e.target.files)} className="w-full border px-3 py-2 rounded" />
+              {room.roomImages.length > 0 && (
+                <p className="text-sm text-green-600">{room.roomImages.length} image(s) selected.</p>
+              )}
+              {rooms.length > 2 && (
+                <button type="button" onClick={() => removeRoom(index)} className="text-red-600 text-sm mt-2">
+                  Remove Room
+                </button>
+              )}
+            </div>
+          ))}
+          <button type="button" onClick={addNewRoom} className="text-blue-600 font-semibold">
+            + Add Another Room
+          </button>
         </div>
 
-        {/* Resort Image */}
-        <div>
-          <label className="block mb-1 text-sm font-medium">Main Resort Image *</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleImageChange(e, setResortImage)}
-            required
-            className="w-full border border-gray-300 rounded px-4 py-2"
-          />
-          {resortImage && (
-            <p className="text-sm text-green-600 mt-1">Selected: {resortImage.name}</p>
-          )}
-        </div>
-
-        {/* Room Image 1 */}
-        <div>
-          <label className="block mb-1 text-sm font-medium">Room Image 1 *</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleImageChange(e, setRoomImage1)}
-            required
-            className="w-full border border-gray-300 rounded px-4 py-2"
-          />
-          {roomImage1 && (
-            <p className="text-sm text-green-600 mt-1">Selected: {roomImage1.name}</p>
-          )}
-        </div>
-
-        {/* Room Image 2 */}
-        <div>
-          <label className="block mb-1 text-sm font-medium">Room Image 2 *</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleImageChange(e, setRoomImage2)}
-            required
-            className="w-full border border-gray-300 rounded px-4 py-2"
-          />
-          {roomImage2 && (
-            <p className="text-sm text-green-600 mt-1">Selected: {roomImage2.name}</p>
-          )}
-        </div>
-
-        <button
-          type="submit"
-          className="bg-blue-600 text-white w-full py-3 rounded-lg font-semibold hover:bg-blue-700"
-        >
+        <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">
           Submit Resort
         </button>
       </form>
