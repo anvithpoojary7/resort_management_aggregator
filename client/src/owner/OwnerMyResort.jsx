@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  FaTachometerAlt, FaHotel, FaBook, FaUser, FaCog, FaEdit, FaWifi,
-  FaCar, FaCoffee, FaSwimmer, FaDumbbell, FaSpa, FaSignOutAlt
+  FaTachometerAlt, FaHotel, FaBook, FaUser, FaCog, FaEdit, FaSignOutAlt
 } from 'react-icons/fa';
+
+const API_BASE_URL = 'http://localhost:8080';
 
 const OwnerMyResort = () => {
   const navigate = useNavigate();
   const [resort, setResort] = useState(null);
+  const [roomImages, setRoomImages] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE_URL = 'http://localhost:8080';
   const currentOwnerId = JSON.parse(localStorage.getItem('user'))?.id;
 
   const handleLogout = () => {
@@ -29,19 +30,23 @@ const OwnerMyResort = () => {
         const res = await fetch(`${API_BASE_URL}/api/resorts/owner/${currentOwnerId}`);
         const data = await res.json();
         setResort(data);
+
+        if (data?._id) {
+          const roomsRes = await fetch(`${API_BASE_URL}/api/resorts/rooms/byresort/${data._id}`);
+          const rooms = await roomsRes.json();
+
+          const images = rooms.flatMap(room => room.roomImages.slice(0, 1));
+          setRoomImages(images.slice(0, 2));
+        }
       } catch (err) {
-        console.error('Failed to fetch resort:', err);
+        console.error('Fetch error:', err);
       } finally {
         setLoading(false);
       }
     })();
   }, [currentOwnerId]);
 
-  if (loading) {
-    return (
-      <div className="p-8 text-center text-gray-600 text-lg">Loading resort details...</div>
-    );
-  }
+  if (loading) return <div className="p-8 text-center text-gray-600 text-lg">Loading resort details...</div>;
 
   if (!resort) {
     return (
@@ -116,27 +121,39 @@ const OwnerMyResort = () => {
           </button>
         </header>
 
-        {/* Resort Image */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Resort Image</h2>
-          {resort.image ? (
-            <img
-              src={`${API_BASE_URL}/api/image/${resort.image}`}
-              alt={resort.name}
-              className="w-full md:w-96 h-64 object-cover rounded-lg"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
-              }}
-            />
-          ) : (
-            <p className="text-gray-600">No image uploaded.</p>
-          )}
+        {/* Resort Main Image */}
+        <div className="bg-white rounded-xl shadow-md mb-4 overflow-hidden">
+          <img
+            src={`${API_BASE_URL}/api/resorts/image/${encodeURIComponent(resort.image)}`}
+            alt="Main Resort"
+            className="w-full h-[300px] object-cover"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = 'https://via.placeholder.com/800x300?text=Image+Unavailable';
+            }}
+          />
+        </div>
+
+        {/* Room Image Gallery */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+          {roomImages.map((filename, idx) => (
+            <div key={idx} className="bg-white rounded-xl shadow p-4">
+              <img
+                src={`${API_BASE_URL}/api/resorts/image/${filename}`}
+                alt={`Room ${idx + 1}`}
+                className="w-full h-[200px] object-cover rounded"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://via.placeholder.com/400x300?text=Room+Image';
+                }}
+              />
+            </div>
+          ))}
         </div>
 
         {/* Resort Details */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Basic Information</h2>
+        <div className="bg-white rounded-xl shadow-md p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Resort Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <p className="text-sm text-gray-500">Name</p>
@@ -151,10 +168,6 @@ const OwnerMyResort = () => {
               <p className="text-lg font-medium text-gray-800">₹{resort.price}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Max Guests</p>
-              <p className="text-lg font-medium text-gray-800">{resort.maxGuests}</p>
-            </div>
-            <div className="md:col-span-2">
               <p className="text-sm text-gray-500">Description</p>
               <p className="text-gray-800 leading-relaxed">{resort.description}</p>
             </div>

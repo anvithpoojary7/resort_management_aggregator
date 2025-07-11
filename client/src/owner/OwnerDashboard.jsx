@@ -21,7 +21,7 @@ const OwnerDashboard = () => {
     const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
 
     if (!isLoggedIn || !user || user?.role !== "owner") {
-      navigate("/login", { replace: true }); // Prevent going back to dashboard
+      navigate("/login", { replace: true });
       return;
     }
 
@@ -47,7 +47,7 @@ const OwnerDashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.setItem("isLoggedIn", "false");
-    navigate("/login", { replace: true }); // Kill dashboard in history
+    navigate("/login", { replace: true });
   };
 
   if (loading) {
@@ -66,7 +66,6 @@ const OwnerDashboard = () => {
     );
   }
 
-  // Conditional views
   if (!resort) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -100,7 +99,6 @@ const OwnerDashboard = () => {
     );
   }
 
-  // Approved Resort Dashboard UI
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
@@ -161,7 +159,7 @@ const OwnerDashboard = () => {
           <div className="flex flex-col md:flex-row items-start md:items-center">
             {resort.image && (
               <img
-                src={`${API_BASE_URL}/api/image/${encodeURIComponent(resort.image)}`}
+                src={`${API_BASE_URL}/api/resorts/image/${encodeURIComponent(resort.image)}`}
                 alt={resort.name}
                 className="w-full md:w-48 h-auto md:h-32 object-cover rounded-lg mr-6 mb-4 md:mb-0"
                 onError={(e) => {

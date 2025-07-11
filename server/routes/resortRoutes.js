@@ -123,7 +123,7 @@ module.exports = (gfs, upload, gridfsBucket) => {
     }
   });
 
-  // --- Existing routes (no changes needed for these based on the image issue) ---
+
 
   router.get("/owner/:ownerId", async (req, res) => {
     try {
@@ -172,6 +172,16 @@ router.get("/:id/details", async (req, res) => {
       res.status(500).json({ message: "Server error fetching resorts" });
     }
   });
+
+  router.get("/rooms/byresort/:resortId", async (req, res) => {
+  try {
+    const rooms = await Room.find({ resortId: req.params.resortId });
+    res.json(rooms);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching rooms" });
+  }
+});
+
 
   router.patch("/:id/status", async (req, res) => {
     try {
