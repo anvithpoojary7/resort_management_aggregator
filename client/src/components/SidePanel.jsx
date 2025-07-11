@@ -5,10 +5,12 @@ import {
   FaHeart, FaSuitcase, FaComment, FaUser, FaBell,
   FaCog, FaQuestionCircle, FaSignOutAlt,
 } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 
-const SidePanel = ({ isOpen, setIsOpen, isLoggedIn, user }) => {
+const SidePanel = ({ isOpen, setIsOpen }) => {
   const panelRef = useRef();
   const navigate = useNavigate();
+  const { isLoggedIn, user, logout } = useAuth();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -18,11 +20,10 @@ const SidePanel = ({ isOpen, setIsOpen, isLoggedIn, user }) => {
     };
     if (isOpen) document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen]);
+  }, [isOpen, setIsOpen]);
 
   const handleLogout = () => {
-    localStorage.setItem('isLoggedIn', 'false');
-    localStorage.removeItem('user');
+    logout(); // Call context logout
     setIsOpen(false);
     navigate('/');
   };
@@ -73,4 +74,3 @@ const SidePanel = ({ isOpen, setIsOpen, isLoggedIn, user }) => {
 };
 
 export default SidePanel;
-

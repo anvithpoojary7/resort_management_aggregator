@@ -1,9 +1,11 @@
-// components/Header.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaBars, FaUser, FaGlobe } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 
-const Header = ({ onMenuClick, isLoggedIn, user }) => {
+const Header = ({ onMenuClick }) => {
+  const { isLoggedIn, user } = useAuth();
+
   const getInitial = (name) => (name ? name[0].toUpperCase() : '');
 
   return (
