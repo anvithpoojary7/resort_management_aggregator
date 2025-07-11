@@ -135,6 +135,23 @@ module.exports = (gfs, upload, gridfsBucket) => {
     }
   });
 
+  // Add this to your resort route file
+router.get("/:id/details", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const resort = await Resort.findById(id);
+    if (!resort) return res.status(404).json({ message: "Resort not found" });
+
+    const rooms = await Room.find({ resortId: id });
+
+    res.json({ resort, rooms });
+  } catch (err) {
+    console.error("Error fetching resort details:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
   router.get("/allresorts", async (req, res) => {
     try {
       const resorts = await Resort.find({}).sort({ createdAt: -1 });
