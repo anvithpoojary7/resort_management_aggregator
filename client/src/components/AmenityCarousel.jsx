@@ -28,21 +28,7 @@ const amenities = [
     description: "Bring your furry friends along — we welcome pets with open paws.",
     image: "/a5.jpeg",
   },
-  {
-    title: "Private Beach",
-    description: "Enjoy serene sunrises and tranquil evenings by your own shore.",
-    image: "/a6.jpg",
-  },
-  {
-    title: "Kids Play Zone",
-    description: "Fun-filled activities and spaces for your little ones to enjoy.",
-    image: "/a7.jpg",
-  },
-  {
-    title: "Mountain Views",
-    description: "Wake up to breathtaking views of the hills and peaks.",
-    image: "/a8.jpg",
-  },
+
 ];
 
 const AmenityCarousel = () => {
