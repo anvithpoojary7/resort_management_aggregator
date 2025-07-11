@@ -117,8 +117,9 @@ const ModerationPage = () => {
                 key={resort._id}
                 className="bg-white rounded-xl shadow hover:shadow-md transition duration-200 overflow-hidden relative"
               >
+                {/* FIX: Changed the image source URL */}
                 <img
-                  src={`${API_BASE_URL}/api/image/${encodeURIComponent(resort.image)}`}
+                  src={`${API_BASE_URL}/api/resorts/image/${encodeURIComponent(resort.image)}`}
                   alt={resort.name}
                   className="h-48 w-full object-cover"
                   onError={(e) => {
@@ -140,6 +141,7 @@ const ModerationPage = () => {
                   </div>
                   <div className="text-gray-600 text-sm flex items-center gap-2 mt-1">
                     <FaUser className="text-gray-500" />
+                    {/* Assuming ownerId is a string or can be directly displayed */}
                     Owner ID: {resort.ownerId}
                   </div>
                   <div className="text-gray-600 text-sm flex items-center gap-2 mt-1">

@@ -1,4 +1,4 @@
-const express = require('express');
+/*const express = require('express');
 const router = express.Router();
 const Owner = require('../models/Owner'); // adjust if your schema file is named differently
 const admin = require('firebase-admin');
@@ -30,4 +30,4 @@ router.get('/profile', verifyFirebaseToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = router;*/
