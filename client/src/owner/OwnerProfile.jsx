@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FaTachometerAlt, FaHotel, FaBook, FaUser, FaCog, FaSignOutAlt, FaEdit,
@@ -7,41 +7,21 @@ import {
 
 const OwnerProfile = () => {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState(null);
-  const API_BASE_URL = 'http://localhost:8080';
+
+  // Dummy profile data
+  const [profile, setProfile] = useState({
+    firstName: "John",
+    lastName: "Doe",
+    email: "john.doe@example.com",
+    phoneNumber: "+91 9876543210",
+    address: "123 Palm Street, Goa",
+    createdAt: new Date().toISOString(),
+  });
 
   const handleLogout = () => {
     localStorage.removeItem("user");
     navigate("/login");
   };
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (!user || !user.accessToken) {
-        alert("Please log in.");
-        return navigate("/login");
-      }
-
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/owner/profile`, {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${user.accessToken}`
-          }
-        });
-
-        if (!res.ok) throw new Error("Failed to fetch profile");
-        const data = await res.json();
-        setProfile(data);
-      } catch (err) {
-        console.error(err);
-        alert("Error fetching profile");
-      }
-    };
-
-    fetchProfile();
-  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -51,18 +31,13 @@ const OwnerProfile = () => {
     }));
   };
 
-  const handleSaveChanges = async () => {
-    // You can implement update route if needed
+  const handleSaveChanges = () => {
     alert("Save functionality not implemented yet.");
   };
 
   const getInitials = (firstName, lastName) => {
     return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
   };
-
-  if (!profile) {
-    return <div className="p-8 text-gray-700">Loading profile...</div>;
-  }
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -141,11 +116,11 @@ const OwnerProfile = () => {
         <div className="bg-white rounded-xl shadow-md p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-6">Personal Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <inputField label="First Name" name="firstName" value={profile.firstName} onChange={handleChange} />
-            <inputField label="Last Name" name="lastName" value={profile.lastName} onChange={handleChange} />
-            <inputField label="Email Address" name="email" value={profile.email} onChange={handleChange} icon={<FaEnvelope />} full />
-            <inputField label="Phone Number" name="phoneNumber" value={profile.phoneNumber} onChange={handleChange} icon={<FaPhone />} full />
-            <textareaField label="Address" name="address" value={profile.address} onChange={handleChange} icon={<FaMapMarkerAlt />} full />
+            <InputField label="First Name" name="firstName" value={profile.firstName} onChange={handleChange} />
+            <InputField label="Last Name" name="lastName" value={profile.lastName} onChange={handleChange} />
+            <InputField label="Email Address" name="email" value={profile.email} onChange={handleChange} icon={<FaEnvelope />} full />
+            <InputField label="Phone Number" name="phoneNumber" value={profile.phoneNumber} onChange={handleChange} icon={<FaPhone />} full />
+            <TextareaField label="Address" name="address" value={profile.address} onChange={handleChange} icon={<FaMapMarkerAlt />} full />
           </div>
           <div className="mt-8 text-right">
             <button onClick={handleSaveChanges} className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition">
@@ -158,7 +133,7 @@ const OwnerProfile = () => {
   );
 };
 
-const inputField = ({ label, name, value, onChange, icon, full }) => (
+const InputField = ({ label, name, value, onChange, icon, full }) => (
   <div className={full ? "md:col-span-2" : ""}>
     <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
     <div className="relative">
@@ -175,7 +150,7 @@ const inputField = ({ label, name, value, onChange, icon, full }) => (
   </div>
 );
 
-const textareaField = ({ label, name, value, onChange, icon, full }) => (
+const TextareaField = ({ label, name, value, onChange, icon, full }) => (
   <div className={full ? "md:col-span-2" : ""}>
     <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
     <div className="relative">
