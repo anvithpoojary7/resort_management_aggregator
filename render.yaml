@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: resort-backend
+    env: node
+    plan: free
+    buildCommand: 'npm install'
+    startCommand: 'node server.js'
+    envVars:
+      - key: MONGO_URI
+        value: your_mongodb_connection_string
+      - key: JWT_SECRET
+        value: your_jwt_secret_key
+      - key: NODE_ENV
+        value: development
+      - key: ADMIN_PASS_KEY
+        value: 123
+    rootDir: server
+
