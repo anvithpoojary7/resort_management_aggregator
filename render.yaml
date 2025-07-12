@@ -2,17 +2,16 @@ services:
   - type: web
     name: resort-backend
     env: node
-    plan: free
-    buildCommand: 'npm install'
-    startCommand: 'node server.js'
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node server.js
     envVars:
       - key: MONGO_URI
-        value: your_mongodb_connection_string
+        value: mongodb+srv://Gauthami:nnm23is069@resortfinder.06fbyjd.mongodb.net/resortAggregator?retryWrites=true&w=majority&appName=ResortFinder
       - key: JWT_SECRET
-        value: your_jwt_secret_key
-      - key: NODE_ENV
-        value: development
+        value: 99906338853806d068246c9b85f9701631eeec29d739868cc5bab4cd10d6f6a1
       - key: ADMIN_PASS_KEY
         value: 123
-    rootDir: server
+      - key: NODE_ENV
+        value: development
 
