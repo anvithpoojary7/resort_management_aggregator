@@ -45,6 +45,7 @@ const AppRoutes = () => (
     {/* ✅ Public / User Routes */}
     <Route path="/" element={<Home />} />
     <Route path="/resorts" element={<ResortList />} />
+
     <Route path="/resorts/:id" element={<ResortDetail />} />
     <Route path="/resorts/:id/reserve" element={<ReservationForm />} />
     <Route path="/auth" element={<CombinedLoginRegister />} />

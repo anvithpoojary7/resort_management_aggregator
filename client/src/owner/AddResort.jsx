@@ -8,7 +8,9 @@ const AddResort = () => {
   const currentOwnerId = JSON.parse(localStorage.getItem("user"))?.id;
 
   const [loading, setLoading] = useState(true);
-  const [resortStatus, setResortStatus] = useState(null);
+  // resortStatus state will still be updated, but not directly used for rendering
+  // a specific "pending" message within this component.
+  const [resortStatus, setResortStatus] = useState(null); 
   const [resortImage, setResortImage] = useState(null);
   const [resort, setResort] = useState({
     name: "",
@@ -40,26 +42,31 @@ const AddResort = () => {
       return;
     }
 
-    const checkStatus = async () => {
+    const checkStatusAndRedirect = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/api/resorts/owner/${currentOwnerId}`);
         const data = await res.json();
-        if (!data) setResortStatus("none");
-        else {
-          setResortStatus(data.status);
-          if (["approved", "rejected"].includes(data.status)) {
-            navigate("/owner/dashboard");
-          }
+
+        if (data && data._id) {
+          // If a resort exists for this owner (regardless of its status),
+          // immediately navigate them to their dashboard.
+          // The dashboard component should then handle displaying the specific status (pending, approved, rejected).
+          setResortStatus(data.status); // Still set the status, might be useful for debugging or future logic
+          navigate("/owner/dashboard", { replace: true });
+        } else {
+          // No resort found for this owner, allow them to add one.
+          setResortStatus("none"); 
         }
       } catch (err) {
         console.error("Error checking resort status:", err);
-        setResortStatus("none");
+        // On error, assume no resort exists or we can't verify, so allow adding.
+        setResortStatus("none"); 
       } finally {
         setLoading(false);
       }
     };
 
-    checkStatus();
+    checkStatusAndRedirect();
   }, [currentOwnerId, navigate]);
 
   const handleChange = (e) => {
@@ -188,10 +195,12 @@ const AddResort = () => {
         body: formData,
       });
 
-      const body = await res.json();
+      const text = await res.text(); // Get raw text to handle potential empty responses
+      const body = text ? JSON.parse(text) : {}; // Parse if not empty
+
       if (res.ok) {
         alert("Resort submitted successfully and is pending review!");
-        navigate("/owner/dashboard");
+        navigate("/owner/dashboard", { replace: true }); // Redirect to dashboard after successful submission
       } else {
         alert(body.message || "Something went wrong.");
       }
@@ -201,21 +210,17 @@ const AddResort = () => {
     }
   };
 
-  if (loading) return <div className="text-center mt-10 text-gray-500">Loading…</div>;
+  if (loading) {
+    return <div className="text-center mt-10 text-gray-500">Loading…</div>;
+  }
 
-  if (resortStatus === "pending") {
-    return (
-      <div className="p-6 max-w-xl mx-auto bg-white rounded shadow mt-10 text-center">
-        <h2 className="text-xl font-semibold mb-2">Awaiting Approval</h2>
-        <p className="text-gray-600 mb-4">Your resort is under review by the admin.</p>
-        <button
-          onClick={() => navigate("/owner/dashboard")}
-          className="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700"
-        >
-          Go to Dashboard
-        </button>
-      </div>
-    );
+  // If resortStatus is not "none", it means a resort was found and the user
+  // should have already been redirected to the dashboard.
+  // This ensures the form is only shown if no resort exists.
+  if (resortStatus !== "none") {
+    // This case should ideally not be reached if the useEffect logic works correctly
+    // But it's a fallback to prevent rendering the form if a redirect was intended.
+    return null; 
   }
 
   return (
