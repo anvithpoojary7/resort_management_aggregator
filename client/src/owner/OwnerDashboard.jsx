@@ -12,7 +12,6 @@ const API_BASE_URL = "http://localhost:8080";
 const OwnerDashboard = () => {
   const navigate = useNavigate();
   const [resort, setResort] = useState(null);
-  const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -33,7 +32,10 @@ const OwnerDashboard = () => {
         const data = await res.json();
         if (data?._id) {
           setResort(data);
-          setStatus(data.status);
+        } else {
+          // If no resort is found, navigate to the add resort page
+          navigate("/owner/addresort", { replace: true });
+          return;
         }
       } catch (err) {
         console.error("Error fetching resort:", err);
@@ -52,23 +54,25 @@ const OwnerDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-gray-100">
         <p className="text-gray-600 text-lg">Loading dashboard...</p>
       </div>
     );
   }
 
+  // Define the main content based on resort status
+  let mainContent;
+
   if (error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
+    mainContent = (
+      <div className="flex-1 flex items-center justify-center p-8">
         <p className="text-red-600 text-lg">{error}</p>
       </div>
     );
-  }
-
-  if (!resort) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
+  } else if (!resort) {
+    // This case should be handled by the useEffect redirect, but it's a good fallback
+    mainContent = (
+      <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center">
           <h2 className="text-xl font-semibold">You haven’t added a resort yet.</h2>
           <Link to="/owner/addresort" className="text-blue-600 underline mt-2 block">
@@ -77,28 +81,74 @@ const OwnerDashboard = () => {
         </div>
       </div>
     );
-  }
-
-  if (status === "pending") {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <h2 className="text-xl font-bold text-yellow-600">
+  } else if (resort.status === "pending") {
+    mainContent = (
+      <div className="flex-1 flex items-center justify-center p-8">
+        <h2 className="text-xl font-bold text-yellow-600 text-center">
           Your resort is under review by the admin.
         </h2>
       </div>
     );
-  }
-
-  if (status === "rejected") {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <h2 className="text-xl font-bold text-red-600">
-          Unfortunately your resort was rejected. Please edit and resubmit.
+  } else if (resort.status === "rejected") {
+    mainContent = (
+      <div className="flex-1 flex items-center justify-center p-8">
+        <h2 className="text-xl font-bold text-red-600 text-center">
+          Unfortunately, your resort was rejected. Please edit and resubmit.
         </h2>
+      </div>
+    );
+  } else {
+    // Approved resort content
+    mainContent = (
+      <div className="flex-1 p-8">
+        <h1 className="text-3xl font-semibold text-gray-800 mb-6">Dashboard Overview</h1>
+
+        <div className="bg-white p-6 rounded-xl shadow-md mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-800">Your Resort</h2>
+            <button onClick={() => navigate(`/owner/my-resort/${resort._id}/edit`)} className="flex items-center text-blue-600 hover:text-blue-700 font-medium">
+              <FaEdit className="mr-2" /> Edit
+            </button>
+          </div>
+          <div className="flex flex-col md:flex-row items-start md:items-center">
+            {resort.image && (
+              <img
+                src={`${API_BASE_URL}/api/resorts/image/${encodeURIComponent(resort.image)}`}
+                alt={resort.name}
+                className="w-full md:w-48 h-auto md:h-32 object-cover rounded-lg mr-6 mb-4 md:mb-0"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://via.placeholder.com/200x128?text=Image+Missing';
+                }}
+              />
+            )}
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900">{resort.name}</h3>
+              <p className="text-gray-600">{resort.location}</p>
+              <div className="flex items-center mt-2">
+                <FaStar className="text-yellow-500 mr-1" />
+                <span className="font-semibold text-gray-800">4.8</span>
+                <span className="text-gray-500 ml-1">(156 reviews)</span>
+                <span className="ml-4 text-xl font-bold text-gray-900">₹{resort.price}</span>
+                <span className="text-gray-500 ml-1">/ night</span>
+              </div>
+              <p className="text-gray-700 text-sm mt-2">{resort.description}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Dummy Performance Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <PerformanceCard title="Total Bookings" value="48" icon={<FaCalendarAlt />} color="blue" />
+          <PerformanceCard title="Revenue" value="₹24,500" icon={<FaDollarSign />} color="green" />
+          <PerformanceCard title="Occupancy" value="78%" icon={<IoMdInformationCircleOutline />} color="gray" />
+          <PerformanceCard title="Rating" value="4.8" icon={<FaStar />} color="yellow" />
+        </div>
       </div>
     );
   }
 
+  // Always render the main dashboard container and sidebar
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
@@ -145,52 +195,9 @@ const OwnerDashboard = () => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 p-8">
-        <h1 className="text-3xl font-semibold text-gray-800 mb-6">Dashboard Overview</h1>
+      {/* Main Content Area */}
+      {mainContent}
 
-        <div className="bg-white p-6 rounded-xl shadow-md mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">Your Resort</h2>
-            <button onClick={() => navigate(`/owner/my-resort/${resort._id}/edit`)} className="flex items-center text-blue-600 hover:text-blue-700 font-medium">
-              <FaEdit className="mr-2" /> Edit
-            </button>
-          </div>
-          <div className="flex flex-col md:flex-row items-start md:items-center">
-            {resort.image && (
-              <img
-                src={`${API_BASE_URL}/api/resorts/image/${encodeURIComponent(resort.image)}`}
-                alt={resort.name}
-                className="w-full md:w-48 h-auto md:h-32 object-cover rounded-lg mr-6 mb-4 md:mb-0"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = 'https://via.placeholder.com/200x128?text=Image+Missing';
-                }}
-              />
-            )}
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900">{resort.name}</h3>
-              <p className="text-gray-600">{resort.location}</p>
-              <div className="flex items-center mt-2">
-                <FaStar className="text-yellow-500 mr-1" />
-                <span className="font-semibold text-gray-800">4.8</span>
-                <span className="text-gray-500 ml-1">(156 reviews)</span>
-                <span className="ml-4 text-xl font-bold text-gray-900">₹{resort.price}</span>
-                <span className="text-gray-500 ml-1">/ night</span>
-              </div>
-              <p className="text-gray-700 text-sm mt-2">{resort.description}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Dummy Performance Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <PerformanceCard title="Total Bookings" value="48" icon={<FaCalendarAlt />} color="blue" />
-          <PerformanceCard title="Revenue" value="₹24,500" icon={<FaDollarSign />} color="green" />
-          <PerformanceCard title="Occupancy" value="78%" icon={<IoMdInformationCircleOutline />} color="gray" />
-          <PerformanceCard title="Rating" value="4.8" icon={<FaStar />} color="yellow" />
-        </div>
-      </div>
     </div>
   );
 };
