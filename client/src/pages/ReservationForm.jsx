@@ -32,15 +32,46 @@ const ReservationForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (formData.guestsAdult < 1) {
+  
+    // Validate required fields
+    const { name, email, checkIn, checkOut, roomType, guestsAdult } = formData;
+  
+    if (!name.trim()) {
+      alert("Please enter your full name.");
+      return;
+    }
+    if (!email.trim()) {
+      alert("Please enter your email address.");
+      return;
+    }
+    if (!checkIn) {
+      alert("Please select a check-in date.");
+      return;
+    }
+    if (!checkOut) {
+      alert("Please select a check-out date.");
+      return;
+    }
+    if (new Date(checkOut) <= new Date(checkIn)) {
+      alert("Check-out date must be after check-in date.");
+      return;
+    }
+    if (!roomType) {
+      alert("Please select a room.");
+      return;
+    }
+    if (guestsAdult < 1) {
       alert("At least one adult is required for a reservation.");
       return;
     }
+  
+    // All validations passed
     setShowSummary(true);
     setTimeout(() => {
       document.getElementById('summaryModal')?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   };
+  
 
   const handlePayment = () => {
     alert("Redirecting to Razorpay...");
