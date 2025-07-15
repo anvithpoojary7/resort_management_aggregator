@@ -90,8 +90,8 @@ const ReservationForm = () => {
           </div>
         </div>
 
+        {/* Room Cards - without "Choose a Room" heading */}
         <div className="space-y-4">
-          <label className="block text-lg font-semibold">Choose a Room</label>
           {rooms?.map((room, idx) => (
             <div key={idx} className={`border rounded-lg p-4 shadow ${formData.roomType === room.roomName ? 'border-green-500' : 'border-gray-300'}`}>
               <div className="flex flex-col md:flex-row gap-4">

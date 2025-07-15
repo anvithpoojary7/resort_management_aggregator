@@ -6,7 +6,8 @@ import { FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaTag, FaSort, FaStar, FaRegSta
 import { MdOutlinePriceChange } from "react-icons/md"; // For max price input
 import { IoIosCloseCircle } from "react-icons/io"; // For clearing inputs
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'https://resort-finder-2aqp.onrender.com';
+
 
 const ResortList = () => {
     const navigate = useNavigate();
