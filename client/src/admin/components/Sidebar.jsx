@@ -40,7 +40,7 @@ const Sidebar = () => {
             <FaHome className="text-lg" /> <span>Dashboard</span>
           </NavLink>
           <NavLink to="/admin/resorts" className={activeClass}>
-            <FaHotel className="text-lg" /> <span>Resorts</span>
+            <FaHotel className="text-lg" /> <span>Manage Resorts</span>
           </NavLink>
           <NavLink to="/admin/users" className={activeClass}>
             <FaUsers className="text-lg" /> <span>Users</span>
