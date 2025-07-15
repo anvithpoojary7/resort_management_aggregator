@@ -1,7 +1,6 @@
 import React from 'react';
 
 const cards = [
-  { label: 'Pending Approvals', value: 3, info: '+2 today', color: 'bg-orange-100', text: 'text-orange-700' },
   { label: 'Total Users', value: 5, info: '+12 this week', color: 'bg-blue-100', text: 'text-blue-700' },
   { label: 'Active Resorts', value: 4, info: '+5 this month', color: 'bg-green-100', text: 'text-green-700' },
   { label: 'Monthly Revenue', value: '$42,500', info: '+18% from last month', color: 'bg-purple-100', text: 'text-purple-700' }
