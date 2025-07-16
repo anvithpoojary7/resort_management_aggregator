@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FaUser } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
@@ -9,8 +9,6 @@ import { useAuth } from '../context/AuthContext';
 
 const CombinedLoginRegister = () => {
   const [isLogin, setIsLogin] = useState(false);
-  const [role, setRole] = useState('user');
-  const [isRoleLocked, setIsRoleLocked] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -20,52 +18,11 @@ const CombinedLoginRegister = () => {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const navigate = useNavigate();
-  const location = useLocation();
   const { user, login } = useAuth();
 
   useEffect(() => {
-    if (user) redirectToDashboard(user.role, user.id);
+    if (user) navigate('/', { replace: true });
   }, [user]);
-
-  useEffect(() => {
-    window.history.pushState(null, '', window.location.href);
-    const blockBack = () => window.history.pushState(null, '', window.location.href);
-    window.addEventListener('popstate', blockBack);
-    return () => window.removeEventListener('popstate', blockBack);
-  }, []);
-
-  useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const roleFromURL = queryParams.get('role');
-    if (roleFromURL && ['user', 'admin', 'owner'].includes(roleFromURL)) {
-      setRole(roleFromURL);
-      setIsRoleLocked(true);
-    }
-  }, [location.search]);
-
-  const redirectToDashboard = async (role, userId) => {
-    if (role === 'owner') {
-      try {
-        const res = await fetch(`http://localhost:8080/api/resorts/owner/${userId}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        if (data && data._id) {
-          navigate('/owner/dashboard', {
-            state: { resortStatus: data.status, resortExists: true },
-            replace: true,
-          });
-        } else {
-          navigate('/owner/addresort', { replace: true });
-        }
-      } catch (err) {
-        console.error('Error checking owner resort:', err);
-        alert('Could not verify resort status. Please try again.');
-        navigate('/owner/addresort', { replace: true });
-      }
-    } else {
-      navigate('/', { replace: true });
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -78,7 +35,7 @@ const CombinedLoginRegister = () => {
 
     const name = `${firstName} ${lastName}`;
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-    const payload = isLogin ? { email, password, role } : { name, email, password, role };
+    const payload = isLogin ? { email, password, role: 'user' } : { name, email, password, role: 'user' };
 
     try {
       const res = await fetch(endpoint, {
@@ -87,13 +44,14 @@ const CombinedLoginRegister = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+
       const text = await res.text();
       const data = text ? JSON.parse(text) : {};
 
       if (res.ok) {
         if (isLogin) {
           login(data.user);
-          redirectToDashboard(data.user.role, data.user.id);
+          navigate('/', { replace: true });
         } else {
           alert('Registration successful! Please login.');
           setIsLogin(true);
@@ -115,6 +73,7 @@ const CombinedLoginRegister = () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+
       const endpoint = isLogin ? '/api/auth/google-login' : '/api/auth/google-signup';
 
       const res = await fetch(endpoint, {
@@ -124,7 +83,7 @@ const CombinedLoginRegister = () => {
         body: JSON.stringify({
           name: user.displayName,
           email: user.email,
-          role,
+          role: 'user',
           profileImage: user.photoURL,
         }),
       });
@@ -138,7 +97,7 @@ const CombinedLoginRegister = () => {
           role: data.user.role,
           profileImage: user.photoURL,
         });
-        redirectToDashboard(data.user.role, data.user.id);
+        navigate('/', { replace: true });
       } else {
         alert(data.message || 'Google login failed');
       }
@@ -146,8 +105,6 @@ const CombinedLoginRegister = () => {
       alert('Google authentication failed: ' + err.message);
     }
   };
-
-  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
 
   return (
     <div className="min-h-screen bg-[#f6f9ff] flex items-center justify-center px-4">
@@ -169,26 +126,8 @@ const CombinedLoginRegister = () => {
           {isLogin ? 'Sign in to your account' : 'Join us today'}
         </p>
         <p className="text-sm text-center text-gray-600 mb-4">
-          You are signing in as: <span className="text-blue-700 font-medium">{role}</span>
+          You are signing in as: <span className="text-blue-700 font-medium">User</span>
         </p>
-
-        <div className="mb-4">
-          <label className="text-sm text-gray-600">Select Role</label>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="w-full mt-1 px-3 py-2 border rounded text-sm focus:outline-none bg-white disabled:bg-gray-100"
-            disabled={isRoleLocked}
-          >
-            <option value="user">User – Standard user</option>
-            <option value="owner">Owner – List resort</option>
-          </select>
-          {isRoleLocked && (
-            <p className="text-xs text-gray-500 mt-1">
-              Role selected as <strong>{role}</strong> via "Become a Host"
-            </p>
-          )}
-        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
@@ -265,7 +204,7 @@ const CombinedLoginRegister = () => {
                 : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
-            {isLogin ? `Sign in as ${roleLabel}` : `Register as ${roleLabel}`}
+            {isLogin ? 'Sign in as User' : 'Register as User'}
           </button>
         </form>
 
@@ -298,3 +237,5 @@ const CombinedLoginRegister = () => {
 };
 
 export default CombinedLoginRegister;
+
+

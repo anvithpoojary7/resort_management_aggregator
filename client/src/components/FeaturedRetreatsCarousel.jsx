@@ -22,7 +22,6 @@ const FeaturedRetreatsCarousel = () => {
         console.error('Error fetching featured resorts:', err);
       }
     };
-
     fetchApprovedResorts();
   }, []);
 
@@ -101,7 +100,9 @@ const FeaturedRetreatsCarousel = () => {
                   </div>
 
                   <div className="p-4">
-                    <h3 className="text-lg font-bold mb-1">{retreat.name}</h3>
+                    <h3 className="text-lg font-bold mb-1 hover:scale-105 hover:text-yellow-600 transition-all duration-300">
+                      {retreat.name}
+                    </h3>
                     <div className="flex items-center text-sm text-gray-500 mb-1">
                       <FaMapMarkerAlt className="mr-1 text-red-400" />
                       <span>{retreat.location}</span>
@@ -122,26 +123,29 @@ const FeaturedRetreatsCarousel = () => {
             ))
           )}
         </Swiper>
-      </div>
 
-      <style>
-        {`
-          .swiper-pagination-bullet {
-            background: black !important;
-            opacity: 0.5;
-          }
-          .swiper-pagination-bullet-active {
-            opacity: 1;
-            transform: scale(1.2);
-          }
-          .swiper-pagination {
-            position: relative;
-            bottom: -20px !important;
-            margin-top: 24px;
-            text-align: center;
-          }
-        `}
-      </style>
+        {/* Custom Styles for Pagination */}
+        <style>
+          {`
+            .swiper-pagination {
+              margin-top: 20px !important;
+              position: relative;
+              text-align: center;
+            }
+            .swiper-pagination-bullet {
+              background-color: black !important;
+              opacity: 0.5;
+              width: 10px;
+              height: 10px;
+              margin: 0 5px !important;
+            }
+            .swiper-pagination-bullet-active {
+              opacity: 1;
+              transform: scale(1.2);
+            }
+          `}
+        </style>
+      </div>
     </section>
   );
 };
