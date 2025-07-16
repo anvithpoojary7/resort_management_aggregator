@@ -20,9 +20,11 @@ const CombinedLoginRegister = () => {
   const navigate = useNavigate();
   const { user, login } = useAuth();
 
+  const BASE_URL = 'https://resort-finder-2aqp.onrender.com';
+
   useEffect(() => {
     if (user) navigate('/', { replace: true });
-  }, [user]);
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,8 +36,12 @@ const CombinedLoginRegister = () => {
     }
 
     const name = `${firstName} ${lastName}`;
-    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-    const payload = isLogin ? { email, password, role: 'user' } : { name, email, password, role: 'user' };
+    const endpoint = isLogin
+      ? `${BASE_URL}/api/auth/login`
+      : `${BASE_URL}/api/auth/register`;
+    const payload = isLogin
+      ? { email, password, role: 'user' }
+      : { name, email, password, role: 'user' };
 
     try {
       const res = await fetch(endpoint, {
@@ -74,7 +80,9 @@ const CombinedLoginRegister = () => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      const endpoint = isLogin ? '/api/auth/google-login' : '/api/auth/google-signup';
+      const endpoint = isLogin
+        ? `${BASE_URL}/api/auth/google-login`
+        : `${BASE_URL}/api/auth/google-signup`;
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -126,7 +134,8 @@ const CombinedLoginRegister = () => {
           {isLogin ? 'Sign in to your account' : 'Join us today'}
         </p>
         <p className="text-sm text-center text-gray-600 mb-4">
-          You are signing in as: <span className="text-blue-700 font-medium">User</span>
+          You are signing in as:{' '}
+          <span className="text-blue-700 font-medium">User</span>
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -237,5 +246,3 @@ const CombinedLoginRegister = () => {
 };
 
 export default CombinedLoginRegister;
-
-
