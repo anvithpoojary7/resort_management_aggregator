@@ -17,16 +17,6 @@ import ProfilePage from '../pages/ProfilePage';
 
 
 
-
-
-//  Owner Pages
-import OwnerDashboard from '../owner/OwnerDashboard';
-import OwnerMyResort from '../owner/OwnerMyResort';
-import OwnerBookings from '../owner/OwnerBookings';
-import OwnerProfile from '../owner/OwnerProfile';
-import AddResort from '../owner/AddResort';
-
-
 //  Admin Pages
 import AdminLogin from '../admin/pages/AdminLogin';
 import AdminDashboard from '../admin/pages/AdminDashboard';
@@ -57,33 +47,7 @@ const AppRoutes = () => (
     <Route path="/profile" element={<ProfilePage />} />
 
 
-    {/* ✅ Owner Routes */}
-    <Route path="/owner/dashboard" element={
-      <ProtectedRoute role="owner">
-        <OwnerDashboard />
-      </ProtectedRoute>
-    } />
-    <Route path="/owner/my-resort" element={
-      <ProtectedRoute role="owner">
-        <OwnerMyResort />
-      </ProtectedRoute>
-    } />
-    <Route path="/owner/bookings" element={
-      <ProtectedRoute role="owner">
-        <OwnerBookings />
-      </ProtectedRoute>
-    } />
-    <Route path="/owner/profile" element={
-      <ProtectedRoute role="owner">
-        <OwnerProfile />
-      </ProtectedRoute>
-    } />
-    <Route path="/owner/addresort" element={
-      <ProtectedRoute role="owner">
-        <AddResort />
-      </ProtectedRoute>
-    } />
-
+   
 
    <Route path={ADMIN_PATH} element={<AdminLogin/>} />
 
