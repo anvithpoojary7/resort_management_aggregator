@@ -19,9 +19,8 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: false, // Make it optional for Google users if not set
   },
-  role: {
+ role: { 
     type: String,
-    enum: ['user', 'owner', 'admin'],
     default: 'user',
   },
   isGoogleUser: { // Added for Google login differentiation
