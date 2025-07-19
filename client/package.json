@@ -20,6 +20,7 @@
     "react-scripts": "^5.0.1",
     "recharts": "^3.0.2",
     "swiper": "^11.2.8",
+    "tailwind-merge": "^3.3.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -29,7 +30,10 @@
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
-    "extends": ["react-app", "react-app/jest"]
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
   },
   "browserslist": {
     "production": [

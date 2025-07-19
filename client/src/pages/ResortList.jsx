@@ -6,6 +6,7 @@ import { FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaTag, FaSort, FaStar, FaRegSta
 import { MdOutlinePriceChange } from "react-icons/md"; // For max price input
 import { IoIosCloseCircle } from "react-icons/io"; // For clearing inputs
 
+import MagicLoader from './MagicLoader'; 
 const API_BASE_URL = 'https://resort-finder-2aqp.onrender.com';
 
 
@@ -142,7 +143,13 @@ const ResortList = () => {
     /* ───────────────────────────────
      * Early returns
      * ─────────────────────────── */
-    if (loading) return <p className="text-center mt-10 text-lg text-blue-600">Loading resorts...</p>;
+   if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+                <MagicLoader size={250} particleCount={2} speed={1.2} />
+            </div>
+        );
+    }
     if (err) return <p className="text-center text-red-500 mt-10 text-lg font-semibold">{err}</p>;
 
     /* ───────────────────────────────
