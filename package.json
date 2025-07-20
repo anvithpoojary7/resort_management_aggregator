@@ -10,7 +10,9 @@
     "concurrently": "^8.2.2"
   },
   "dependencies": {
+    "@sendgrid/mail": "^8.1.5",
     "framer-motion": "^12.20.1",
+    "nodemailer": "^7.0.5",
     "react-router-dom": "^7.6.3",
     "recharts": "^3.0.2"
   }

@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/users');
 const Owner = require('../models/owner');
+const sendVerificationEmail = require('../utils/sendVerification'); 
+
 
 const requireAuth=require('../middleware/requireAuth');
 
@@ -16,6 +18,7 @@ router.get('/me', requireAuth, async (req, res) => {
     res.status(500).json({ message: 'Error fetching user' });
   }
 });
+
 
 
 router.post('/register', async (req, res) => {
@@ -36,45 +39,57 @@ router.post('/register', async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     const newUser = new User({
       name,
       email,
       role,
       passwordHash: hashedPassword,
+      verificationCode,
+      isVerified: false,
     });
 
     await newUser.save();
-
+    await sendVerificationEmail(email, verificationCode); // send code
 
     if (role === 'owner') {
       await Owner.create({ userId: newUser._id });
-    } 
-
-    const payload = { id: newUser._id, email: newUser.email, role: newUser.role };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 3 * 24 * 60 * 60 * 1000,
-    });
+    }
 
     res.status(201).json({
-      message: 'User registered successfully',
-      user: {
-        id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-      },
+      message: 'Verification code sent to your email',
+      userId: newUser._id,
     });
   } catch (err) {
     console.error('Registration Error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+router.post('/verify-email', async (req, res) => {
+  try {
+    const { email, code } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (user.isVerified) return res.status(400).json({ message: 'User already verified' });
+
+    if (user.verificationCode === code) {
+      user.isVerified = true;
+      user.verificationCode = null;
+      await user.save();
+      return res.json({ message: 'Email verified successfully' });
+    } else {
+      return res.status(400).json({ message: 'Invalid verification code' });
+    }
+  } catch (err) {
+    console.error('Verification Error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 
 router.post('/login', async (req, res) => {
