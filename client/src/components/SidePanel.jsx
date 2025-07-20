@@ -1,4 +1,4 @@
-// src/components/SidePanel.jsx
+
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -82,9 +82,7 @@ const SidePanel = ({ isOpen, setIsOpen, buttonRef }) => {
               <FaBell className="mr-3 text-white" />
               Notifications
             </span>
-            <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-              1
-            </span>
+           
           </Link>
         </li>
       </ul>
