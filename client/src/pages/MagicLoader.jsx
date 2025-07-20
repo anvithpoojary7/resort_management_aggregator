@@ -29,7 +29,7 @@ const MagicLoader = ({
   size = 200,
   particleCount = 2,
   speed = 2,
-  hueRange = [0, 360],
+  hueRange = [180, 220],
   className
 }) => {
   // Type generics like <HTMLCanvasElement> are removed from useRef
