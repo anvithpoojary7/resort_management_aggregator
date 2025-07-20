@@ -5,7 +5,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 const sendVerificationEmail = async (email, code) => {
   const msg = {
     to: email,
-    from: 'resortfinderinbox@gmail.com', // This should be verified in SendGrid
+    from: process.env.EMAIL_FROM, // This should be verified in SendGrid
     subject: 'Verify your Resort Finder account',
     text: `Your verification code is: ${code}`,
   };

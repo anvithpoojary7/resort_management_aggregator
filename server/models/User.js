@@ -18,7 +18,7 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
- role: { 
+  role: {
     type: String,
     default: 'user',
   },
@@ -37,7 +37,7 @@ const UserSchema = new mongoose.Schema({
   timestamps: true
 });
 
-UserSchema.pre('save', async function(next) {
+UserSchema.pre('save', async function (next) {
   if (!this.isModified('passwordHash') || this.isGoogleUser) {
     return next();
   }
@@ -46,10 +46,9 @@ UserSchema.pre('save', async function(next) {
   next();
 });
 
-UserSchema.methods.matchPassword = async function(enteredPassword) {
+UserSchema.methods.matchPassword = async function (enteredPassword) {
   if (this.isGoogleUser) return false;
   return await bcrypt.compare(enteredPassword, this.passwordHash);
 };
 
-// ✅ Prevent model overwrite error during hot-reload/dev
 module.exports = mongoose.models.User || mongoose.model('User', UserSchema);

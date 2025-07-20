@@ -3,12 +3,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/users');
 const Owner = require('../models/owner');
-
-const requireAuth=require('../middleware/requireAuth');
+const sendVerificationEmail = require('../utils/sendVerification');
+const requireAuth = require('../middleware/requireAuth');
 
 const router = express.Router();
 
-// This endpoint remains the same
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const { id, email, role } = req.user;
@@ -18,19 +17,19 @@ router.get('/me', requireAuth, async (req, res) => {
   }
 });
 
-
-// ✅ Simplified Registration
+// ✅ Registration with email verification
 router.post('/register', async (req, res) => {
   try {
-    // We no longer need 'role' from the request body
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'All fields are required.' });
     }
+
     if (password.length < 6) {
       return res.status(400).json({ message: 'Password must be at least 6 characters.' });
     }
+
     if (await User.findOne({ email })) {
       return res.status(400).json({ message: 'User already exists' });
     }
@@ -38,7 +37,6 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // The 'role' will be set to 'user' by default from the schema
     const newUser = new User({
       name,
       email,
@@ -46,12 +44,11 @@ router.post('/register', async (req, res) => {
       verificationCode,
       isVerified: false,
     });
+
     await newUser.save();
 
-
-    if (role === 'owner') {
-      await Owner.create({ userId: newUser._id });
-    } 
+    // ✅ Send verification email
+    await sendVerificationEmail(email, verificationCode);
 
     const payload = { id: newUser._id, email: newUser.email, role: newUser.role };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
@@ -64,7 +61,7 @@ router.post('/register', async (req, res) => {
     });
 
     res.status(201).json({
-      message: 'User registered successfully',
+      message: 'User registered successfully. Check your email to verify.',
       user: {
         id: newUser._id,
         name: newUser.name,
@@ -101,11 +98,8 @@ router.post('/verify-email', async (req, res) => {
   }
 });
 
-
-// ✅ Simplified Login
 router.post('/login', async (req, res) => {
   try {
-    // We no longer need 'role' from the request body
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -117,8 +111,6 @@ router.post('/login', async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
-
-    // The check for different roles is removed.
 
     const payload = { id: user._id, email: user.email, role: user.role };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
@@ -137,78 +129,72 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// ✅ Simplified Google Login
 router.post('/google-login', async (req, res) => {
-    try {
-        const { email } = req.body;
+  try {
+    const { email } = req.body;
 
-        if (!email) {
-            return res.status(400).json({ message: 'Missing Google user info.' });
-        }
-
-        let user = await User.findOne({ email });
-
-        if (!user) {
-            return res.status(404).json({ message: 'No user found. Please sign up first.' });
-        }
-
-        const payload = { id: user._id, email: user.email, role: user.role };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
-
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 3 * 24 * 60 * 60 * 1000,
-        });
-
-        res.json({ message: 'Google login successful', user: payload });
-    } catch (err) {
-        console.error('Google Login Error:', err);
-        res.status(500).json({ message: 'Server error' });
+    if (!email) {
+      return res.status(400).json({ message: 'Missing Google user info.' });
     }
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'No user found. Please sign up first.' });
+    }
+
+    const payload = { id: user._id, email: user.email, role: user.role };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 3 * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({ message: 'Google login successful', user: payload });
+  } catch (err) {
+    console.error('Google Login Error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
-// ✅ Simplified Google Signup
 router.post('/google-signup', async (req, res) => {
-    try {
-        const { name, email } = req.body;
+  try {
+    const { name, email } = req.body;
 
-        if (!name || !email) {
-            return res.status(400).json({ message: 'Missing Google user info.' });
-        }
-
-        if (await User.findOne({ email })) {
-            return res.status(400).json({ message: 'User already exists. Try login instead.' });
-        }
-
-        const newUser = new User({
-            name,
-            email,
-            isGoogleUser: true,
-            passwordHash: ''
-            // 'role' is automatically set to 'user' by default
-        });
-        await newUser.save();
-
-        // Removed the 'owner' logic
-
-        const payload = { id: newUser._id, email: newUser.email, role: newUser.role };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
-
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 3 * 24 * 60 * 60 * 1000,
-        });
-
-        res.status(201).json({ message: 'Google signup successful', user: payload });
-    } catch (err) {
-        console.error('Google Signup Error:', err);
-        res.status(500).json({ message: 'Server error' });
+    if (!name || !email) {
+      return res.status(400).json({ message: 'Missing Google user info.' });
     }
-});
 
+    if (await User.findOne({ email })) {
+      return res.status(400).json({ message: 'User already exists. Try login instead.' });
+    }
+
+    const newUser = new User({
+      name,
+      email,
+      isGoogleUser: true,
+      passwordHash: ''
+    });
+    await newUser.save();
+
+    const payload = { id: newUser._id, email: newUser.email, role: newUser.role };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 3 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(201).json({ message: 'Google signup successful', user: payload });
+  } catch (err) {
+    console.error('Google Signup Error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 module.exports = router;
