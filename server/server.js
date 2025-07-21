@@ -87,6 +87,10 @@ app.get("/api/resorts/image/:filename", async (req, res) => {
   }
 });
 
+app.get('/', (req, res) => {
+  res.send('Resort Finder API is running successfully!');
+});
+
 
   const PORT = process.env.PORT || 8080;
   app.listen(PORT, () => {
