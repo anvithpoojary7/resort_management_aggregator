@@ -23,10 +23,30 @@ let gfs;
 let upload;
 let gridfsBucket;
 
-app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true,
-}));
+// --- CORS Configuration STARTS HERE ---
+// List of allowed domains
+const allowedOrigins = [
+  'http://localhost:3000', // Your local frontend
+  'https://resort-management-aggregator.vercel.app' // Your deployed frontend
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true, // This is important for sending cookies
+};
+
+app.use(cors(corsOptions)); // Use the new cors options
+// --- CORS Configuration ENDS HERE ---
+
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
