@@ -6,11 +6,14 @@ import 'swiper/css/pagination';
 import { FaStar, FaRegStar, FaHeart, FaMapMarkerAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
+const API_BASE_URL = process.env.NODE_ENV === 'production'
+  ? 'https://resort-finder-2aqp.onrender.com'
+  : 'http://localhost:8080'; 
 const FeaturedRetreatsCarousel = () => {
   const [featuredResorts, setFeaturedResorts] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const navigate = useNavigate();
-  const API_BASE_URL = 'http://localhost:8080';
+  
 
   useEffect(() => {
     const fetchApprovedResorts = async () => {
