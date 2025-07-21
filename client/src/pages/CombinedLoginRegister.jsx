@@ -6,7 +6,12 @@ import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, provider } from '../firebase';
 import { useAuth } from '../context/AuthContext';
-import { TopLoader } from './TopLoader'; // Import TopLoader
+import { TopLoader } from './TopLoader'; 
+
+
+const API_URL = process.env.NODE_ENV === 'production'
+  ? 'https://resort-finder-2aqp.onrender.com'
+  : 'http://localhost:8080'; 
 
 const CombinedLoginRegister = () => {
   const [mode, setMode] = useState('login'); // 'login', 'register', or 'verify'
@@ -55,7 +60,8 @@ const CombinedLoginRegister = () => {
         : { name, email, password, role: 'user' };
 
     try {
-      const res = await fetch(endpoint, {
+      // Use the dynamic API_URL for the fetch request
+      const res = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -93,7 +99,8 @@ const CombinedLoginRegister = () => {
     setIsLoading(true);
 
     try {
-      const res = await fetch('/api/auth/verify-email', {
+      // Use the dynamic API_URL for the fetch request
+      const res = await fetch(`${API_URL}/api/auth/verify-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code: verificationCode }),

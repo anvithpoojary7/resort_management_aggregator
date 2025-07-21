@@ -2,14 +2,20 @@ import React, { useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Dynamically set the API base URL based on the environment
+const API_URL = process.env.NODE_ENV === 'production'
+  ? 'https://resort-finder-2aqp.onrender.com'
+  : 'http://localhost:8080'; // Assuming your local server runs on port 5000
+
 const ReservationForm = () => {
   const { id } = useParams();
   const location = useLocation();
   const { resort, rooms } = location.state || {};
 
   const resortName = resort?.name || 'Unknown Resort';
+  // Use the dynamic API_URL for the resort image
   const resortImage = resort?.image
-    ? `/api/resorts/image/${resort.image}`
+    ? `${API_URL}/api/resorts/image/${resort.image}`
     : '/default.jpg';
 
   const [formData, setFormData] = useState({
@@ -32,10 +38,10 @@ const ReservationForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-  
+
     // Validate required fields
     const { name, email, checkIn, checkOut, roomType, guestsAdult } = formData;
-  
+
     if (!name.trim()) {
       alert("Please enter your full name.");
       return;
@@ -64,17 +70,45 @@ const ReservationForm = () => {
       alert("At least one adult is required for a reservation.");
       return;
     }
-  
+
     // All validations passed
     setShowSummary(true);
     setTimeout(() => {
       document.getElementById('summaryModal')?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   };
-  
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
+    // This is where you would make an API call to your backend to create a Razorpay order
+    // For now, it just shows an alert.
     alert("Redirecting to Razorpay...");
+
+    // Example of a future API call:
+    /*
+    try {
+      const selectedRoom = rooms.find(r => r.roomName === formData.roomType);
+      const totalAmount = calculateNights() * selectedRoom.roomPrice;
+
+      const res = await fetch(`${API_URL}/api/payment/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: totalAmount,
+          currency: 'INR',
+          receipt: `receipt_${Date.now()}`,
+          ...formData
+        })
+      });
+
+      const order = await res.json();
+      // Use the order details to open Razorpay checkout
+      console.log(order);
+
+    } catch (error) {
+      console.error("Payment initiation failed", error);
+      alert("Could not initiate payment. Please try again.");
+    }
+    */
   };
 
   const calculateNights = () => {
@@ -121,12 +155,12 @@ const ReservationForm = () => {
           </div>
         </div>
 
-        {/* Room Cards - without "Choose a Room" heading */}
+        {/* Room Cards - using dynamic API_URL for images */}
         <div className="space-y-4">
           {rooms?.map((room, idx) => (
             <div key={idx} className={`border rounded-lg p-4 shadow ${formData.roomType === room.roomName ? 'border-green-500' : 'border-gray-300'}`}>
               <div className="flex flex-col md:flex-row gap-4">
-                <img src={`/api/resorts/image/${room.roomImages[0]}`} alt={room.roomName} className="w-full md:w-60 h-40 object-cover rounded-lg" />
+                <img src={`${API_URL}/api/resorts/image/${room.roomImages[0]}`} alt={room.roomName} className="w-full md:w-60 h-40 object-cover rounded-lg" />
                 <div className="flex-1">
                   <div className="flex justify-between items-center">
                     <h3 className="text-xl font-bold">{room.roomName}</h3>
@@ -146,7 +180,7 @@ const ReservationForm = () => {
         <button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded transition">Confirm Reservation</button>
       </form>
 
-      {/* Room Detail Popup */}
+      {/* Room Detail Popup - using dynamic API_URL for images */}
       <AnimatePresence>
         {showRoomPopup && (
           <motion.div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -155,7 +189,7 @@ const ReservationForm = () => {
               <h2 className="text-2xl font-bold mb-2">{showRoomPopup.roomName}</h2>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 {showRoomPopup.roomImages.map((img, i) => (
-                  <img key={i} src={`/api/resorts/image/${img}`} className="w-full h-40 object-cover rounded" alt="Room Detail" />
+                  <img key={i} src={`${API_URL}/api/resorts/image/${img}`} className="w-full h-40 object-cover rounded" alt="Room Detail" />
                 ))}
               </div>
               <p className="text-gray-700 mb-2">{showRoomPopup.roomDescription}</p>

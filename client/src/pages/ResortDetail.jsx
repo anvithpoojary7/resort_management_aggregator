@@ -3,6 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { TopLoader } from './TopLoader'; // Import TopLoader
 
+// Dynamically set the API base URL based on the environment
+const API_URL = process.env.NODE_ENV === 'production'
+  ? 'https://resort-finder-2aqp.onrender.com'
+  : 'http://localhost:8080'; // Assuming your local server runs on port 5000
+
 const ResortDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -15,7 +20,8 @@ const ResortDetail = () => {
     const fetchResort = async () => {
       try {
         setIsLoading(true);
-        const res = await axios.get(`/api/resorts/${id}/details`);
+        // Use the dynamic API_URL for the fetch request
+        const res = await axios.get(`${API_URL}/api/resorts/${id}/details`);
         setResort(res.data.resort);
         setRooms(res.data.rooms);
       } catch (err) {
@@ -35,12 +41,12 @@ const ResortDetail = () => {
 
       {isLoading && !resort ? (
         <div className="text-center mt-10">Loading resort details...</div>
-      ) : (
+      ) : resort ? ( // Added a check to ensure resort is not null before rendering
         <div className="max-w-6xl mx-auto">
           {/* Main Resort Image */}
           <div className="mb-4">
             <img
-              src={`/api/resorts/image/${resort.image}`}
+              src={`${API_URL}/api/resorts/image/${resort.image}`}
               alt="Main"
               className="rounded-lg h-96 object-cover w-full"
             />
@@ -82,7 +88,7 @@ const ResortDetail = () => {
                 <div key={i} className="bg-white rounded-lg shadow p-4">
                   <div className="flex flex-col sm:flex-row gap-4">
                     <img
-                      src={`/api/resorts/image/${room.roomImages[0]}`}
+                      src={`${API_URL}/api/resorts/image/${room.roomImages[0]}`}
                       className="w-full sm:w-64 h-40 object-cover rounded"
                       alt={`Room ${i + 1}`}
                     />
@@ -95,7 +101,7 @@ const ResortDetail = () => {
                       <button
                         onClick={() =>
                           navigate(`/resorts/${id}/reserve`, {
-                            state: { resort, rooms: [room] },
+                            state: { resort, rooms }, // Pass all rooms to the reservation page
                           })
                         }
                         className="mt-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded transition"
@@ -109,6 +115,8 @@ const ResortDetail = () => {
             </div>
           </div>
         </div>
+      ) : (
+        <div className="text-center mt-10">Could not load resort details.</div>
       )}
     </div>
   );

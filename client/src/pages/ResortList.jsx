@@ -6,7 +6,11 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { FaMapMarkerAlt, FaStar, FaRegStar } from 'react-icons/fa';
 import MagicLoader from './MagicLoader';
 
-const API_BASE_URL = 'https://resort-finder-2aqp.onrender.com';
+// Dynamically set the API base URL based on the environment
+const API_BASE_URL = process.env.NODE_ENV === 'production'
+  ? 'https://resort-finder-2aqp.onrender.com'
+  : 'http://localhost:8080'; 
+
 const AMENITIES = ['Pool', 'Wi-Fi', 'AC', 'Games', 'Spa', 'Yoga'];
 
 const ResortList = () => {
@@ -43,8 +47,9 @@ const ResortList = () => {
     setErr(null);
     try {
       const qs = location.search.slice(1);
+      // The endpoint name seems to have a typo, changed 'fiteresort' to 'filteresort'
       const url = qs
-        ? `${API_BASE_URL}/api/fiteresort/search?${qs}`
+        ? `${API_BASE_URL}/api/filteresort/search?${qs}`
         : `${API_BASE_URL}/api/resorts/allresorts`;
 
       const res = await fetch(url);
@@ -231,10 +236,9 @@ const ResortList = () => {
             ))
           ) : (
             <p className="text-gray-700 col-span-full text-center text-xl py-10">
-  🔍 No resorts found with your current filters.<br />  
-  Try changing the max price or selecting different amenities to explore more options!
-</p>
-
+              🔍 No resorts found with your current filters.<br /> 
+              Try changing the max price or selecting different amenities to explore more options!
+            </p>
           )}
         </div>
       </div>
