@@ -4,7 +4,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { FaSearch, FaCalendarAlt, FaUserFriends, FaMapMarkerAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
-const destinations = ['mangalore', 'udupi', 'Mysore', 'Tirupati', 'Udhagamandalam'];
+const destinations = ['Mangalore', 'udupi', 'Karkala', 'Tirupati', 'Udhagamandalam'];
 
 const ResortSearchBar = () => {
   const [showDestinations, setShowDestinations] = useState(false);

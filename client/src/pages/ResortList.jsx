@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
 import { FaMapMarkerAlt, FaStar, FaRegStar } from 'react-icons/fa';
 import MagicLoader from './MagicLoader';
 
-// Dynamically set the API base URL based on the environment
 const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://resort-finder-2aqp.onrender.com'
-  : 'http://localhost:8080'; 
+  : 'http://localhost:8080';
 
 const AMENITIES = ['Pool', 'Wi-Fi', 'AC', 'Games', 'Spa', 'Yoga'];
 
@@ -31,29 +29,49 @@ const ResortList = () => {
   const [err, setErr] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [amenities, setAmenities] = useState(params.getAll('amenities'));
+  const [allLocations, setAllLocations] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
 
+  // Close suggestions & filter box on outside click
   useEffect(() => {
     const close = (e) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
         setShowFilters(false);
+        setSuggestions([]);
       }
     };
     document.addEventListener('mousedown', close);
     return () => document.removeEventListener('mousedown', close);
   }, []);
 
+  // Fetch all locations for autocomplete suggestions
+  useEffect(() => {
+    const fetchAllLocations = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/resorts/allresorts`);
+        if (!res.ok) throw new Error('Could not fetch locations');
+        const allResortsData = await res.json();
+        const uniqueLocations = [...new Set(allResortsData.map(r => r.location))];
+        setAllLocations(uniqueLocations);
+      } catch (error) {
+        console.error("Failed to load locations for suggestions:", error);
+      }
+    };
+    fetchAllLocations();
+  }, []);
+
+  // Fetch resorts based on query params
   const fetchResorts = useCallback(async () => {
     setLoading(true);
     setErr(null);
     try {
       const qs = location.search.slice(1);
-      // The endpoint name seems to have a typo, changed 'fiteresort' to 'filteresort'
       const url = qs
         ? `${API_BASE_URL}/api/filteresort/search?${qs}`
         : `${API_BASE_URL}/api/resorts/allresorts`;
 
       const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) throw new Error(`HTTP Error ${res.status} on URL: ${url}`);
       setResorts(await res.json());
     } catch (e) {
       console.error(e);
@@ -67,36 +85,63 @@ const ResortList = () => {
     fetchResorts();
   }, [fetchResorts]);
 
-  const toggleAmenity = (amenity) => {
-    const searchParams = new URLSearchParams(location.search);
-    const current = searchParams.getAll('amenities');
-    const lower = amenity.toLowerCase();
-    let updated;
-
-    if (current.includes(lower)) {
-      updated = current.filter((a) => a !== lower);
-    } else {
-      updated = [...current, lower];
-    }
-
-    searchParams.delete('amenities');
-    updated.forEach((a) => searchParams.append('amenities', a));
-    setAmenities(updated);
-    navigate(`/resorts?${searchParams.toString()}`);
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  // Update the URL and trigger search
+  const updateUrlAndSearch = (overrides = {}) => {
     const p = new URLSearchParams();
-    if (locFilter) p.set('location', locFilter);
+
+    const locationToSearch = overrides.location !== undefined ? overrides.location : locFilter;
+    const amenitiesToSearch = overrides.amenities !== undefined ? overrides.amenities : amenities;
+
+    if (locationToSearch) p.set('location', locationToSearch);
     if (maxPrice) p.set('maxPrice', maxPrice);
     if (adults > 0) p.set('adults', adults);
     if (children > 0) p.set('children', children);
     if (checkInDate) p.set('checkIn', checkInDate.toISOString());
     if (checkOutDate) p.set('checkOut', checkOutDate.toISOString());
     if (sort) p.set('sort', sort);
-    amenities.forEach((a) => p.append('amenities', a));
+    amenitiesToSearch.forEach((a) => p.append('amenities', a));
+
     navigate(`/resorts?${p.toString()}`);
+  };
+
+  // Handle location input change
+  const handleLocationChange = (e) => {
+    const inputVal = e.target.value;
+    setLocFilter(inputVal);
+
+    if (inputVal.length > 0) {
+      const filteredSuggestions = allLocations.filter(loc =>
+        loc.toLowerCase().includes(inputVal.toLowerCase())
+      );
+      // Show "No locations found" if no matches
+      setSuggestions(filteredSuggestions.length > 0 ? filteredSuggestions : ['__NO_MATCH__']);
+    } else {
+      setSuggestions([]);
+    }
+  };
+
+  const handleSuggestionClick = (selectedLocation) => {
+    if (selectedLocation === '__NO_MATCH__') return; // Ignore click on "No locations found"
+    setLocFilter(selectedLocation);
+    setSuggestions([]);
+    updateUrlAndSearch({ location: selectedLocation });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    updateUrlAndSearch();
+    setSuggestions([]);
+  };
+
+  // Toggle amenities
+  const toggleAmenity = (toggledAmenity) => {
+    const lower = toggledAmenity.toLowerCase();
+    const updatedAmenities = amenities.includes(lower)
+      ? amenities.filter(a => a !== lower)
+      : [...amenities, lower];
+
+    setAmenities(updatedAmenities);
+    updateUrlAndSearch({ amenities: updatedAmenities });
   };
 
   if (loading) {
@@ -119,17 +164,41 @@ const ResortList = () => {
           className="mb-12 bg-white shadow-xl rounded-full px-6 py-5 flex items-center justify-between gap-4 border border-gray-200 relative"
           ref={wrapperRef}
         >
-          {/* 🔍 Search Bar & Filter Icon */}
+          {/* Location input with suggestions */}
           <div className="relative flex items-center flex-grow bg-white border border-gray-300 rounded-full shadow-sm px-6 py-4">
             <FaMapMarkerAlt className="text-gray-500 text-xl mr-4" />
             <input
               type="text"
               value={locFilter}
-              onChange={(e) => setLocFilter(e.target.value)}
+              onChange={handleLocationChange}
               placeholder="Search location..."
               className="flex-grow bg-transparent focus:outline-none text-blue-800 font-semibold text-lg"
+              autoComplete="off"
             />
+            {suggestions.length > 0 && (
+              <ul className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
+                {suggestions.map((sugg_location, index) => (
+                  sugg_location === '__NO_MATCH__' ? (
+                    <li
+                      key={index}
+                      className="px-6 py-3 text-gray-400 cursor-default"
+                    >
+                      No locations found
+                    </li>
+                  ) : (
+                    <li
+                      key={index}
+                      onClick={() => handleSuggestionClick(sugg_location)}
+                      className="px-6 py-3 cursor-pointer hover:bg-gray-100 text-gray-800"
+                    >
+                      {sugg_location}
+                    </li>
+                  )
+                ))}
+              </ul>
+            )}
 
+            {/* Filter button */}
             <div
               className="ml-4 relative cursor-pointer hover:text-blue-600"
               onClick={() => setShowFilters(!showFilters)}
@@ -137,11 +206,8 @@ const ResortList = () => {
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" stroke="currentColor">
                 <path d="M3 4h18M3 10h18M3 16h18" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
               </svg>
-
-              {/* 🔽 Filter Dropdown */}
               {showFilters && (
                 <div className="absolute right-0 mt-4 w-72 bg-black border border-gray-800 rounded-xl shadow-xl p-4 z-50 space-y-5 text-white">
-                  {/* 💰 Max Price */}
                   <div>
                     <label className="block text-sm font-semibold mb-1 text-white">Max Price (₹)</label>
                     <input
@@ -153,8 +219,6 @@ const ResortList = () => {
                       onClick={(e) => e.stopPropagation()}
                     />
                   </div>
-
-                  {/* 🧘 Amenities */}
                   <div>
                     <label className="block text-sm font-semibold mb-2">Amenities</label>
                     <div className="flex flex-wrap gap-2">
@@ -182,12 +246,10 @@ const ResortList = () => {
               )}
             </div>
           </div>
-
-          {/* 🔘 Submit */}
           <button
             type="submit"
             className={`px-8 py-3 rounded-full font-bold transition-all duration-300 shadow-lg ${
-              locFilter || maxPrice || sort || adults > 0 || children > 0 || checkInDate || checkOutDate
+              locFilter || maxPrice || sort || adults > 0 || children > 0 || checkInDate || checkOutDate || amenities.length > 0
                 ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-blue-900'
                 : 'bg-gray-300 text-gray-600 cursor-not-allowed'
             }`}
@@ -196,7 +258,7 @@ const ResortList = () => {
           </button>
         </form>
 
-        {/* Resort List */}
+        {/* Resorts List */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {resorts.length ? (
             resorts.map((r) => (
@@ -236,7 +298,7 @@ const ResortList = () => {
             ))
           ) : (
             <p className="text-gray-700 col-span-full text-center text-xl py-10">
-              🔍 No resorts found with your current filters.<br /> 
+              🔍 No resorts found with your current filters.<br />
               Try changing the max price or selecting different amenities to explore more options!
             </p>
           )}
