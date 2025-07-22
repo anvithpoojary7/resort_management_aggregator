@@ -1,22 +1,19 @@
-import React, { useState } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+// ReservationForm.jsx
+import React, { useState, useEffect } from 'react';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Dynamically set the API base URL based on the environment
+// Dynamically set API base URL
 const API_URL = process.env.NODE_ENV === 'production'
   ? 'https://resort-finder-2aqp.onrender.com'
-  : 'http://localhost:8080'; // Assuming your local server runs on port 5000
+  : 'http://localhost:8080';
 
 const ReservationForm = () => {
   const { id } = useParams();
   const location = useLocation();
-  const { resort, rooms } = location.state || {};
+  const navigate = useNavigate();
 
-  const resortName = resort?.name || 'Unknown Resort';
-  // Use the dynamic API_URL for the resort image
-  const resortImage = resort?.image
-    ? `${API_URL}/api/resorts/image/${resort.image}`
-    : '/default.jpg';
+  const { resort, rooms } = location.state || {};
 
   const [formData, setFormData] = useState({
     name: '',
@@ -31,98 +28,56 @@ const ReservationForm = () => {
   const [showSummary, setShowSummary] = useState(false);
   const [showRoomPopup, setShowRoomPopup] = useState(null);
 
+  // Redirect if user lands directly without state (refresh case)
+  useEffect(() => {
+    if (!resort || !rooms) {
+      navigate('/'); // redirect to home or resorts list
+    }
+  }, [resort, rooms, navigate]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const calculateNights = () => {
+    const { checkIn, checkOut } = formData;
+    if (!checkIn || !checkOut) return 0;
+    const nights = (new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24);
+    return Math.max(nights, 0);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validate required fields
     const { name, email, checkIn, checkOut, roomType, guestsAdult } = formData;
 
-    if (!name.trim()) {
-      alert("Please enter your full name.");
-      return;
-    }
-    if (!email.trim()) {
-      alert("Please enter your email address.");
-      return;
-    }
-    if (!checkIn) {
-      alert("Please select a check-in date.");
-      return;
-    }
-    if (!checkOut) {
-      alert("Please select a check-out date.");
-      return;
-    }
-    if (new Date(checkOut) <= new Date(checkIn)) {
-      alert("Check-out date must be after check-in date.");
-      return;
-    }
-    if (!roomType) {
-      alert("Please select a room.");
-      return;
-    }
-    if (guestsAdult < 1) {
-      alert("At least one adult is required for a reservation.");
+    if (!name.trim() || !email.trim() || !checkIn || !checkOut || !roomType || guestsAdult < 1) {
+      alert('Please fill all required fields correctly.');
       return;
     }
 
-    // All validations passed
+    if (new Date(checkOut) <= new Date(checkIn)) {
+      alert("Check-out must be after check-in.");
+      return;
+    }
+
     setShowSummary(true);
     setTimeout(() => {
       document.getElementById('summaryModal')?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   };
 
-  const handlePayment = async () => {
-    // This is where you would make an API call to your backend to create a Razorpay order
-    // For now, it just shows an alert.
-    alert("Redirecting to Razorpay...");
-
-    // Example of a future API call:
-    /*
-    try {
-      const selectedRoom = rooms.find(r => r.roomName === formData.roomType);
-      const totalAmount = calculateNights() * selectedRoom.roomPrice;
-
-      const res = await fetch(`${API_URL}/api/payment/create-order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: totalAmount,
-          currency: 'INR',
-          receipt: `receipt_${Date.now()}`,
-          ...formData
-        })
-      });
-
-      const order = await res.json();
-      // Use the order details to open Razorpay checkout
-      console.log(order);
-
-    } catch (error) {
-      console.error("Payment initiation failed", error);
-      alert("Could not initiate payment. Please try again.");
-    }
-    */
+  const handlePayment = () => {
+    alert('Redirecting to Razorpay...');
+    // Future: Send payment request to backend here
   };
 
-  const calculateNights = () => {
-    if (!formData.checkIn || !formData.checkOut) return 0;
-    const checkInDate = new Date(formData.checkIn);
-    const checkOutDate = new Date(formData.checkOut);
-    const diffTime = checkOutDate - checkInDate;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? diffDays : 0;
-  };
+  if (!resort || !rooms) return null;
 
   return (
     <div className="bg-white text-gray-800 py-8 px-4 min-h-screen">
-      <h1 className="text-3xl font-bold text-center mb-2">{resortName}</h1>
+      <h1 className="text-3xl font-bold text-center mb-2">{resort.name}</h1>
       <p className="text-center text-gray-500 mb-6">Book your stay at our beautiful resort</p>
 
       <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-4">
@@ -134,43 +89,43 @@ const ReservationForm = () => {
           <label className="block font-medium mb-1">Email Address</label>
           <input name="email" value={formData.email} onChange={handleChange} type="email" className="w-full px-4 py-2 border rounded" />
         </div>
+
         <div className="flex gap-4">
           <div className="w-full">
-            <label className="block font-medium mb-1">Adults (18+)</label>
+            <label className="block font-medium mb-1">Adults</label>
             <input name="guestsAdult" value={formData.guestsAdult} onChange={handleChange} type="number" min="1" className="w-full px-4 py-2 border rounded" />
           </div>
           <div className="w-full">
-            <label className="block font-medium mb-1">Children (Under 18)</label>
+            <label className="block font-medium mb-1">Children</label>
             <input name="guestsChild" value={formData.guestsChild} onChange={handleChange} type="number" min="0" className="w-full px-4 py-2 border rounded" />
           </div>
         </div>
+
         <div className="flex gap-4">
           <div className="w-full">
-            <label className="block font-medium mb-1">Check-In Date</label>
+            <label className="block font-medium mb-1">Check-In</label>
             <input name="checkIn" value={formData.checkIn} onChange={handleChange} type="date" className="w-full px-4 py-2 border rounded" />
           </div>
           <div className="w-full">
-            <label className="block font-medium mb-1">Check-Out Date</label>
+            <label className="block font-medium mb-1">Check-Out</label>
             <input name="checkOut" value={formData.checkOut} onChange={handleChange} type="date" className="w-full px-4 py-2 border rounded" />
           </div>
         </div>
 
-        {/* Room Cards - using dynamic API_URL for images */}
+        {/* Room Cards */}
         <div className="space-y-4">
-          {rooms?.map((room, idx) => (
-            <div key={idx} className={`border rounded-lg p-4 shadow ${formData.roomType === room.roomName ? 'border-green-500' : 'border-gray-300'}`}>
+          {rooms.map((room, idx) => (
+            <div key={idx} className={`border rounded-lg p-4 shadow ${formData.roomType === room.roomName ? 'border-green-500' : ''}`}>
               <div className="flex flex-col md:flex-row gap-4">
-                <img src={`${API_URL}/api/resorts/image/${room.roomImages[0]}`} alt={room.roomName} className="w-full md:w-60 h-40 object-cover rounded-lg" />
+                <img src={`${API_URL}/api/resorts/image/${room.roomImages[0]}`} className="w-full md:w-60 h-40 object-cover rounded-lg" alt={room.roomName} />
                 <div className="flex-1">
                   <div className="flex justify-between items-center">
                     <h3 className="text-xl font-bold">{room.roomName}</h3>
-                    <button type="button" onClick={() => setShowRoomPopup(room)} className="text-sm text-blue-600 hover:underline">View Details</button>
+                    <button type="button" onClick={() => setShowRoomPopup(room)} className="text-sm text-blue-600 hover:underline">View</button>
                   </div>
-                  <p className="text-gray-700 text-sm my-1">{room.roomDescription}</p>
-                  <div className="mt-2 font-semibold text-green-600">₹{room.roomPrice} per night</div>
-                  <button type="button" onClick={() => setFormData({ ...formData, roomType: room.roomName })} className="mt-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md">
-                    Select Room
-                  </button>
+                  <p className="text-sm text-gray-600">{room.roomDescription}</p>
+                  <div className="mt-2 font-semibold text-green-600">₹{room.roomPrice} / night</div>
+                  <button type="button" onClick={() => setFormData({ ...formData, roomType: room.roomName })} className="mt-2 bg-green-600 text-white px-4 py-2 rounded">Select Room</button>
                 </div>
               </div>
             </div>
@@ -180,7 +135,7 @@ const ReservationForm = () => {
         <button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded transition">Confirm Reservation</button>
       </form>
 
-      {/* Room Detail Popup - using dynamic API_URL for images */}
+      {/* Room Popup */}
       <AnimatePresence>
         {showRoomPopup && (
           <motion.div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -189,50 +144,40 @@ const ReservationForm = () => {
               <h2 className="text-2xl font-bold mb-2">{showRoomPopup.roomName}</h2>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 {showRoomPopup.roomImages.map((img, i) => (
-                  <img key={i} src={`${API_URL}/api/resorts/image/${img}`} className="w-full h-40 object-cover rounded" alt="Room Detail" />
+                  <img key={i} src={`${API_URL}/api/resorts/image/${img}`} className="w-full h-40 object-cover rounded" alt="Room" />
                 ))}
               </div>
-              <p className="text-gray-700 mb-2">{showRoomPopup.roomDescription}</p>
-              <div className="text-green-600 font-bold">Price: ₹{showRoomPopup.roomPrice}</div>
+              <p>{showRoomPopup.roomDescription}</p>
+              <p className="text-green-600 font-semibold mt-2">₹{showRoomPopup.roomPrice}</p>
             </motion.div>
           </motion.div>
         )}
+      </AnimatePresence>
 
-        {/* Summary Modal */}
+      {/* Summary Popup */}
+      <AnimatePresence>
         {showSummary && (
           <motion.div id="summaryModal" className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} transition={{ duration: 0.3 }} className="bg-white text-black rounded-2xl shadow-2xl p-6 w-full max-w-lg relative">
-              <button onClick={() => setShowSummary(false)} className="absolute top-3 right-4 text-gray-400 text-2xl hover:text-red-500">&times;</button>
-              <h2 className="text-2xl font-bold text-center mb-4">{resortName}</h2>
-              <div className="flex items-center gap-4 mb-4">
-                <img src={resortImage} alt="Selected Resort" className="w-20 h-20 rounded-lg object-cover" />
-                <div>
-                  <h3 className="text-xl font-bold">{formData.roomType}</h3>
-                  <p className="text-sm text-gray-600">Free cancellation available</p>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm">
-                <p><strong>Date:</strong> {formData.checkIn} to {formData.checkOut}</p>
-                <p><strong>Guests:</strong> {formData.guestsAdult} adults, {formData.guestsChild} children</p>
+            <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }} className="bg-white p-6 rounded-xl max-w-lg w-full relative">
+              <button onClick={() => setShowSummary(false)} className="absolute top-2 right-3 text-2xl text-gray-500 hover:text-red-500">&times;</button>
+              <h2 className="text-xl font-bold text-center mb-4">Reservation Summary</h2>
+              <div className="text-sm space-y-2">
                 <p><strong>Name:</strong> {formData.name}</p>
                 <p><strong>Email:</strong> {formData.email}</p>
-                <p><strong>Price per night:</strong> ₹{rooms.find(r => r.roomName === formData.roomType)?.roomPrice ?? '--'}</p>
-                <p><strong>Nights:</strong> {calculateNights()}</p>
+                <p><strong>Room:</strong> {formData.roomType}</p>
+                <p><strong>Dates:</strong> {formData.checkIn} to {formData.checkOut}</p>
+                <p><strong>Guests:</strong> {formData.guestsAdult} adults, {formData.guestsChild} children</p>
+                <p><strong>Total Nights:</strong> {calculateNights()}</p>
+                <p><strong>Price per Night:</strong> ₹{rooms.find(r => r.roomName === formData.roomType)?.roomPrice}</p>
+                <p><strong>Total:</strong> ₹{(() => {
+                  const nights = calculateNights();
+                  const price = rooms.find(r => r.roomName === formData.roomType)?.roomPrice || 0;
+                  return nights * price;
+                })()}</p>
               </div>
-              <div className="mt-4">
-                <input type="text" placeholder="Enter a coupon" className="w-full px-4 py-2 border rounded mb-2" />
-                <p className="font-semibold">
-                  Total: ₹
-                  {(() => {
-                    const nights = calculateNights();
-                    const pricePerNight = rooms.find(r => r.roomName === formData.roomType)?.roomPrice ?? 0;
-                    return nights > 0 ? nights * pricePerNight : '--';
-                  })()}
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3 justify-between mt-6">
-                <button onClick={() => setShowSummary(false)} className="w-full sm:w-1/2 px-4 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium transition">Edit Details</button>
-                <button onClick={handlePayment} className="w-full sm:w-1/2 px-4 py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold transition">Pay Now</button>
+              <div className="mt-4 flex gap-4">
+                <button onClick={() => setShowSummary(false)} className="flex-1 bg-gray-300 text-black px-4 py-2 rounded">Edit</button>
+                <button onClick={handlePayment} className="flex-1 bg-green-600 text-white px-4 py-2 rounded">Pay Now</button>
               </div>
             </motion.div>
           </motion.div>

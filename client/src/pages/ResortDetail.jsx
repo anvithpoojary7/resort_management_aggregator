@@ -1,26 +1,27 @@
+// pages/ResortDetail.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { TopLoader } from './TopLoader'; // Import TopLoader
+import { TopLoader } from '../pages/TopLoader';
+import { useAuth } from '../context/AuthContext';
 
-// Dynamically set the API base URL based on the environment
 const API_URL = process.env.NODE_ENV === 'production'
   ? 'https://resort-finder-2aqp.onrender.com'
-  : 'http://localhost:8080'; // Assuming your local server runs on port 5000
+  : 'http://localhost:8080';
 
 const ResortDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, isLoggedIn } = useAuth();
 
   const [resort, setResort] = useState(null);
   const [rooms, setRooms] = useState([]);
-  const [isLoading, setIsLoading] = useState(true); // Loader state
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchResort = async () => {
       try {
         setIsLoading(true);
-        // Use the dynamic API_URL for the fetch request
         const res = await axios.get(`${API_URL}/api/resorts/${id}/details`);
         setResort(res.data.resort);
         setRooms(res.data.rooms);
@@ -34,14 +35,31 @@ const ResortDetail = () => {
     fetchResort();
   }, [id]);
 
+  const handleBookNow = () => {
+    if (!isLoggedIn || !user) {
+      // Not logged in → go to login
+      return navigate('/auth', { state: { from: `/resorts/${id}/reserve` } });
+    }
+
+    if (user.role !== 'user') {
+      // Logged in but not a regular user
+      alert('Only users can book a resort. Please login with a user account.');
+      return;
+    }
+
+    // Valid user → go to reservation
+    navigate(`/resorts/${id}/reserve`, {
+      state: { resort, rooms },
+    });
+  };
+
   return (
     <div className="bg-gray-50 py-8 px-4 min-h-screen relative">
-      {/* Top Loader */}
       <TopLoader isLoading={isLoading} />
 
       {isLoading && !resort ? (
         <div className="text-center mt-10">Loading resort details...</div>
-      ) : resort ? ( // Added a check to ensure resort is not null before rendering
+      ) : resort ? (
         <div className="max-w-6xl mx-auto">
           {/* Main Resort Image */}
           <div className="mb-4">
@@ -99,11 +117,7 @@ const ResortDetail = () => {
                         ₹{room.roomPrice} per night
                       </div>
                       <button
-                        onClick={() =>
-                          navigate(`/resorts/${id}/reserve`, {
-                            state: { resort, rooms }, // Pass all rooms to the reservation page
-                          })
-                        }
+                        onClick={handleBookNow}
                         className="mt-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded transition"
                       >
                         Book Now
