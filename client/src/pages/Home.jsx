@@ -17,7 +17,6 @@ const Home = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* Hero Section with Fading Background Slideshow */}
       <div className="relative w-full h-[500px] overflow-hidden pt-20">
         {backgrounds.map((bg, index) => (
           <div
@@ -30,7 +29,7 @@ const Home = () => {
         ))}
         <div className="absolute top-0 left-0 w-full h-full bg-black/50 z-20"></div>
 
-        {/* Text Overlay */}
+    
         <div className="relative z-30 flex flex-col items-center justify-center h-full text-white text-center px-4">
           <h1 className="text-4xl sm:text-5xl font-bold mb-2 hover:scale-105 transition">
             Explore Luxury Resorts
@@ -41,19 +40,19 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Search Bar Section */}
+
       <section className="w-full bg-white py-4 relative z-30">
         <div className="max-w-6xl mx-auto px-4">
           <ResortSearchBar />
         </div>
       </section>
 
-      {/* Top Deals */}
+      
       <section className="w-full bg-white py-12 px-4">
         <TopDealsCarousel />
       </section>
 
-      {/* Mood Section */}
+      
       <section className="bg-gradient-to-b from-yellow-50 to-white py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-800 mb-6 hover:scale-105 transition">
@@ -71,12 +70,12 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Amenity Carousel */}
+    
       <section className="py-10">
         <AmenityCarousel />
       </section>
 
-      {/* Featured Retreats */}
+    
       <section className="py-10">
         <FeaturedRetreatsCarousel />
       </section>
