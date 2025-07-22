@@ -12,9 +12,7 @@ import ContactUs from '../pages/ContactUs';
 import HelpSupport from '../pages/HelpSupport';
 import DealDetails from '../components/DealDetails'; 
 import AmenityResortsList from '../pages/AmenityResortsList'; 
-
-
-
+import About from '../pages/About';
 
 
 //  Admin Pages
@@ -44,6 +42,7 @@ const AppRoutes = () => (
     <Route path="/help" element={<HelpSupport />} />
     <Route path="/deal/:id" element={<DealDetails />} /> 
     <Route path="/amenity/:amenityName" element={<AmenityResortsList />} /> 
+    <Route path="/about" element={<About />} />
 
 
    
