@@ -27,7 +27,7 @@ let gridfsBucket;
 // List of allowed domains
 const allowedOrigins = [
   'http://localhost:3000', // Your local frontend
-  'https://resort-management-aggregator.vercel.app' // Your deployed frontend
+  'https://resort-management-aggregator.vercel.app'
 ];
 
 const corsOptions = {

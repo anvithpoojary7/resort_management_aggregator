@@ -40,10 +40,10 @@ const RevenueAnalytics = () => {
 
 return (
     <div className="flex bg-gray-100 min-h-screen">
-      {/* ✅ Sidebar */}
+
       <Sidebar />
 
-      {/* ✅ Main Content */}
+    
       <div className="flex-1 p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
