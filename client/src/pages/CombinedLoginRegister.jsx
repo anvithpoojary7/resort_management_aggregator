@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom'; // ✅ Added useLocation
 import { FaUser, FaKey } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, provider } from '../firebase';
 import { useAuth } from '../context/AuthContext';
-import { TopLoader } from './TopLoader'; 
-
+import { TopLoader } from './TopLoader';
 
 const API_URL = process.env.NODE_ENV === 'production'
   ? 'https://resort-finder-2aqp.onrender.com'
-  : 'http://localhost:8080'; 
+  : 'http://localhost:8080';
 
 const CombinedLoginRegister = () => {
-  const [mode, setMode] = useState('login'); // 'login', 'register', or 'verify'
+  const [mode, setMode] = useState('login');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -23,14 +22,18 @@ const CombinedLoginRegister = () => {
   const [verificationCode, setVerificationCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Loader state
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation(); // ✅ Get redirect location
   const { user, login } = useAuth();
 
+  const redirectTo = location.state?.redirectTo || '/'; // ✅ fallback if no redirect
+  const fromBooking = location.state?.fromBooking;
+
   useEffect(() => {
-    if (user) navigate('/', { replace: true });
-  }, [user, navigate]);
+    if (user) navigate(redirectTo, { replace: true }); // ✅ go where intended
+  }, [user, navigate, redirectTo]);
 
   const clearForm = () => {
     setFirstName('');
@@ -44,7 +47,7 @@ const CombinedLoginRegister = () => {
     e.preventDefault();
     if (!email || !password) return alert('Please fill all required fields.');
 
-    setIsLoading(true); // Show loader
+    setIsLoading(true);
 
     if (mode === 'register') {
       if (!firstName || !lastName || !confirmPassword) return alert('Please fill all registration fields.');
@@ -60,7 +63,6 @@ const CombinedLoginRegister = () => {
         : { name, email, password, role: 'user' };
 
     try {
-      // Use the dynamic API_URL for the fetch request
       const res = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         credentials: 'include',
@@ -73,10 +75,9 @@ const CombinedLoginRegister = () => {
       if (res.ok) {
         if (mode === 'login') {
           login(data.user);
-          // Keep loader visible for 800ms to show the transition
           setTimeout(() => {
             setIsLoading(false);
-            navigate('/', { replace: true });
+            navigate(redirectTo, { replace: true }); // ✅ after login, redirect back
           }, 800);
         } else {
           setIsLoading(false);
@@ -99,7 +100,6 @@ const CombinedLoginRegister = () => {
     setIsLoading(true);
 
     try {
-      // Use the dynamic API_URL for the fetch request
       const res = await fetch(`${API_URL}/api/auth/verify-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -124,15 +124,13 @@ const CombinedLoginRegister = () => {
   };
 
   const handleGoogleAuth = async () => {
-    // Your Google authentication logic
+    // You can later implement Google login here
   };
 
   return (
     <div className="relative">
-      {/* Top Loader */}
       <TopLoader isLoading={isLoading} />
 
-      {/* Optional Fullscreen Spinner */}
       {isLoading && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-[2000]">
           <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -160,7 +158,6 @@ const CombinedLoginRegister = () => {
             {mode === 'verify' && `A 6-digit code was sent to ${email}`}
           </p>
 
-          {/* Forms */}
           {mode === 'verify' ? (
             <form onSubmit={handleVerify} className="space-y-4 mt-6">
               <input
@@ -261,7 +258,6 @@ const CombinedLoginRegister = () => {
             </form>
           )}
 
-          {/* Toggle Links */}
           {mode !== 'verify' && (
             <>
               <div className="flex items-center my-4">

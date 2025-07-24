@@ -85,7 +85,7 @@ conn.once('open', () => {
   app.use('/api/auth', authRoutes);
   app.use('/api/resorts', resortRoutesModule(gfs, upload, gridfsBucket));
  /* app.use('/api/owner',ownerRoutes);*/
- app.use('/api/fiteresort',filterResorts);
+ app.use('/api/filteresort',filterResorts);
  
   app.use('/api/adminapproval',adminapproval);
  
