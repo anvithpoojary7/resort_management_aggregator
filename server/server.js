@@ -79,7 +79,9 @@ conn.once('open', () => {
   upload = multer({ storage });
   console.log('✅ Multer disk upload ready');
 
- 
+  const adminResortControl = require('./routes/adminResortControl');
+  app.use('/api/admin/resorts', adminResortControl);
+  
   const authRoutes = require('./routes/auth');
   const resortRoutesModule = require('./routes/resortRoutes');
   app.use('/api/auth', authRoutes);
