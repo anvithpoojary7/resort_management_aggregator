@@ -14,9 +14,6 @@ import DealDetails from '../components/DealDetails';
 import AmenityResortsList from '../pages/AmenityResortsList'; 
 
 
-
-
-
 //  Admin Pages
 import AdminLogin from '../admin/pages/AdminLogin';
 import AdminDashboard from '../admin/pages/AdminDashboard';
@@ -28,7 +25,7 @@ import RevenueAnalytics from '../admin/pages/RevenueAnalytics';
 // Route Protection Component
 import ProtectedRoute from './ProtectedRoute';
 
-const ADMIN_PATH = `/${process.env.REACT_APP_ADMIN_URL_PATH || 'admin-portal-secret/login'}`
+const ADMIN_PATH = `/${process.env.REACT_APP_ADMIN_URL_PATH || 'admin-portal-secret/login'}`;
 const AppRoutes = () => (
   <Routes>
 
@@ -45,8 +42,7 @@ const AppRoutes = () => (
     <Route path="/deal/:id" element={<DealDetails />} /> 
     <Route path="/amenity/:amenityName" element={<AmenityResortsList />} /> 
 
-
-   
+  
 
    <Route path={ADMIN_PATH} element={<AdminLogin/>} />
 
@@ -82,4 +78,4 @@ const AppRoutes = () => (
   </Routes>
 );
 
-export default AppRoutes;
+export default AppRoutes; 
