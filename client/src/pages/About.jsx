@@ -2,77 +2,80 @@ import React from 'react';
 
 const aboutSections = [
   {
-    title: 'EXPLORE',
-    text: 'Uncover hidden gems — from seaside sanctuaries to misty mountain escapes.',
-    image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1400&q=80',
+    image: 'r1.jpg',
+    title: 'Majestic Mountain Escapes',
+    text: 'Breathe in crisp alpine air as golden sunrays dance over tranquil peaks. Let nature cradle your soul.',
   },
   {
-    title: 'RELAX',
-    text: 'Let luxury meet nature. Spa retreats, peaceful villas, and barefoot bliss await.',
     image: 'r2.jpg',
+    title: 'Beachside Bliss',
+    text: 'Sink your toes into velvet sands where waves whisper serenity and sunsets paint the skies in royalty.',
   },
   {
-    title: 'CONNECT',
-    text: 'Trust, transparency, and terrific getaways — curated for travelers like you.',
     image: 'r3.jpg',
+    title: 'Regal Retreats',
+    text: 'Step into a realm of opulence where architecture meets elegance and every detail echoes grandeur.',
   },
   {
-    title: 'BOOK',
-    text: 'Real-time availability, seamless booking, and endless memories to be made.',
     image: 'r4.jpg',
+    title: 'Lakeside Luxury',
+    text: 'Mirror-like lakes, candlelit dinners, and timeless stillness — an experience tailored for kings and queens.',
   },
 ];
 
 const AboutResort = () => {
   return (
     <div style={{
-      fontFamily: "'italic','Playfair Display', serif",
+      fontFamily: "'Playfair Display', serif",
       marginTop: '60px',
-      color: '#2e2e2e',
-      backgroundColor: '#f9f9f9',
-      paddingBottom: '80px'
+      color: '#3e3e3e',
+      paddingBottom: '80px',
     }}>
-      <h1 style={{
-        textAlign: 'center',
-        fontSize: '3.5rem',
-        fontWeight: '700',
-        letterSpacing: '3px',
-        marginBottom: '20px',
-        fontFamily: "'Dancing Script', cursive",
-        color: '#3f3f3f',
-        textShadow: '2px 2px 4px rgba(0,0,0,0.2)'
-      }}>
-        About ResortFinder
-      </h1>
+<div style={{ textAlign: 'center', marginTop: '50px' }}>
+  <h1 style={{
+    fontSize: '3.2rem',
+    fontWeight: '900',
+    fontFamily: "'Times New Roman', serif",
+    color: '#4B2E2E',
+    textTransform: 'uppercase',
+    letterSpacing: '4px',
+    marginBottom: '20px',
+  }}>
+    Welcome to Resort Finder
+  </h1>
+</div>
+
+
 
       <p style={{
         textAlign: 'center',
-        fontSize: '1.4rem',
+        fontSize: '1.1rem',
         maxWidth: '900px',
         margin: '0 auto',
-        padding: '0 20px',
+        padding: '0 25px',
         fontStyle: 'italic',
         lineHeight: '2',
-        fontFamily: "'Cinzel', serif",
-        color: '#4a4a4a'
+        color: '#594545',
+        fontFamily: "'Cinzel Decorative', cursive",
+        textShadow: '0px 0px 3px rgba(128, 90, 50, 0.05)',
       }}>
-        At ResortFinder, we help you uncover stays that inspire your soul — from cozy retreats to majestic escapes. Your journey deserves more than a room. It deserves a story.
+        ResortFinder is your curated gateway to serene landscapes and unforgettable escapes. From sunlit shores to snow-cloaked sanctuaries, our platform helps you discover retreats that bring calm, comfort, and a touch of grandeur. Every stay is crafted for elegance and ease — the perfect balance of nature and nobility.
       </p>
 
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '30px',
-        marginTop: '60px',
-        padding: '0 40px'
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gap: '40px',
+        marginTop: '70px',
+        padding: '0 50px'
       }}>
         {aboutSections.map((section, index) => (
           <div key={index} style={{
             position: 'relative',
             overflow: 'hidden',
-            height: '320px',
-            borderRadius: '18px',
-            boxShadow: '0 12px 25px rgba(0,0,0,0.25)',
+            height: '340px',
+            borderRadius: '20px',
+            boxShadow: '0 12px 25px rgba(0,0,0,0.2)',
             cursor: 'pointer',
             transition: 'transform 0.4s ease-in-out',
           }}
@@ -86,7 +89,7 @@ const AboutResort = () => {
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
-                filter: 'brightness(60%)',
+                filter: 'brightness(55%)',
               }}
             />
             <div style={{
@@ -96,19 +99,23 @@ const AboutResort = () => {
               transform: 'translate(-50%, -50%)',
               color: 'white',
               textAlign: 'center',
-              padding: '20px',
-              width: '85%',
+              padding: '18px',
+              width: '90%',
               fontFamily: "'Cinzel', serif",
-              textShadow: '1px 1px 8px rgba(0,0,0,0.5)'
+              textShadow: '2px 2px 12px rgba(0,0,0,0.7)'
             }}>
-              <h2 style={{ fontSize: '2.2rem', marginBottom: '10px', letterSpacing: '1.2px' }}>{section.title}</h2>
-              <p style={{ fontSize: '1.1rem', lineHeight: '1.7' }}>{section.text}</p>
+              <h2 style={{ fontSize: '1.6rem', marginBottom: '10px', letterSpacing: '1px' }}>
+                {section.title}
+              </h2>
+              <p style={{ fontSize: '1rem', lineHeight: '1.6' }}>
+                {section.text}
+              </p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Gap after image section */}
+      {/* Space after cards */}
       <div style={{ height: '100px' }}></div>
     </div>
   );

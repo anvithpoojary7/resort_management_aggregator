@@ -124,8 +124,63 @@ const CombinedLoginRegister = () => {
   };
 
   const handleGoogleAuth = async () => {
-    // You can later implement Google login here
-  };
+  try {
+    setIsLoading(true);
+    const result = await signInWithPopup(auth, provider);
+    const { user } = result;
+
+    const payload = {
+      name: user.displayName,
+      email: user.email,
+    };
+
+    // First try to login
+    let res = await fetch(`${API_URL}/api/auth/google-login`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: payload.email }),
+    });
+
+    let data = await res.json();
+
+    if (res.ok) {
+      login(data.user);
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate(redirectTo, { replace: true });
+      }, 800);
+    } else if (res.status === 404) {
+      // No user found — try signup
+      res = await fetch(`${API_URL}/api/auth/google-signup`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      data = await res.json();
+
+      if (res.ok) {
+        login(data.user);
+        setTimeout(() => {
+          setIsLoading(false);
+          navigate(redirectTo, { replace: true });
+        }, 800);
+      } else {
+        setIsLoading(false);
+        alert(data.message || 'Google signup failed.');
+      }
+    } else {
+      setIsLoading(false);
+      alert(data.message || 'Google login failed.');
+    }
+  } catch (err) {
+    setIsLoading(false);
+    alert('Google authentication failed: ' + err.message);
+  }
+};
+
 
   return (
     <div className="relative">
