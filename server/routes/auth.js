@@ -10,9 +10,12 @@ const router = express.Router();
 // ✅ Get current logged-in user
 router.get('/me', requireAuth, async (req, res) => {
   try {
-    const { id, email, role } = req.user;
-    res.json({ user: { id, email, role } });
+    const user = await User.findById(req.user.id).select('name email role');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    res.json({ user });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Error fetching user' });
   }
 });

@@ -1,20 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import { FaStar, FaRegStar, FaHeart, FaMapMarkerAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://resort-finder-2aqp.onrender.com'
-  : 'http://localhost:8080'; 
+  : 'http://localhost:8080';
+
 const FeaturedRetreatsCarousel = () => {
   const [featuredResorts, setFeaturedResorts] = useState([]);
-  const [favorites, setFavorites] = useState([]);
+  const [wishlistIds, setWishlistIds] = useState([]);
+  const [loadingWishlistToggle, setLoadingWishlistToggle] = useState(false);
   const navigate = useNavigate();
-  
+  const { isLoggedIn } = useAuth();
 
+  // Fetch featured resorts
   useEffect(() => {
     const fetchApprovedResorts = async () => {
       try {
@@ -28,10 +33,54 @@ const FeaturedRetreatsCarousel = () => {
     fetchApprovedResorts();
   }, []);
 
-  const toggleFavorite = (id) => {
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]
-    );
+  // Fetch user's wishlist IDs on mount or login
+  const fetchWishlistStatus = useCallback(async () => {
+    if (!isLoggedIn) {
+      setWishlistIds([]);
+      return;
+    }
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/wishlist/status`, {
+        withCredentials: true,
+      });
+      setWishlistIds(res.data.map(id => id.toString()));
+    } catch (err) {
+      console.error('Error fetching wishlist status:', err.response?.data?.message || err.message);
+      setWishlistIds([]);
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    fetchWishlistStatus();
+  }, [fetchWishlistStatus]);
+
+  // Handle toggling wishlist status for a resort
+  const handleToggleWishlist = async (resortId) => {
+    if (!isLoggedIn) {
+      alert('Please log in to add resorts to your wishlist!');
+      navigate('/login');
+      return;
+    }
+
+    setLoadingWishlistToggle(true);
+
+    const isCurrentlyWishlisted = wishlistIds.includes(resortId);
+
+    try {
+      if (isCurrentlyWishlisted) {
+        await axios.delete(`${API_BASE_URL}/api/wishlist/${resortId}`, { withCredentials: true });
+        setWishlistIds((prev) => prev.filter((id) => id !== resortId));
+      } else {
+        // CORRECTED: Added backticks for the template literal string
+        await axios.post(`${API_BASE_URL}/api/wishlist/${resortId}`, {}, { withCredentials: true });
+        setWishlistIds((prev) => [...prev, resortId]);
+      }
+    } catch (err) {
+      console.error('Error toggling wishlist:', err.response?.data?.message || err.message);
+      alert('Failed to update wishlist. Please try again.');
+    } finally {
+      setLoadingWishlistToggle(false);
+    }
   };
 
   const renderStars = (rating) => {
@@ -87,6 +136,7 @@ const FeaturedRetreatsCarousel = () => {
                     <div className="absolute inset-x-0 bottom-0 opacity-0 group-hover:opacity-100 transition duration-300 flex justify-center mb-3">
                       <button
                         className="bg-yellow-400 text-white font-semibold px-4 py-1 rounded-full hover:bg-yellow-500 text-sm"
+                        // CORRECTED: Wrapped path in backticks to make it a valid string
                         onClick={() => navigate(`/resorts/${retreat._id}`)}
                       >
                         View Details
@@ -94,11 +144,15 @@ const FeaturedRetreatsCarousel = () => {
                     </div>
                     <div
                       className="absolute top-3 right-3 text-xl p-1 bg-white/70 rounded-full cursor-pointer hover:scale-110 transition"
-                      onClick={() => toggleFavorite(retreat._id)}
+                      onClick={() => handleToggleWishlist(retreat._id.toString())}
                     >
-                      <FaHeart
-                        className={favorites.includes(retreat._id) ? 'text-red-500' : 'text-gray-400'}
-                      />
+                      {loadingWishlistToggle && wishlistIds.includes(retreat._id.toString()) ? (
+                         <FaHeart className="text-gray-400 animate-pulse" />
+                      ) : (
+                        <FaHeart
+                          className={wishlistIds.includes(retreat._id.toString()) ? 'text-red-500' : 'text-gray-400'}
+                        />
+                      )}
                     </div>
                   </div>
 

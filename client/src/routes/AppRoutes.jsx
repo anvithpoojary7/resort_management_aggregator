@@ -10,13 +10,19 @@ import CombinedLoginRegister from '../pages/CombinedLoginRegister';
 import Settings from '../pages/Settings';
 import ContactUs from '../pages/ContactUs';
 import HelpSupport from '../pages/HelpSupport';
-import DealDetails from '../components/DealDetails'; 
-import AmenityResortsList from '../pages/AmenityResortsList'; 
+import DealDetails from '../components/DealDetails';
+import AmenityResortsList from '../pages/AmenityResortsList';
 import About from '../pages/About';
+
 import Notifications from '../pages/Notifications';
 
 
 //  Admin Pages
+
+import WishlistPage from '../pages/WishlistPage'; // Import the WishlistPage component
+
+// Admin Pages
+
 import AdminLogin from '../admin/pages/AdminLogin';
 import AdminDashboard from '../admin/pages/AdminDashboard';
 import ModerationPage from '../admin/pages/ModerationPage';
@@ -27,6 +33,7 @@ import RevenueAnalytics from '../admin/pages/RevenueAnalytics';
 // Route Protection
 import ProtectedRoute from './ProtectedRoute';
 
+// CORRECTED: Replaced the regex-like slashes with backticks for a valid template literal
 const ADMIN_PATH = `/${process.env.REACT_APP_ADMIN_URL_PATH || 'admin-portal-secret/login'}`;
 
 const AppRoutes = () => (
@@ -39,12 +46,12 @@ const AppRoutes = () => (
     <Route path="/settings" element={<Settings />} />
     <Route path="/contact" element={<ContactUs />} />
     <Route path="/help" element={<HelpSupport />} />
-    <Route path="/deal/:id" element={<DealDetails />} /> 
-    <Route path="/amenity/:amenityName" element={<AmenityResortsList />} /> 
+    <Route path="/deal/:id" element={<DealDetails />} />
+    <Route path="/amenity/:amenityName" element={<AmenityResortsList />} />
     <Route path="/about" element={<About />} />
+
     <Route path="/notifications" element={<Notifications />} />
 
-    {/* ✅ Protected Reservation Route for Logged-in Users */}
     <Route
       path="/resorts/:id/reserve"
       element={
@@ -53,6 +60,16 @@ const AppRoutes = () => (
         </ProtectedRoute>
       }
     />
+    {/* --- ADDED WISHLIST ROUTE --- */}
+    <Route
+      path="/wishlists"
+      element={
+        <ProtectedRoute role="user">
+          <WishlistPage />
+        </ProtectedRoute>
+      }
+    />
+    {/* --- END WISHLIST ROUTE ADDITION --- */}
 
     {/* ✅ Admin Routes */}
     <Route path={ADMIN_PATH} element={<AdminLogin />} />
@@ -97,7 +114,7 @@ const AppRoutes = () => (
       }
     />
 
-    {/* ⚠️ Optional: 404 Page */}
+    {/* ⚠ Optional: 404 Page */}
     {/* <Route path="*" element={<NotFound />} /> */}
   </Routes>
 );
