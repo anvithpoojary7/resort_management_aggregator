@@ -35,23 +35,24 @@ const ResortDetail = () => {
     fetchResort();
   }, [id]);
 
-  const handleBookNow = () => {
+  const handleBookNow = (room) => {
     if (!isLoggedIn || !user) {
-      // Not logged in → go to login
       return navigate('/auth', { state: { from: `/resorts/${id}/reserve` } });
     }
-
+  
     if (user.role !== 'user') {
-      // Logged in but not a regular user
       alert('Only users can book a resort. Please login with a user account.');
       return;
     }
-
-    // Valid user → go to reservation
+  
     navigate(`/resorts/${id}/reserve`, {
-      state: { resort, rooms },
+      state: {
+        resort: { ...resort, rooms }, // merge rooms into resort
+        selectedRoom: room
+      }
     });
   };
+  
 
   return (
     <div className="bg-gray-50 py-8 px-4 min-h-screen relative">
@@ -116,12 +117,14 @@ const ResortDetail = () => {
                       <div className="text-green-600 mt-2 font-medium">
                         ₹{room.roomPrice} per night
                       </div>
+                      
                       <button
-                        onClick={handleBookNow}
+                        onClick={() => handleBookNow(room)}
                         className="mt-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded transition"
                       >
-                        Book Now
+                      Book Now
                       </button>
+
                     </div>
                   </div>
                 </div>

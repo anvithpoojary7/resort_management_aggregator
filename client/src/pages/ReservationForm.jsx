@@ -10,7 +10,9 @@ const ReservationForm = () => {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { resort, rooms } = location.state || {};
+  const { resort, selectedRoom } = location.state || {};
+  const rooms = selectedRoom ? [selectedRoom] : (resort?.rooms || []);
+
 
   const [formData, setFormData] = useState({
     name: '',
@@ -37,7 +39,7 @@ const ReservationForm = () => {
   }, []);
 
   useEffect(() => {
-    if (!resort || !rooms) {
+    if (!resort ) {
       navigate('/');
     }
   }, [resort, rooms, navigate]);
