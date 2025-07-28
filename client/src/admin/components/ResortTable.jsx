@@ -1,13 +1,22 @@
 import React from 'react';
+import axios from 'axios';
 
-const ResortTable = ({ resorts }) => {
-  if (!Array.isArray(resorts)) {
-    return (
-      <div className="text-center text-red-500 py-4">
-        Invalid resort data.
-      </div>
-    );
-  }
+const ResortTable = ({ resorts, fetchResorts }) => {
+  const handleVisibilityToggle = async (id, visible) => {
+    try {
+      // **CHANGE THIS LINE**
+      await axios.patch(
+        `http://localhost:8080/api/admin/resorts/visibility/${id}`, // <-- Changed to 'resorts'
+        { isVisible: visible }
+      );
+
+      alert(`Resort marked as ${visible ? 'Active' : 'Inactive'}`);
+      fetchResorts(); // ✅ reload data
+    } catch (error) {
+      console.error('Error updating visibility:', error);
+    }
+  };
+  
 
   return (
     <div className="overflow-x-auto">
@@ -17,7 +26,7 @@ const ResortTable = ({ resorts }) => {
             <th className="py-3 px-4">Resort Details</th>
             <th className="py-3 px-4">Owner</th>
             <th className="py-3 px-4">Performance</th>
-            <th className="py-3 px-4">Status</th>
+            <th className="py-3 px-4">Visibility</th>
           </tr>
         </thead>
         <tbody>
@@ -46,18 +55,28 @@ const ResortTable = ({ resorts }) => {
                   ₹{resort.revenue || 0} revenue
                 </p>
               </td>
-              <td className="py-3 px-4">
+              <td className="py-3 px-4 space-x-2">
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    resort.status === 'approved'
-                      ? 'bg-green-100 text-green-700'
-                      : resort.status === 'rejected'
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-yellow-100 text-yellow-700'
+                  className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
+                    resort.visible
+                      ? 'bg-green-100 text-green-700 border border-green-400'
+                      : 'bg-red-100 text-red-700 border border-red-400'
                   }`}
                 >
-                  {resort.status}
+                  {resort.visible ? 'Active' : 'Inactive'}
                 </span>
+                <button
+                  className="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700 border border-green-400"
+                  onClick={() => handleVisibilityToggle(resort._id, true)}
+                >
+                  Active
+                </button>
+                <button
+                  className="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-700 border border-red-400"
+                  onClick={() => handleVisibilityToggle(resort._id, false)}
+                >
+                  Inactive
+                </button>
               </td>
             </tr>
           ))}

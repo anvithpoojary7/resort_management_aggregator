@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom'; // ✅ Added useLocation
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FaUser, FaKey } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
@@ -25,14 +25,14 @@ const CombinedLoginRegister = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
-  const location = useLocation(); // ✅ Get redirect location
+  const location = useLocation();
   const { user, login } = useAuth();
 
-  const redirectTo = location.state?.redirectTo || '/'; // ✅ fallback if no redirect
+  const redirectTo = location.state?.redirectTo || '/';
   const fromBooking = location.state?.fromBooking;
 
   useEffect(() => {
-    if (user) navigate(redirectTo, { replace: true }); // ✅ go where intended
+    if (user) navigate(redirectTo, { replace: true });
   }, [user, navigate, redirectTo]);
 
   const clearForm = () => {
@@ -74,10 +74,16 @@ const CombinedLoginRegister = () => {
 
       if (res.ok) {
         if (mode === 'login') {
+          // =================== THE FIX ===================
+          // We must check for the token and save it to localStorage
+          if (data.token) {
+            localStorage.setItem('token', data.token);
+          }
+          // ===============================================
           login(data.user);
           setTimeout(() => {
             setIsLoading(false);
-            navigate(redirectTo, { replace: true }); // ✅ after login, redirect back
+            navigate(redirectTo, { replace: true });
           }, 800);
         } else {
           setIsLoading(false);
@@ -124,8 +130,74 @@ const CombinedLoginRegister = () => {
   };
 
   const handleGoogleAuth = async () => {
-    // You can later implement Google login here
+    try {
+      setIsLoading(true);
+      const result = await signInWithPopup(auth, provider);
+      const { user } = result;
+
+      const payload = {
+        name: user.displayName,
+        email: user.email,
+      };
+
+      // First try to login
+      let res = await fetch(`${API_URL}/api/auth/google-login`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: payload.email }),
+      });
+
+      let data = await res.json();
+
+      if (res.ok) {
+        // =================== THE FIX ===================
+        // We must check for the token and save it to localStorage
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+        }
+        // ===============================================
+        login(data.user);
+        setTimeout(() => {
+          setIsLoading(false);
+          navigate(redirectTo, { replace: true });
+        }, 800);
+      } else if (res.status === 404) {
+        // No user found — try signup
+        res = await fetch(`${API_URL}/api/auth/google-signup`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        data = await res.json();
+
+        if (res.ok) {
+          // =================== THE FIX (for signup) ===================
+          if (data.token) {
+            localStorage.setItem('token', data.token);
+          }
+          // ============================================================
+          login(data.user);
+          setTimeout(() => {
+            setIsLoading(false);
+            navigate(redirectTo, { replace: true });
+          }, 800);
+        } else {
+          setIsLoading(false);
+          alert(data.message || 'Google signup failed.');
+        }
+      } else {
+        setIsLoading(false);
+        alert(data.message || 'Google login failed.');
+      }
+    } catch (err) {
+      setIsLoading(false);
+      alert('Google authentication failed: ' + err.message);
+    }
   };
+
 
   return (
     <div className="relative">

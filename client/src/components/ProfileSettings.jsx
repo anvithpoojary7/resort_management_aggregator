@@ -1,238 +1,356 @@
 import React, { useState, useEffect } from 'react';
-import { FaUserCircle } from 'react-icons/fa';
 import { FiEdit, FiX } from 'react-icons/fi';
 
-/**
- * ProfileSettings – scroll‑free modal
- * Dark translucent theme, warm terracotta accents (#C97B63)
- * Fields: first / last name, address, language
- * Password change requires current + new password
- */
+
 const ACCENT = '#C97B63';
+
+const API_URL = process.env.NODE_ENV === 'production'
+  ? 'https://resort-finder-2aqp.onrender.com'
+  : 'http://localhost:8080';
+
+// A simple modal for showing messages instead of alert()
+const MessageModal = ({ message, onClose }) => (
+  <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
+    <div className="bg-gray-800 rounded-lg p-6 text-white text-center">
+      <p className="mb-4">{message}</p>
+      <button
+        onClick={onClose}
+        className="px-4 py-2 rounded-lg text-white"
+        style={{ backgroundColor: ACCENT }}
+      >
+        Close
+      </button>
+    </div>
+  </div>
+);
 
 const ProfileSettings = ({ onClose }) => {
   const [editing, setEditing] = useState(false);
-  const [imageUrl, setImageUrl] = useState('');
-  const [avatarModal, setAvatarModal] = useState(false);
   const [currentPwd, setCurrentPwd] = useState('');
   const [newPwd, setNewPwd] = useState('');
   const [userRole, setUserRole] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState(null); // For custom modal messages
 
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    name: '',
     address: '',
-    language: '',
+    phone: '',
     email: '',
   });
 
+  // Effect to lock body scroll when modal is open
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
   }, []);
 
+  // Effect to fetch user data on component mount
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem('user'));
-    if (!stored) return;
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error("No authorization token found.");
 
-    const [firstName = '', ...rest] = (stored.name || '').trim().split(' ');
-    setFormData({
-      firstName,
-      lastName: rest.join(' '),
-      address: stored.address || '',
-      language: stored.language || '',
-      email: stored.email || '',
-    });
+        // CORRECTED: Using the full API_URL
+        const response = await fetch(`${API_URL}/api/user/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-    if (stored.profileImage) setImageUrl(stored.profileImage);
-    if (stored.role) setUserRole(stored.role);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to fetch user data');
+        }
+
+        const userData = await response.json();
+        setFormData({
+          name: userData.name || '',
+          address: userData.address || '',
+          phone: userData.phone || '',
+          email: userData.email || '',
+        });
+
+        if (userData.role) setUserRole(userData.role);
+      } catch (error) {
+        console.error("Fetch user data error:", error);
+        setMessage(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
   }, []);
 
-  const handleChange = (e) => setFormData(p => ({ ...p, [e.target.name]: e.target.value }));
+  const handleChange = (e) =>
+    setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
 
-  const handleAvatarUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file?.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImageUrl(reader.result);
-      setAvatarModal(false);
-    };
-    reader.readAsDataURL(file);
+  const saveProfile = async () => {
+    try {
+      // CORRECTED: Using the full API_URL
+      const response = await fetch(`${API_URL}/api/user/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({
+          address: formData.address,
+          phone: formData.phone,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update profile');
+      setMessage('Profile updated successfully');
+      setEditing(false);
+    } catch (error) {
+      console.error(error);
+      setMessage('Error updating profile');
+    }
   };
 
-  const saveProfile = () => {
-    const stored = JSON.parse(localStorage.getItem('user')) || {};
-    const updated = {
-      ...stored,
-      name: `${formData.firstName} ${formData.lastName}`.trim(),
-      address: formData.address,
-      language: formData.language,
-      profileImage: imageUrl,
-    };
-    localStorage.setItem('user', JSON.stringify(updated));
-    setEditing(false);
+  const handleUpdatePassword = async () => {
+    if (!currentPwd || !newPwd) return setMessage('Fill both password fields');
+    if (newPwd.length < 6) return setMessage('New password must be at least 6 characters');
+    try {
+      // CORRECTED: Using the full API_URL
+      const response = await fetch(`${API_URL}/api/user/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ currentPassword: currentPwd, newPassword: newPwd }),
+      });
+      if (!response.ok) throw new Error('Failed to update password. Check current password.');
+      setMessage('Password updated successfully');
+      setCurrentPwd('');
+      setNewPwd('');
+    } catch (error) {
+      console.error(error);
+      setMessage(error.message);
+    }
   };
 
-  const handleUpdatePassword = () => {
-    if (!currentPwd || !newPwd) return alert('Fill both password fields');
-    if (newPwd.length < 6) return alert('New password must be ≥ 6 chars');
-    alert('Password updated (demo)');
-    setCurrentPwd('');
-    setNewPwd('');
+  const handleDeleteAccount = async () => {
+    // Using custom modal instead of window.confirm
+    const confirmed = await new Promise(resolve => {
+        setMessage({
+            text: 'Delete account permanently? This cannot be undone.',
+            onConfirm: () => resolve(true),
+            onCancel: () => resolve(false)
+        });
+    });
+
+    if (!confirmed) {
+        setMessage(null); // Close confirmation modal
+        return;
+    }
+
+    try {
+      // CORRECTED: Using the full API_URL
+      const response = await fetch(`${API_URL}/api/user/delete`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!response.ok) throw new Error('Failed to delete account');
+      setMessage('Account deleted successfully');
+      localStorage.removeItem('token');
+      // Redirect after a short delay to allow user to see the message
+      setTimeout(() => window.location.href = '/auth', 2000);
+    } catch (error) {
+      console.error(error);
+      setMessage('Error deleting account');
+    }
   };
 
-  const handleDeleteAccount = () => {
-    if (!window.confirm('Delete account permanently?')) return;
-    localStorage.removeItem('user');
-    alert('Account deleted (demo)');
-    window.location.href = '/auth';
-  };
+  const userInitial = formData.name ? formData.name.charAt(0).toUpperCase() : 'U';
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
+        <p className="text-white">Loading profile...</p>
+      </div>
+    );
+  }
+  
+  // Custom Confirmation Modal
+    const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
+            <div className="bg-gray-800 rounded-lg p-6 text-white text-center shadow-xl">
+                <p className="mb-4">{message}</p>
+                <div className="flex justify-center gap-4">
+                    <button onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-500">
+                        Cancel
+                    </button>
+                    <button onClick={onConfirm} className="px-4 py-2 rounded-lg text-white" style={{ backgroundColor: 'red' }}>
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 md:p-6 overflow-auto">
-      <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-black/60 backdrop-blur-lg rounded-2xl shadow-2xl text-white px-6 py-8 grid gap-8">
-        <button onClick={onClose} className="absolute top-4 right-4 text-white hover:text-gray-200">
-          <FiX size={24} />
-        </button>
-
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold">Welcome, {formData.firstName || 'Guest'}</h1>
-            <p className="text-sm text-gray-300 capitalize">Role: {userRole || 'N/A'}</p>
-          </div>
-          <FaUserCircle className="text-4xl text-white/70" />
-        </div>
-
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <img
-              src={imageUrl || '/default-avatar.jpg'}
-              alt="Profile"
-              className="w-20 h-20 rounded-full object-cover cursor-pointer hover:opacity-80"
-              onClick={() => setAvatarModal(true)}
-            />
-            <div>
-              <h2 className="text-xl font-bold leading-tight break-all">
-                {formData.firstName} {formData.lastName}
-              </h2>
-              <p className="text-gray-300 text-sm break-all">{formData.email}</p>
-            </div>
-          </div>
-          <button
-            onClick={editing ? saveProfile : () => setEditing(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-white"
-            style={{ backgroundColor: ACCENT }}
-          >
-            <FiEdit /> {editing ? 'Save' : 'Edit'}
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {['firstName', 'lastName', 'address'].map((field) => (
-            <div key={field} className="flex flex-col gap-1">
-              <label className="text-gray-300 capitalize">{field.replace(/([A-Z])/g, ' $1')}</label>
-              <input
-                name={field}
-                disabled={!editing}
-                value={formData[field]}
-                onChange={handleChange}
-                placeholder={field}
-                className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-gray-400 disabled:opacity-60" />
-            </div>
-          ))}
-
-          <div className="flex flex-col gap-1">
-            <label className="text-gray-300">Language</label>
-            <select
-              name="language"
-              disabled={!editing}
-              value={formData.language}
-              onChange={handleChange}
-              className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-white disabled:opacity-60"
-            >
-              <option value="">Select</option>
-              <option value="english">English</option>
-              <option value="hindi">Hindi</option>
-              <option value="kannada">Kannada</option>
-            </select>
-          </div>
-        </div>
-        {/* Email Info */}
-       <div className="mt-6 space-y-2">
-          <label className="text-gray-300 block text-sm">My email address</label>
-          <div className="flex items-center gap-2 text-white">
-            <div className="w-3 h-3" style={{ backgroundColor: '#C97B63', borderRadius: '9999px' }}></div>
-            <span className="text-sm break-all">{formData.email}</span>
-            <span className="text-xs text-gray-400">1 month ago</span>
-          </div>
-          <button className="text-sm hover:underline" style={{ color: '#C97B63' }}>+ Add Email Address</button>
-        </div>
-
-        <section className="space-y-4">
-          <h3 className="text-lg font-semibold">Change Password</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              type="password"
-              placeholder="Current password"
-              value={currentPwd}
-              onChange={(e) => setCurrentPwd(e.target.value)}
-              className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-gray-400" />
-            <input
-              type="password"
-              placeholder="New password"
-              value={newPwd}
-              onChange={(e) => setNewPwd(e.target.value)}
-              className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-gray-400" />
-          </div>
-          <button
-            onClick={handleUpdatePassword}
-            className="px-4 py-2 rounded-xl text-white"
-            style={{ backgroundColor: ACCENT }}
-          >
-            Update Password
-          </button>
-        </section>
-
-        <section className="space-y-4 border-t border-white/10 pt-6">
-          <h3 className="text-lg font-semibold">Danger Zone</h3>
-          <p className="text-gray-400 text-sm">Deleting your account is permanent and cannot be undone.</p>
-          <button
-            onClick={handleDeleteAccount}
-            className="px-4 py-2 rounded-xl text-white"
-            style={{ backgroundColor: ACCENT }}
-          >
-            Delete Account
-          </button>
-        </section>
-      </div>
-
-      {avatarModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="relative w-full max-w-sm bg-black/90 backdrop-blur-md rounded-2xl p-6 text-white">
-            <button
-              onClick={() => setAvatarModal(false)}
-              className="absolute top-2 right-2 text-gray-300 hover:text-white"
-            >
-              <FiX size={20} />
-            </button>
-            <img src={imageUrl || '/default-avatar.jpg'} alt="Large Avatar" className="w-full h-64 object-cover rounded-xl mb-4" />
-            <div className="flex justify-between">
-              <label className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded cursor-pointer">
-                Change Photo
-                <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
-              </label>
-              <button
-                onClick={() => { setImageUrl(''); setAvatarModal(false); }}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
-              >
-                Delete Photo
-              </button>
-            </div>
-          </div>
-        </div>
+    <>
+      {/* This section handles the display of all messages and confirmations */}
+      {message && typeof message === 'string' && (
+        <MessageModal message={message} onClose={() => setMessage(null)} />
       )}
-    </div>
+      {message && typeof message === 'object' && message.onConfirm && (
+        <ConfirmationModal 
+            message={message.text} 
+            onConfirm={message.onConfirm}
+            onCancel={message.onCancel}
+        />
+      )}
+
+      <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 md:p-6 overflow-auto">
+        <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-black/60 backdrop-blur-lg rounded-2xl shadow-2xl text-white px-6 py-8 grid gap-8">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-white hover:text-gray-200"
+          >
+            <FiX size={24} />
+          </button>
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-semibold">
+                Welcome, {formData.name || 'Guest'}
+              </h1>
+            
+            </div>
+            <div className="flex items-center justify-center w-12 h-12 rounded-full text-white font-bold text-lg"
+              style={{ backgroundColor: ACCENT }}>
+              {userInitial}
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold"
+                style={{ backgroundColor: ACCENT }}>
+                {userInitial}
+              </div>
+              <div>
+                <h2 className="text-xl font-bold leading-tight break-all">
+                  {formData.name}
+                </h2>
+                <p className="text-gray-300 text-sm break-all">{formData.email}</p>
+              </div>
+            </div>
+            <button
+              onClick={editing ? saveProfile : () => setEditing(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white"
+              style={{ backgroundColor: ACCENT }}
+            >
+              <FiEdit /> {editing ? 'Save' : 'Edit'}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Name (readonly) */}
+            <div className="flex flex-col gap-1">
+              <label className="text-gray-300">Name</label>
+              <div className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-white opacity-60 select-none cursor-not-allowed">
+                {formData.name || '—'}
+              </div>
+            </div>
+
+          
+            <div className="flex flex-col gap-1">
+              <label className="text-gray-300">Address</label>
+              {editing ? (
+                <input
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="Add address"
+                  className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-gray-400"
+                />
+              ) : (
+                <div className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-white break-words">
+                  {formData.address || '—'}
+                </div>
+              )}
+            </div>
+
+          
+            <div className="flex flex-col gap-1">
+              <label className="text-gray-300">Phone</label>
+              {editing ? (
+                <input
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="Enter phone number"
+                  className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-gray-400"
+                />
+              ) : (
+                <div className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-white break-words">
+                  {formData.phone || '—'}
+                </div>
+              )}
+            </div>
+          </div>
+
+      
+          <div className="mt-6 space-y-2">
+            <label className="text-gray-300 block text-sm">My email address</label>
+            <div className="flex items-center gap-2 text-white">
+              <div className="w-3 h-3"
+                style={{ backgroundColor: ACCENT, borderRadius: '9999px' }}
+              ></div>
+              <span className="text-sm break-all">{formData.email}</span>
+            </div>
+          </div>
+
+        
+          <section className="space-y-4">
+            <h3 className="text-lg font-semibold">Change Password</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                type="password"
+                placeholder="Current password"
+                value={currentPwd}
+                onChange={(e) => setCurrentPwd(e.target.value)}
+                className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-gray-400"
+              />
+              <input
+                type="password"
+                placeholder="New password"
+                value={newPwd}
+                onChange={(e) => setNewPwd(e.target.value)}
+                className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-gray-400"
+              />
+            </div>
+            <button
+              onClick={handleUpdatePassword}
+              className="px-4 py-2 rounded-xl text-white"
+              style={{ backgroundColor: ACCENT }}
+            >
+              Update Password
+            </button>
+          </section>
+
+        
+          <section className="space-y-4 border-t border-white/10 pt-6">
+            <h3 className="text-lg font-semibold text-red-400">Danger Zone</h3>
+            <p className="text-gray-400 text-sm">
+              Deleting your account is permanent and cannot be undone.
+            </p>
+            <button
+              onClick={handleDeleteAccount}
+              className="px-4 py-2 rounded-xl text-white bg-red-600 hover:bg-red-700"
+            >
+              Delete Account
+            </button>
+          </section>
+        </div>
+      </div>
+    </>
   );
 };
 

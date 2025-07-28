@@ -27,7 +27,7 @@ let gridfsBucket;
 // List of allowed domains
 const allowedOrigins = [
   'http://localhost:3000', // Your local frontend
-  'https://resort-management-aggregator.vercel.app' // Your deployed frontend
+  'https://resort-management-aggregator.vercel.app'
 ];
 
 const corsOptions = {
@@ -43,8 +43,15 @@ const corsOptions = {
   credentials: true, // This is important for sending cookies
 };
 
-app.use(cors(corsOptions)); // Use the new cors options
-// --- CORS Configuration ENDS HERE ---
+app.use(cors(corsOptions)); 
+
+app.use((req, res, next) => {
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+  );
+  next();
+});
 
 
 app.use(express.json());
@@ -79,9 +86,15 @@ conn.once('open', () => {
   upload = multer({ storage });
   console.log('✅ Multer disk upload ready');
 
- 
+  const adminResortControl = require('./routes/adminResortControl');
+  app.use('/api/admin/resorts', adminResortControl);
+  
   const authRoutes = require('./routes/auth');
   const resortRoutesModule = require('./routes/resortRoutes');
+  const userRoutes=require('./routes/userRoutes');
+
+  app.use('/api/user',userRoutes);
+  
   app.use('/api/auth', authRoutes);
   app.use('/api/resorts', resortRoutesModule(gfs, upload, gridfsBucket));
  /* app.use('/api/owner',ownerRoutes);*/

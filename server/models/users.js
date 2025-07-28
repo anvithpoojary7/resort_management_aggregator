@@ -19,6 +19,14 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: false, // For Google users, it can be empty
     },
+    address: {
+      type: String,
+      default: '',
+    },
+    phone: {
+      type: String,
+      default: '',
+    },
     role: {
       type: String,
       default: 'user',
