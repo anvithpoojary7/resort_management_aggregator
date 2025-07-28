@@ -13,11 +13,7 @@ import HelpSupport from '../pages/HelpSupport';
 import DealDetails from '../components/DealDetails'; 
 import AmenityResortsList from '../pages/AmenityResortsList'; 
 import About from '../pages/About';
-
-
-
-
-
+import Notifications from '../pages/Notifications';
 
 
 //  Admin Pages
@@ -46,6 +42,7 @@ const AppRoutes = () => (
     <Route path="/deal/:id" element={<DealDetails />} /> 
     <Route path="/amenity/:amenityName" element={<AmenityResortsList />} /> 
     <Route path="/about" element={<About />} />
+    <Route path="/notifications" element={<Notifications />} />
 
     {/* ✅ Protected Reservation Route for Logged-in Users */}
     <Route

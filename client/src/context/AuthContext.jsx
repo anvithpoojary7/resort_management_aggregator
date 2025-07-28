@@ -6,6 +6,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true); // ✅ new
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -19,6 +20,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('user');
       }
     }
+    setAuthLoading(false); // ✅ Mark loading as done after checking
   }, []);
 
   const login = (userData) => {
@@ -42,6 +44,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         setUser,
         setIsLoggedIn,
+        authLoading, // ✅ expose to components
       }}
     >
       {children}
