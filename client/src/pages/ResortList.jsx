@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import 'react-datepicker/dist/react-datepicker.css';
+import axios from 'axios';
 
-import { FaMapMarkerAlt, FaStar, FaRegStar } from 'react-icons/fa';
-import MagicLoader from './MagicLoader';
+import { FaMapMarkerAlt } from 'react-icons/fa';
+import MagicLoader from '../pages/MagicLoader';
+import ResortCard from '../components/ResortCard';
+import { useAuth } from '../context/AuthContext';
 
 const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://resort-finder-2aqp.onrender.com'
@@ -32,7 +35,10 @@ const ResortList = () => {
   const [allLocations, setAllLocations] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
 
-  // Close suggestions & filter box on outside click
+  const [wishlistIds, setWishlistIds] = useState([]);
+  const [loadingWishlistToggle, setLoadingWishlistToggle] = useState(false);
+  const { isLoggedIn } = useAuth();
+
   useEffect(() => {
     const close = (e) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
@@ -44,10 +50,10 @@ const ResortList = () => {
     return () => document.removeEventListener('mousedown', close);
   }, []);
 
-  // Fetch all locations for autocomplete suggestions
   useEffect(() => {
     const fetchAllLocations = async () => {
       try {
+        // CORRECTED: Added backticks for the template literal string
         const res = await fetch(`${API_BASE_URL}/api/resorts/allresorts`);
         if (!res.ok) throw new Error('Could not fetch locations');
         const allResortsData = await res.json();
@@ -60,17 +66,18 @@ const ResortList = () => {
     fetchAllLocations();
   }, []);
 
-  // Fetch resorts based on query params
   const fetchResorts = useCallback(async () => {
     setLoading(true);
     setErr(null);
     try {
       const qs = location.search.slice(1);
+      // CORRECTED: Added backticks for the template literal strings
       const url = qs
         ? `${API_BASE_URL}/api/filteresort/search?${qs}`
         : `${API_BASE_URL}/api/resorts/allresorts`;
 
       const res = await fetch(url);
+      // CORRECTED: Added backticks for the template literal string in the error message
       if (!res.ok) throw new Error(`HTTP Error ${res.status} on URL: ${url}`);
       setResorts(await res.json());
     } catch (e) {
@@ -85,7 +92,55 @@ const ResortList = () => {
     fetchResorts();
   }, [fetchResorts]);
 
-  // Update the URL and trigger search
+  const fetchWishlistStatus = useCallback(async () => {
+    if (!isLoggedIn) {
+      setWishlistIds([]);
+      return;
+    }
+    try {
+      // CORRECTED: Added backticks for the template literal string
+      const res = await axios.get(`${API_BASE_URL}/api/wishlist/status`, {
+        withCredentials: true,
+      });
+      setWishlistIds(res.data.map(id => id.toString()));
+    } catch (err) {
+      console.error('Error fetching wishlist status:', err.response?.data?.message || err.message);
+      setWishlistIds([]);
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    fetchWishlistStatus();
+  }, [fetchWishlistStatus]);
+
+  const handleToggleWishlist = async (resortId) => {
+    if (!isLoggedIn) {
+      alert('Please log in to add resorts to your wishlist!');
+      navigate('/login');
+      return;
+    }
+
+    setLoadingWishlistToggle(true);
+    const isCurrentlyWishlisted = wishlistIds.includes(resortId);
+
+    try {
+      if (isCurrentlyWishlisted) {
+        // CORRECTED: Added backticks for the template literal string
+        await axios.delete(`${API_BASE_URL}/api/wishlist/${resortId}`, { withCredentials: true });
+        setWishlistIds((prev) => prev.filter((id) => id !== resortId));
+      } else {
+        // CORRECTED: Added backticks for the template literal string
+        await axios.post(`${API_BASE_URL}/api/wishlist/${resortId}`, {}, { withCredentials: true });
+        setWishlistIds((prev) => [...prev, resortId]);
+      }
+    } catch (err) {
+      console.error('Error toggling wishlist:', err.response?.data?.message || err.message);
+      alert('Failed to update wishlist. Please try again.');
+    } finally {
+      setLoadingWishlistToggle(false);
+    }
+  };
+
   const updateUrlAndSearch = (overrides = {}) => {
     const p = new URLSearchParams();
 
@@ -101,10 +156,10 @@ const ResortList = () => {
     if (sort) p.set('sort', sort);
     amenitiesToSearch.forEach((a) => p.append('amenities', a));
 
+    // CORRECTED: Wrapped path in backticks to make it a valid string
     navigate(`/resorts?${p.toString()}`);
   };
 
-  // Handle location input change
   const handleLocationChange = (e) => {
     const inputVal = e.target.value;
     setLocFilter(inputVal);
@@ -113,15 +168,14 @@ const ResortList = () => {
       const filteredSuggestions = allLocations.filter(loc =>
         loc.toLowerCase().includes(inputVal.toLowerCase())
       );
-      // Show "No locations found" if no matches
-      setSuggestions(filteredSuggestions.length > 0 ? filteredSuggestions : ['__NO_MATCH__']);
+      setSuggestions(filteredSuggestions.length > 0 ? filteredSuggestions : ['_NO_MATCH_']);
     } else {
       setSuggestions([]);
     }
   };
 
   const handleSuggestionClick = (selectedLocation) => {
-    if (selectedLocation === '__NO_MATCH__') return; // Ignore click on "No locations found"
+    if (selectedLocation === '_NO_MATCH_') return;
     setLocFilter(selectedLocation);
     setSuggestions([]);
     updateUrlAndSearch({ location: selectedLocation });
@@ -133,7 +187,6 @@ const ResortList = () => {
     setSuggestions([]);
   };
 
-  // Toggle amenities
   const toggleAmenity = (toggledAmenity) => {
     const lower = toggledAmenity.toLowerCase();
     const updatedAmenities = amenities.includes(lower)
@@ -164,7 +217,7 @@ const ResortList = () => {
           className="mb-12 bg-white shadow-xl rounded-full px-6 py-5 flex items-center justify-between gap-4 border border-gray-200 relative"
           ref={wrapperRef}
         >
-          {/* Location input with suggestions */}
+          {/* Form content remains the same... */}
           <div className="relative flex items-center flex-grow bg-white border border-gray-300 rounded-full shadow-sm px-6 py-4">
             <FaMapMarkerAlt className="text-gray-500 text-xl mr-4" />
             <input
@@ -178,7 +231,7 @@ const ResortList = () => {
             {suggestions.length > 0 && (
               <ul className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
                 {suggestions.map((sugg_location, index) => (
-                  sugg_location === '__NO_MATCH__' ? (
+                  sugg_location === '_NO_MATCH_' ? (
                     <li
                       key={index}
                       className="px-6 py-3 text-gray-400 cursor-default"
@@ -198,7 +251,6 @@ const ResortList = () => {
               </ul>
             )}
 
-            {/* Filter button */}
             <div
               className="ml-4 relative cursor-pointer hover:text-blue-600"
               onClick={() => setShowFilters(!showFilters)}
@@ -258,43 +310,16 @@ const ResortList = () => {
           </button>
         </form>
 
-        {/* Resorts List */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {resorts.length ? (
             resorts.map((r) => (
-              <div
+              <ResortCard
                 key={r._id}
-                onClick={() => navigate(`/resorts/${r._id}`)}
-                className="cursor-pointer bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transition-all duration-300 transform hover:-translate-y-1 border border-gray-100"
-              >
-                <img
-                  src={`${API_BASE_URL}/api/resorts/image/${encodeURIComponent(r.image)}`}
-                  alt={r.name}
-                  className="h-60 w-full object-cover transition-transform duration-300 hover:scale-105"
-                />
-                <div className="p-5">
-                  <h2 className="text-xl font-extrabold text-gray-800 mb-2">{r.name}</h2>
-                  <div className="flex items-center text-sm text-gray-600 mb-2">
-                    <FaMapMarkerAlt className="mr-2 text-red-500" />
-                    <span>{r.location}</span>
-                  </div>
-                  <p className="text-lg font-bold text-green-700 mb-1">
-                    ₹{r.price}
-                    <span className="text-sm text-gray-500 font-normal">/night</span>
-                  </p>
-                  <p className="text-sm text-gray-500 mb-3 line-clamp-2">{(r.amenities || []).join(' • ')}</p>
-                  <div className="flex items-center">
-                    {[...Array(5)].map((_, i) =>
-                      i < (r.rating || 4) ? (
-                        <FaStar key={i} className="text-yellow-500 mr-1 text-md" />
-                      ) : (
-                        <FaRegStar key={i} className="text-gray-300 mr-1 text-md" />
-                      )
-                    )}
-                    <span className="ml-2 text-sm text-gray-600">({r.rating || 4}.0)</span>
-                  </div>
-                </div>
-              </div>
+                resort={r}
+                isWishlisted={wishlistIds.includes(r._id.toString())}
+                onToggleWishlist={handleToggleWishlist}
+                isLoadingToggle={loadingWishlistToggle}
+              />
             ))
           ) : (
             <p className="text-gray-700 col-span-full text-center text-xl py-10">
