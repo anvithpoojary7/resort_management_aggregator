@@ -4,7 +4,7 @@ const mongoose = require('mongoose'); // Needed for mongoose.Types.ObjectId.isVa
 const User = require('../models/users'); // Path to your consolidated User model
 const Resort = require('../models/resort'); // Path to your Resort model
 
-// CORRECT IMPORT: Destructure 'protect' function.
+
 const { protect } = require('../middleware/authMiddleware'); // Assuming this path is correct
 
 const router = express.Router();

@@ -137,43 +137,20 @@ router.post('/login', async (req, res) => {
 });
 
 
-// ✅ Google Login
-router.post('/google-login', async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ message: 'Missing Google user info.' });
-
-    const normalizedEmail = email.toLowerCase().trim();
-    let user = await User.findOne({ email: normalizedEmail });
-
-    if (!user) return res.status(404).json({ message: 'No user found. Please sign up first.' });
-
-    const payload = { id: user._id, email: user.email, role: user.role };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 3 * 24 * 60 * 60 * 1000,
-    });
-
-    res.json({ message: 'Google login successful', user: payload });
-  } catch (err) {
-    console.error('Google Login Error:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// ✅ Google Signup
 router.post('/google-signup', async (req, res) => {
   try {
     const { name, email } = req.body;
-    if (!name || !email) return res.status(400).json({ message: 'Missing Google user info.' });
 
-    const normalizedEmail = email.toLowerCase().trim();
-    if (await User.findOne({ email: normalizedEmail })) {
-      return res.status(400).json({ message: 'User already exists. Try login instead.' });
+    if (!name || !email) {
+      return res.status(400).json({ message: 'Name and email are required' });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+
+    const existingUser = await User.findOne({ email: normalizedEmail });
+
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
     }
 
     const newUser = new User({
@@ -182,22 +159,54 @@ router.post('/google-signup', async (req, res) => {
       isGoogleUser: true,
       passwordHash: '',
     });
+
     await newUser.save();
 
-    const payload = { id: newUser._id, email: newUser.email, role: newUser.role };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
+    const payload = {
+      id: newUser._id,
+      name: newUser.name, 
+      email: newUser.email,
+      role: newUser.role,
+    };
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 3 * 24 * 60 * 60 * 1000,
-    });
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-    res.status(201).json({ message: 'Google signup successful', user: payload });
+    res.status(201).json({ token, user: payload });
   } catch (err) {
-    console.error('Google Signup Error:', err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Google signup error:', err);
+    res.status(500).json({ message: 'Google signup failed' });
+  }
+});
+
+
+router.post('/google-login', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
+
+    if (!user || !user.isGoogleUser) {
+      return res.status(404).json({ message: 'Google user not found' });
+    }
+
+    const payload = {
+      id: user._id,
+      name: user.name, 
+      email: user.email,
+      role: user.role,
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+    res.status(200).json({ token, user: payload });
+  } catch (err) {
+    console.error('Google login error:', err);
+    res.status(500).json({ message: 'Google login failed' });
   }
 });
 
