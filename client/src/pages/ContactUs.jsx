@@ -1,14 +1,39 @@
-import React, { useState } from 'react';
-import { FaEnvelope, FaCommentDots, FaPhoneAlt, FaTimes } from 'react-icons/fa';
+import React, { useState, useRef } from "react";
+import { FaEnvelope, FaCommentDots, FaPhoneAlt, FaTimes } from "react-icons/fa";
+import emailjs from "@emailjs/browser";
 
 const ContactUs = () => {
   const [modal, setModal] = useState(null); // 'email', 'message', 'call'
+  const formRef = useRef();
 
   const closeModal = () => setModal(null);
 
   const handleCopyEmail = () => {
     navigator.clipboard.writeText("resortfinderinbox@gmail.com");
     alert("Email copied to clipboard!");
+  };
+
+  const sendEmail = (e) => {
+    e.preventDefault();
+
+    emailjs
+      .sendForm(
+        "service_fk468kj",
+        "template_l05nief",
+        formRef.current,
+        "zG1Il6jXa4VeMb3Fv"
+      )
+      .then(
+        () => {
+          alert("Message sent successfully!");
+          formRef.current.reset();
+          setModal(null);
+        },
+        (error) => {
+          alert("Failed to send message. Please try again.");
+          console.error(error);
+        }
+      );
   };
 
   return (
@@ -88,47 +113,11 @@ const ContactUs = () => {
               </>
             )}
 
-            {/* Message Modal */}
+            {/* Message Modal - EmailJS Integration */}
             {modal === "message" && (
               <>
                 <h2 className="text-2xl font-bold mb-4">Send a Message</h2>
-                <form
-                  className="space-y-4"
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    const form = e.target;
-                    const formData = {
-                      name: form.name.value,
-                      email: form.email.value,
-                      phone: form.phone.value,
-                      message: form.message.value,
-                    };
-
-                    try {
-                      const response = await fetch(
-                        "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec",
-                        {
-                          method: "POST",
-                          body: JSON.stringify(formData),
-                          headers: {
-                            "Content-Type": "application/json",
-                          },
-                        }
-                      );
-
-                      const result = await response.json();
-                      if (result.result === "Success") {
-                        alert("Message sent! ✅");
-                        form.reset();
-                        closeModal();
-                      } else {
-                        alert("Something went wrong ❌");
-                      }
-                    } catch (err) {
-                      alert("Error sending message: " + err.message);
-                    }
-                  }}
-                >
+                <form ref={formRef} onSubmit={sendEmail} className="space-y-4">
                   <input
                     type="text"
                     name="name"
