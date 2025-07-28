@@ -13,7 +13,6 @@ const ReservationForm = () => {
   const { resort, selectedRoom } = location.state || {};
   const rooms = selectedRoom ? [selectedRoom] : (resort?.rooms || []);
 
-
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -21,7 +20,7 @@ const ReservationForm = () => {
     guestsChild: 0,
     checkIn: '',
     checkOut: '',
-    roomType: '',
+    roomType: selectedRoom?.roomName || '',
   });
 
   useEffect(() => {
@@ -39,7 +38,7 @@ const ReservationForm = () => {
   }, []);
 
   useEffect(() => {
-    if (!resort ) {
+    if (!resort) {
       navigate('/');
     }
   }, [resort, rooms, navigate]);
@@ -70,7 +69,7 @@ const ReservationForm = () => {
     }
 
     alert("Reservation confirmed!");
-    // Submit logic goes here
+    // Submit logic here
   };
 
   if (!resort || !rooms) return null;
@@ -78,21 +77,54 @@ const ReservationForm = () => {
   return (
     <div className="bg-white text-gray-800 py-10 px-6 min-h-screen">
       <h1 className="text-3xl font-bold text-center mb-6">{resort.name}</h1>
+
+      {/* Featured Resort Image */}
+      {resort.images?.length > 0 && (
+        <div className="mb-10">
+          <img
+            src={`${API_URL}/api/resorts/image/${resort.images[0]}`}
+            alt="Resort Main"
+            className="w-full h-[400px] object-cover rounded-xl shadow-lg"
+          />
+        </div>
+      )}
+
+      {/* Interior Gallery */}
+      {resort.images?.length > 1 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+          {resort.images.slice(1, 4).map((img, idx) => (
+            <img
+              key={idx}
+              src={`${API_URL}/api/resorts/image/${img}`}
+              alt={`Interior ${idx + 1}`}
+              className="w-full h-60 object-cover rounded-lg shadow-md"
+            />
+          ))}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Room List */}
         <div className="md:col-span-2 space-y-6">
           {rooms.map((room, idx) => (
-            <div key={idx} className={`border rounded-lg p-4 shadow ${formData.roomType === room.roomName ? 'border-green-600' : ''}`}>
+            <div
+              key={idx}
+              className={`border rounded-xl p-4 shadow-md bg-white ${formData.roomType === room.roomName ? 'border-blue-600' : 'border-gray-200'}`}
+            >
               <div className="flex flex-col md:flex-row gap-4">
-                <img src={`${API_URL}/api/resorts/image/${room.roomImages[0]}`} className="w-full md:w-56 h-36 object-cover rounded-lg" />
+                <img
+                  src={`${API_URL}/api/resorts/image/${room.roomImages[0]}`}
+                  alt={room.roomName}
+                  className="w-full md:w-56 h-40 object-cover rounded-lg"
+                />
                 <div className="flex-1">
-                  <h2 className="text-lg font-semibold">{room.roomName}</h2>
+                  <h2 className="text-xl font-semibold mb-1">{room.roomName}</h2>
                   <p className="text-sm text-gray-600">{room.roomDescription}</p>
                   <div className="text-green-600 font-bold mt-2">₹{room.roomPrice} / night</div>
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, roomType: room.roomName })}
-                    className="mt-2 bg-green-600 text-white px-4 py-2 rounded"
+                    className="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
                   >
                     Select Room
                   </button>
@@ -102,40 +134,73 @@ const ReservationForm = () => {
           ))}
         </div>
 
-        {/* Side Reservation Box */}
-        <form onSubmit={handleSubmit} className="md:sticky md:top-20 border p-5 shadow-lg rounded-lg h-fit space-y-4 bg-gray-50">
-          <h3 className="text-xl font-semibold mb-2">Your Reservation</h3>
+        {/* Reservation Form */}
+        <form onSubmit={handleSubmit} className="border p-5 rounded-lg shadow-md bg-gray-50 space-y-4">
+          <h3 className="text-lg font-semibold">Your Reservation</h3>
+
           <div>
             <label className="block text-sm font-medium">Check-In</label>
-            <input type="date" name="checkIn" value={formData.checkIn} onChange={handleChange}
-              className="w-full px-3 py-2 border rounded" />
+            <input
+              type="date"
+              name="checkIn"
+              value={formData.checkIn}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded"
+            />
           </div>
+
           <div>
             <label className="block text-sm font-medium">Check-Out</label>
-            <input type="date" name="checkOut" value={formData.checkOut} onChange={handleChange}
-              className="w-full px-3 py-2 border rounded" />
+            <input
+              type="date"
+              name="checkOut"
+              value={formData.checkOut}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded"
+            />
           </div>
+
           <div>
             <label className="block text-sm font-medium">Guests</label>
-            <input type="number" name="guestsAdult" min="1" value={formData.guestsAdult} onChange={handleChange}
-              className="w-full px-3 py-2 border rounded" />
+            <input
+              type="number"
+              name="guestsAdult"
+              min="1"
+              value={formData.guestsAdult}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded"
+            />
           </div>
+
           <div>
             <label className="block text-sm font-medium">Children</label>
-            <input type="number" name="guestsChild" min="0" value={formData.guestsChild} onChange={handleChange}
-              className="w-full px-3 py-2 border rounded" />
+            <input
+              type="number"
+              name="guestsChild"
+              min="0"
+              value={formData.guestsChild}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded"
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium">Selected Room</label>
-            <div className="border px-3 py-2 rounded bg-white">{formData.roomType || 'None selected'}</div>
+            <div className="border px-3 py-2 rounded bg-white">
+              {formData.roomType || 'None selected'}
+            </div>
           </div>
 
           {formData.checkIn && formData.checkOut && (
-            <p className="text-sm text-gray-600">Nights: <strong>{calculateNights()}</strong></p>
+            <p className="text-sm text-gray-600">
+              Nights: <strong>{calculateNights()}</strong>
+            </p>
           )}
 
-          <button type="submit" className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition">
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+          >
             Confirm Reservation
           </button>
         </form>
