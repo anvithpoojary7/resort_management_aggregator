@@ -1,6 +1,5 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { NotificationProvider } from './context/NotificationContext';
 
 // Public / User Pages
 import Home from '../pages/Home';

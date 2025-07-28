@@ -45,16 +45,18 @@ const Notifications = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#fffdf9] px-4 py-10">
-        {/* 🔹 Background Image with Blur */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src="/notification.jpg" // <-- Change this to your actual image path
-          alt="background"
-          className="w-full h-full object-cover blur-sm opacity-40"
-        />
-      </div>
-      <div className="max-w-3xl mx-auto">
+  <div className="min-h-screen bg-[#fffdf9] px-4 py-10 relative">
+    {/* 🔹 Background Image with Blur */}
+    <div className="absolute inset-0 z-0">
+      <img
+        src="/notification.jpg"
+        alt="background"
+        className="w-full h-full object-cover blur-sm opacity-40"
+      />
+    </div>
+
+    {/* Foreground content should be on top */}
+    <div className="relative z-10 max-w-3xl mx-auto">
         <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold text-[#2c2c2c]">Notifications</h1>
             {notifications.length > 0 && (
