@@ -1,62 +1,42 @@
 const express = require("express");
 const fs = require("fs");
+// Multer is already passed in, no need to require it here again
 const Resort = require("../models/resort");
 const Room = require("../models/room");
 
 module.exports = (gfs, upload, gridfsBucket) => {
   const router = express.Router();
-  const uploadMw = upload.any();
 
-  // 👇 PATCH: Toggle Active/Inactive status for resorts
-  router.patch("/:id/active", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { visible } = req.body;
+  const uploadMw = upload.any(); // Allow multiple fields/files
 
-      const updated = await Resort.findByIdAndUpdate(
-        id,
-        { visible, updatedAt: new Date() },
-        { new: true }
-      );
-
-      if (!updated) {
-        return res.status(404).json({ message: "Resort not found." });
-      }
-
-      const msg = visible
-        ? "Resort is now active and visible to users."
-        : "Resort is now inactive and hidden from users.";
-
-      res.json({ message: msg, resort: updated });
-    } catch (err) {
-      console.error("Visibility toggle error:", err);
-      res.status(500).json({ message: "Server error while toggling resort status." });
-    }
-  });
-
-  // 🏨 POST: Submit new resort
   router.post("/", uploadMw, async (req, res) => {
     const files = req.files || [];
     const { name, location, price, description, amenities, type, ownerId, rooms } = req.body;
+
+    // Log received files and body for debugging
+    // console.log("Received Files:", files);
+    // console.log("Received Body:", req.body);
 
     try {
       if (await Resort.findOne({ ownerId })) {
         return res.status(409).json({ message: "You have already submitted a resort." });
       }
 
+      // Find main resort image (optional check based on field name)
       const resortImageFile = files.find(f => f.fieldname === "resortImage");
       if (!resortImageFile) return res.status(400).json({ message: "Main resort image required." });
 
+      // Create a promise for the main resort image upload
       const uploadMainImagePromise = new Promise((resolve, reject) => {
         const { filename, path: tmpPath, mimetype } = resortImageFile;
         fs.createReadStream(tmpPath)
           .pipe(gridfsBucket.openUploadStream(filename, { contentType: mimetype }))
           .on("error", (err) => {
-            fs.unlink(tmpPath, () => {});
+            fs.unlink(tmpPath, () => {}); // Clean up temp file
             reject(new Error("Resort image upload failed: " + err.message));
           })
           .on("finish", () => {
-            fs.unlink(tmpPath, () => {});
+            fs.unlink(tmpPath, () => {}); // Clean up temp file
             resolve(filename);
           });
       });
@@ -70,11 +50,14 @@ module.exports = (gfs, upload, gridfsBucket) => {
         description,
         amenities: amenities ? JSON.parse(amenities) : [],
         type,
-        image: mainImageFilename,
+        image: mainImageFilename, // Use the filename from the promise
         ownerId,
       });
 
+      // Parse room metadata
       const roomMeta = rooms ? JSON.parse(rooms) : [];
+
+      // Array to hold promises for room image uploads and room creation
       const roomCreationPromises = [];
 
       roomMeta.forEach((roomData, roomIndex) => {
@@ -83,8 +66,9 @@ module.exports = (gfs, upload, gridfsBucket) => {
         );
 
         if (roomImagesToUpload.length < 2 || roomImagesToUpload.length > 5) {
-          console.warn(`Room ${roomIndex + 1} has invalid number of images (${roomImagesToUpload.length}). Skipping.`);
-          return;
+          // This check is already done on the frontend, but good to have a backend safeguard
+          console.warn(`Room ${roomIndex + 1} has an invalid number of images (${roomImagesToUpload.length}). Skipping.`);
+          return; // Skip this room if it doesn't meet image requirements
         }
 
         const currentRoomImages = [];
@@ -94,53 +78,53 @@ module.exports = (gfs, upload, gridfsBucket) => {
             fs.createReadStream(tmp)
               .pipe(gridfsBucket.openUploadStream(filename, { contentType: mimetype }))
               .on("error", (err) => {
-                fs.unlink(tmp, () => {});
+                fs.unlink(tmp, () => {}); // Clean up temp file
                 reject(new Error(`Room image upload failed for ${filename}: ${err.message}`));
               })
               .on("finish", () => {
-                fs.unlink(tmp, () => {});
+                fs.unlink(tmp, () => {}); // Clean up temp file
                 currentRoomImages.push(filename);
                 resolve();
               });
           });
         });
 
+        // Add a promise to the main array that waits for all images of the current room
+        // to be uploaded, and then creates the room document.
         roomCreationPromises.push(
           Promise.all(imageUploadPromises)
-            .then(() => Room.create({
-              resortId: resortDoc._id,
-              roomName: roomData.roomName,
-              roomPrice: roomData.roomPrice,
-              roomDescription: roomData.roomDescription,
-              roomImages: currentRoomImages,
-            }))
+            .then(async () => {
+              await Room.create({
+                resortId: resortDoc._id,
+                roomName: roomData.roomName,
+                roomPrice: roomData.roomPrice,
+                roomDescription: roomData.roomDescription,
+                roomImages: currentRoomImages, // Use the collected filenames
+              });
+            })
             .catch((err) => {
               console.error(`Error processing room ${roomIndex + 1}:`, err);
+              // Depending on your error handling, you might want to re-throw or handle differently
+              // For now, we'll just log and continue with other rooms if possible.
             })
         );
       });
 
+      // Wait for all room processing to complete
       await Promise.all(roomCreationPromises);
+
       res.status(201).json({ message: "Resort submitted!", resort: resortDoc });
 
     } catch (err) {
       console.error("Submit resort error:", err);
+      // Ensure any uploaded files are cleaned up in case of an overall error
       files.forEach(file => fs.unlink(file.path, () => {}));
       res.status(500).json({ message: "Server error while submitting resort." });
     }
   });
 
-  // 🌐 GET resorts for user-facing list (✅ Updated Here)
-  router.get("/", async (req, res) => {
-    try {
-      const resorts = await Resort.find({ status: "approved", visible: true });
-      res.status(200).json(resorts);
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching resorts", error });
-    }
-  });
 
-  // 🌐 GET by owner
+
   router.get("/owner/:ownerId", async (req, res) => {
     try {
       const { ownerId } = req.params;
@@ -151,31 +135,23 @@ module.exports = (gfs, upload, gridfsBucket) => {
     }
   });
 
-  // 📦 GET resort + rooms by ID
-  router.get("/:id/details", async (req, res) => {
-    try {
-      const { id } = req.params;
-      // Fetch the resort, ensuring it's approved and visible
-      const resort = await Resort.findOne({ _id: id, status: "approved", visible: true });
-      
-      if (!resort) {
-        // If not found, or not approved/visible, return 404
-        return res.status(404).json({ message: "Resort not found or is not available." });
-      }
+  // Add this to your resort route file
+router.get("/:id/details", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const resort = await Resort.findById(id);
+    if (!resort) return res.status(404).json({ message: "Resort not found" });
 
-      const rooms = await Room.find({ resortId: id });
-      res.json({ resort, rooms });
-    } catch (err) {
-      console.error("Error fetching resort details:", err);
-      // If it's a cast error (invalid ID format), return 400
-      if (err.name === 'CastError') {
-        return res.status(400).json({ message: "Invalid Resort ID." });
-      }
-      res.status(500).json({ message: "Server error" });
-    }
-  });
+    const rooms = await Room.find({ resortId: id });
 
-  // 🧾 GET all resorts (admin use)
+    res.json({ resort, rooms });
+  } catch (err) {
+    console.error("Error fetching resort details:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
   router.get("/allresorts", async (req, res) => {
     try {
       const resorts = await Resort.find({}).sort({ createdAt: -1 });
@@ -185,9 +161,10 @@ module.exports = (gfs, upload, gridfsBucket) => {
     }
   });
 
-  // 🧠 GET approved resorts for admin panel
   router.get("/admin/resorts", async (req, res) => {
     try {
+      // It looks like this route is meant for approved resorts for the admin dashboard.
+      // If it's for admin to review all resorts (pending, approved, rejected), then remove { status: "approved" }
       const resorts = await Resort.find({ status: "approved" }).populate("ownerId", "name email");
       res.json(resorts);
     } catch (err) {
@@ -196,17 +173,16 @@ module.exports = (gfs, upload, gridfsBucket) => {
     }
   });
 
-  // 🛏️ GET rooms by resort
   router.get("/rooms/byresort/:resortId", async (req, res) => {
-    try {
-      const rooms = await Room.find({ resortId: req.params.resortId });
-      res.json(rooms);
-    } catch (err) {
-      res.status(500).json({ message: "Error fetching rooms" });
-    }
-  });
+  try {
+    const rooms = await Room.find({ resortId: req.params.resortId });
+    res.json(rooms);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching rooms" });
+  }
+});
 
-  // 🔁 PATCH status (admin approve/reject)
+
   router.patch("/:id/status", async (req, res) => {
     try {
       const { id } = req.params;
@@ -215,11 +191,10 @@ module.exports = (gfs, upload, gridfsBucket) => {
         return res.status(400).json({ message: "Invalid status." });
       }
 
-      const updated = await Resort.findByIdAndUpdate(
-        id,
-        { status, updatedAt: new Date() },
-        { new: true }
-      );
+      const updated = await Resort.findByIdAndUpdate(id, {
+        status,
+        updatedAt: new Date(),
+      }, { new: true });
 
       if (!updated) {
         return res.status(404).json({ message: "Resort not found." });
