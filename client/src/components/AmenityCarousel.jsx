@@ -26,7 +26,7 @@ const amenities = [
   {
     title: "Pet Friendly",
     description: "Bring your furry friends along — we welcome pets with open paws.",
-    image: "/a5.jpeg",
+    image: "/a5.jpg",
   },
 
 ];

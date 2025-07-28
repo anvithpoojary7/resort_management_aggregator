@@ -5,7 +5,7 @@ import AmenityCarousel from '../components/AmenityCarousel';
 import FeaturedRetreatsCarousel from '../components/FeaturedRetreatsCarousel';
 
 const Home = () => {
-  const backgrounds = ['/resortpic.jpg', '/resort2.jpg', '/resort3.webp'];
+  const backgrounds = ['/resortpic.jpg', '/resort2.jpg', '/resort3.jpg'];
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
