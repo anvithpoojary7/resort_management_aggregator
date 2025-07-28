@@ -7,8 +7,12 @@ import {
   FaBell,
   FaTimes,
 } from 'react-icons/fa';
+import { BellIcon } from 'lucide-react';
+import { useNotifications } from '../context/NotificationContext';
 
 const SidePanel = ({ isOpen, setIsOpen, buttonRef }) => {
+  const { notifications } = useNotifications();
+  const unreadCount = notifications.filter(n => !n.read).length;
   const panelRef = useRef();
 
   /* ─── close when clicking outside ─── */
@@ -76,13 +80,18 @@ const SidePanel = ({ isOpen, setIsOpen, buttonRef }) => {
           <Link
             to="/notifications"
             onClick={() => setIsOpen(false)}
-            className="flex items-center justify-between hover:bg-white/10 p-2 rounded"
+            className="flex items-center justify-between hover:bg-white/10 p-2 rounded relative"
           >
-            <span className="flex items-center">
+            <span className="flex items-center relative">
               <FaBell className="mr-3 text-white" />
               Notifications
+
+              {unreadCount > 0 && (
+                <span className="ml-2 bg-red-600 text-white text-xs font-semibold px-1.5 py-0.5 rounded-full">
+                  {unreadCount}
+                </span>
+              )}
             </span>
-           
           </Link>
         </li>
       </ul>

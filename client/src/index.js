@@ -1,18 +1,18 @@
-// index.js
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import './index.css'; // Tailwind styles
+import './index.css';
 import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext'; // ⬅️ Add this line
 
-// Create the root
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
-// Render the app wrapped with AuthProvider
 root.render(
   <React.StrictMode>
     <AuthProvider>
-      <App />
+      <NotificationProvider> {/* ⬅️ Wrap App with it */}
+        <App />
+      </NotificationProvider>
     </AuthProvider>
   </React.StrictMode>
 );
