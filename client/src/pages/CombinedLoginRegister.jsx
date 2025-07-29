@@ -74,12 +74,9 @@ const CombinedLoginRegister = () => {
 
       if (res.ok) {
         if (mode === 'login') {
-          // =================== THE FIX ===================
-          // We must check for the token and save it to localStorage
           if (data.token) {
             localStorage.setItem('token', data.token);
           }
-          // ===============================================
           login(data.user);
           setTimeout(() => {
             setIsLoading(false);
@@ -136,11 +133,11 @@ const CombinedLoginRegister = () => {
       const { user } = result;
 
       const payload = {
-        name: user.displayName,
+        name: user.displayName, // ✅ Send name during Google signup
         email: user.email,
       };
 
-      // First try to login
+      // Try Google login first
       let res = await fetch(`${API_URL}/api/auth/google-login`, {
         method: 'POST',
         credentials: 'include',
@@ -151,34 +148,29 @@ const CombinedLoginRegister = () => {
       let data = await res.json();
 
       if (res.ok) {
-        // =================== THE FIX ===================
-        // We must check for the token and save it to localStorage
         if (data.token) {
           localStorage.setItem('token', data.token);
         }
-        // ===============================================
         login(data.user);
         setTimeout(() => {
           setIsLoading(false);
           navigate(redirectTo, { replace: true });
         }, 800);
       } else if (res.status === 404) {
-        // No user found — try signup
+        // No user found – try Google signup
         res = await fetch(`${API_URL}/api/auth/google-signup`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(payload), // ✅ Includes name now
         });
 
         data = await res.json();
 
         if (res.ok) {
-          // =================== THE FIX (for signup) ===================
           if (data.token) {
             localStorage.setItem('token', data.token);
           }
-          // ============================================================
           login(data.user);
           setTimeout(() => {
             setIsLoading(false);
@@ -197,7 +189,6 @@ const CombinedLoginRegister = () => {
       alert('Google authentication failed: ' + err.message);
     }
   };
-
 
   return (
     <div className="relative">
@@ -364,3 +355,4 @@ const CombinedLoginRegister = () => {
 };
 
 export default CombinedLoginRegister;
+git 

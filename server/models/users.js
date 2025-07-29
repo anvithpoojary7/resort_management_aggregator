@@ -42,6 +42,14 @@ const UserSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    // ✅ Wishlist field added
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Resort',
+      },
+    ],
   },
   {
     timestamps: true,
@@ -58,7 +66,6 @@ UserSchema.pre('save', async function (next) {
   next();
 });
 
-// Compare password method
 UserSchema.methods.matchPassword = async function (enteredPassword) {
   if (this.isGoogleUser) return false;
   return await bcrypt.compare(enteredPassword, this.passwordHash);

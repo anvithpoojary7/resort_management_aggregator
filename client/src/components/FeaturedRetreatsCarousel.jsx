@@ -58,7 +58,7 @@ const FeaturedRetreatsCarousel = () => {
   const handleToggleWishlist = async (resortId) => {
     if (!isLoggedIn) {
       alert('Please log in to add resorts to your wishlist!');
-      navigate('/login');
+      navigate('/auth');
       return;
     }
 

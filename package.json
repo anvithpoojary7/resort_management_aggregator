@@ -10,7 +10,9 @@
     "concurrently": "^8.2.2"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@sendgrid/mail": "^8.1.5",
+    "emailjs-com": "^3.2.0",
     "framer-motion": "^12.20.1",
     "lucide-react": "^0.525.0",
     "nodemailer": "^7.0.5",
