@@ -38,26 +38,46 @@ const AddResort = () => {
     setRooms(updatedRooms);
   };
 
-  const handleRoomImageChange = (index, fileList) => {
-    const newFiles = Array.from(fileList).filter(
-      (f) => f.type.startsWith("image/") && f.size <= 500 * 1024
-    );
+const handleRoomImageChange = (index, fileList) => {
+  const acceptedFiles = [];
+  const rejectedFiles = [];
 
-    const rejected = Array.from(fileList).filter(f => f.size > 500 * 1024);
-    if (rejected.length > 0) {
-      alert("Some images were skipped because they exceed 500KB.");
+  for (let file of fileList) {
+    if (file.size <= 500 * 1024 && file.type.startsWith("image/")) {
+      acceptedFiles.push(file);
+    } else {
+      rejectedFiles.push(file);
+    }
+  }
+
+  setRooms((prevRooms) => {
+    const updatedRooms = [...prevRooms];
+    const existingImages = updatedRooms[index].roomImages || [];
+
+    const combined = [...existingImages, ...acceptedFiles];
+
+    // Deduplicate
+    const unique = combined.reduce((acc, curr) => {
+      const isDuplicate = acc.find(
+        (f) => f.name === curr.name && f.size === curr.size
+      );
+      return isDuplicate ? acc : [...acc, curr];
+    }, []);
+
+    if (unique.length > 5) {
+      alert("You can upload a maximum of 5 images per room.");
     }
 
-    setRooms((prevRooms) => {
-      const updated = [...prevRooms];
-      const combined = [...updated[index].roomImages, ...newFiles];
-      const unique = combined.reduce((acc, curr) => {
-        return acc.find(f => f.name === curr.name && f.size === curr.size) ? acc : [...acc, curr];
-      }, []);
-      updated[index].roomImages = unique.slice(0, 5);
-      return updated;
-    });
-  };
+    // Trim to max 5
+    updatedRooms[index].roomImages = unique.slice(0, 5);
+    return updatedRooms;
+  });
+
+  if (rejectedFiles.length > 0) {
+    alert("Some images were skipped because they exceed 500KB.");
+  }
+};
+
 
   const removeRoomImage = (roomIndex, imageIndex) => {
     setRooms((prevRooms) => {
