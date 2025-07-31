@@ -1,49 +1,53 @@
-// src/context/NotificationContext.jsx
-import React, { createContext, useContext, useState } from 'react';
+// client/src/context/NotificationContext.jsx
+import React, { createContext, useContext, useState, useEffect } from "react";
+import axios from "axios";
+import { useAuth } from "./AuthContext";
 
 const NotificationContext = createContext();
 
-const sampleNotifications = [
-  {
-    id: 1,
-    message: 'Your resort booking has been confirmed!',
-    timestamp: '2 hours ago',
-    read: false,
-  },
-  {
-    id: 2,
-    message: 'New resort added near your location.',
-    timestamp: '1 day ago',
-    read: false,
-  },
-  {
-    id: 3,
-    message: 'You have a 10% discount coupon waiting!',
-    timestamp: '3 days ago',
-    read: true,
-  },
-];
-
 export const NotificationProvider = ({ children }) => {
-  const [notifications, setNotifications] = useState(sampleNotifications);
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState([]);
 
+  // Fetch notifications for logged-in user
+  useEffect(() => {
+    if (!user) {
+      setNotifications([]);
+      return;
+    }
+
+    axios
+      .get("/api/notifications", { withCredentials: true })
+      .then((res) => setNotifications(res.data))
+      .catch((err) => console.error("Error fetching notifications", err));
+  }, [user]);
+
+  // Mark all as read
   const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    axios
+      .patch("/api/notifications/mark-all-read", {}, { withCredentials: true })
+      .then(() => {
+        setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      })
+      .catch((err) => console.error("Error marking as read", err));
   };
 
+  // Clear all notifications
   const clearAllNotifications = () => {
-    setNotifications([]);
+    axios
+      .delete("/api/notifications/clear-all", { withCredentials: true })
+      .then(() => {
+        setNotifications([]);
+      })
+      .catch((err) => console.error("Error clearing notifications", err));
   };
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <NotificationContext.Provider
       value={{
         notifications,
         markAllAsRead,
-        clearAllNotifications, // ✅ added here
-        unreadCount,
+        clearAllNotifications,
       }}
     >
       {children}

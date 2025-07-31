@@ -6,10 +6,7 @@ const API_BASE_URL = "http://localhost:8080";
 
 const AddResort = () => {
   const navigate = useNavigate();
-  const currentOwnerId = JSON.parse(localStorage.getItem("user"))?.id;
 
-  const [loading, setLoading] = useState(true);
-  const [resortStatus, setResortStatus] = useState(null);
   const [resortImage, setResortImage] = useState(null);
   const [resort, setResort] = useState({
     name: "",
@@ -24,34 +21,6 @@ const AddResort = () => {
     { roomName: "", roomPrice: "", roomDescription: "", roomImages: [] },
     { roomName: "", roomPrice: "", roomDescription: "", roomImages: [] },
   ]);
-
-  useEffect(() => {
-    if (!currentOwnerId) {
-      navigate("/login");
-      return;
-    }
-
-    const checkStatusAndRedirect = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/resorts/owner/${currentOwnerId}`);
-        const data = await res.json();
-
-        if (data && data._id) {
-          setResortStatus(data.status);
-          navigate("/owner/dashboard", { replace: true });
-        } else {
-          setResortStatus("none");
-        }
-      } catch (err) {
-        console.error("Error checking resort status:", err);
-        setResortStatus("none");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkStatusAndRedirect();
-  }, [currentOwnerId, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -114,12 +83,16 @@ const AddResort = () => {
     Object.entries(resort).forEach(([key, val]) =>
       formData.append(key, key === "amenities" ? JSON.stringify(val) : val)
     );
-    formData.append("ownerId", currentOwnerId);
-    formData.append("rooms", JSON.stringify(
-      rooms.map(({ roomName, roomPrice, roomDescription }) => ({
-        roomName, roomPrice, roomDescription
-      }))
-    ));
+    formData.append(
+      "rooms",
+      JSON.stringify(
+        rooms.map(({ roomName, roomPrice, roomDescription }) => ({
+          roomName,
+          roomPrice,
+          roomDescription
+        }))
+      )
+    );
     rooms.forEach((room, i) => {
       room.roomImages.forEach((file, j) => {
         formData.append(`roomImage_${i}_${j}`, file);
@@ -135,8 +108,8 @@ const AddResort = () => {
       const text = await res.text();
       const body = text ? JSON.parse(text) : {};
       if (res.ok) {
-        alert("Resort submitted for review!");
-        navigate("/owner/dashboard", { replace: true });
+        alert("Resort submitted successfully!");
+        navigate("/admin/resorts"); // ✅ Go to Manage Resorts after saving
       } else {
         alert(body.message || "Something went wrong.");
       }
@@ -146,15 +119,14 @@ const AddResort = () => {
     }
   };
 
-  if (loading) return <div className="text-center mt-10 text-gray-500">Loading…</div>;
-  if (resortStatus !== "none") return null;
-
   return (
     <div className="flex bg-gray-100 min-h-screen">
       <Sidebar />
       <div className="flex-1 p-6">
         <h1 className="text-3xl font-bold mb-6">Add New Resort Listing</h1>
-        <p className="text-gray-600 mb-6">Fill out the form below to add a new resort for approval.</p>
+        <p className="text-gray-600 mb-6">
+          Fill out the form below to add a new resort for approval.
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow">
           <input type="text" name="name" value={resort.name} onChange={handleChange} placeholder="Resort Name" required className="w-full border px-4 py-2 rounded" />

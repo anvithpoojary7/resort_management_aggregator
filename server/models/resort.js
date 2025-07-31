@@ -12,7 +12,7 @@ const resortSchema = new mongoose.Schema({
     enum: ['Beach', 'Mountain', 'Desert', 'City', 'Island', 'Adventure', 'Wellness', 'Other'],
     required: true,
   },
-  ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
