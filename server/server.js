@@ -12,7 +12,7 @@ const Grid = require('gridfs-stream');
 const adminlogin=require('./routes/adminAuth');
 const adminapproval=require('./routes/adminApproval');
 const filterResorts=require('./routes/resortSearch');
-
+const notificationRoutes = require('./routes/notificationRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
@@ -109,6 +109,8 @@ conn.once('open', () => {
  app.use('/api/admin/login',adminlogin);
 
  app.use('/api/admin', adminRoutes);
+
+ app.use('/api/notifications', notificationRoutes);
  
 app.get("/api/resorts/image/:filename", async (req, res) => {
   try {
