@@ -93,7 +93,8 @@ conn.once('open', () => {
   const resortRoutesModule = require('./routes/resortRoutes');
   const userRoutes=require('./routes/userRoutes');
   const wishlistRoutes=require('./routes/wishlistRoutes');
-  
+  const bookings=require('./routes/bookingsRoutes');
+
    // --- ADD THIS LINE FOR WISHLIST ROUTES ---
   app.use('/api/wishlist', wishlistRoutes);
   // --- END ADDITION ---
@@ -111,6 +112,8 @@ conn.once('open', () => {
  app.use('/api/admin', adminRoutes);
 
  app.use('/api/notifications', notificationRoutes);
+
+ app.use('/api/bookings',bookings);
  
 app.get("/api/resorts/image/:filename", async (req, res) => {
   try {

@@ -55,22 +55,64 @@ const ReservationForm = () => {
     return Math.max(nights, 0);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const { checkIn, checkOut, guestsAdult, roomType } = formData;
-    if (!checkIn || !checkOut || guestsAdult < 1 || !roomType) {
-      alert("Fill all fields");
-      return;
-    }
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (new Date(checkOut) <= new Date(checkIn)) {
-      alert("Check-out must be after check-in");
-      return;
-    }
+  const { checkIn, checkOut, guestsAdult, roomType } = formData;
 
-    alert("Reservation confirmed!");
-    // Submit logic here
-  };
+  if (!checkIn || !checkOut || guestsAdult < 1 || !roomType) {
+    alert("Fill all fields");
+    return;
+  }
+
+  if (new Date(checkOut) <= new Date(checkIn)) {
+    alert("Check-out must be after check-in");
+    return;
+  }
+
+  const nights = calculateNights();
+  const selectedRoomDetails = rooms.find(room => room.roomName === roomType);
+  const pricePerNight = selectedRoomDetails?.roomPrice || 0;
+  const totalAmount = nights * pricePerNight;
+
+  try {
+    const userRes = await axios.get(`${API_URL}/api/auth/me`, { withCredentials: true });
+    const user = userRes.data.user;
+
+    const response = await axios.post(`${API_URL}/api/bookings`, {
+      user: user._id,
+      resort: resort._id,
+      room: selectedRoomDetails._id,
+      checkIn: formData.checkIn,
+      checkOut: formData.checkOut,
+      totalAmount,
+      paymentStatus: "paid", // mock as paid
+      paymentId: "mock_" + Date.now() // temporary id
+    });
+
+    if (response.data.success) {
+      navigate("/reservation-success", {
+        state: {
+          resortName: resort.name,
+          resortImage: resort.images?.[0],
+          roomName: selectedRoomDetails.roomName,
+          roomImage: selectedRoomDetails.roomImages?.[0],
+          price: pricePerNight,
+          checkIn: formData.checkIn,
+          checkOut: formData.checkOut,
+          guestsAdult: formData.guestsAdult,
+          guestsChild: formData.guestsChild,
+        }
+      });
+    } else {
+      alert("Booking failed");
+    }
+  } catch (err) {
+    console.error("Booking error:", err);
+    alert("Something went wrong");
+  }
+};
+
 
   if (!resort || !rooms) return null;
 

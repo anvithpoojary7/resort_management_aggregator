@@ -32,6 +32,7 @@ import RevenueAnalytics from '../admin/pages/RevenueAnalytics';
 
 // Route Protection
 import ProtectedRoute from './ProtectedRoute';
+import ReservationSuccess from '../pages/ReservationSuccess';
 
 // CORRECTED: Replaced the regex-like slashes with backticks for a valid template literal
 const ADMIN_PATH = `/${process.env.REACT_APP_ADMIN_URL_PATH || 'admin-portal-secret/login'}`;
@@ -49,9 +50,9 @@ const AppRoutes = () => (
     <Route path="/deal/:id" element={<DealDetails />} />
     <Route path="/amenity/:amenityName" element={<AmenityResortsList />} />
     <Route path="/about" element={<About />} />
-
+   <Route path="/reservation-success" element={<ReservationSuccess />} />
     <Route path="/notifications" element={<Notifications />} />
-
+ 
     <Route
       path="/resorts/:id/reserve"
       element={
