@@ -1,9 +1,8 @@
 const express = require("express");
 const Notification = require("../models/notification");
-const { protect } = require("../middleware/authMiddleware"); // ✅ destructure
+const { protect } = require("../middleware/authMiddleware"); 
 const router = express.Router();
 
-// ✅ Get all notifications for logged-in user
 router.get("/", protect, async (req, res) => {
   try {
     const notifications = await Notification.find({ userId: req.user._id })
@@ -14,7 +13,6 @@ router.get("/", protect, async (req, res) => {
   }
 });
 
-// ✅ Mark all as read
 router.patch("/mark-all-read", protect, async (req, res) => {
   try {
     await Notification.updateMany(
@@ -27,7 +25,7 @@ router.patch("/mark-all-read", protect, async (req, res) => {
   }
 });
 
-// ✅ Clear all notifications
+
 router.delete("/clear-all", protect, async (req, res) => {
   try {
     await Notification.deleteMany({ userId: req.user._id });

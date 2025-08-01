@@ -149,9 +149,7 @@ module.exports = (gfs, upload, gridfsBucket) => {
     }
   });
 
-  // ------------------------------
-  // GET: All resorts
-  // ------------------------------
+ 
   router.get("/allresorts", async (req, res) => {
     try {
       const resorts = await Resort.find({}).sort({ createdAt: -1 });
