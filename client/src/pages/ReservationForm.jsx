@@ -79,16 +79,19 @@ const ReservationForm = () => {
     const userRes = await axios.get(`${API_URL}/api/auth/me`, { withCredentials: true });
     const user = userRes.data.user;
 
-    const response = await axios.post(`${API_URL}/api/bookings`, {
-      user: user._id,
-      resort: resort._id,
-      room: selectedRoomDetails._id,
-      checkIn: formData.checkIn,
-      checkOut: formData.checkOut,
-      totalAmount,
-      paymentStatus: "paid", // mock as paid
-      paymentId: "mock_" + Date.now() // temporary id
-    });
+  const response = await axios.post(`${API_URL}/api/bookings`, {
+  user: user._id,
+  resort: resort._id,
+  room: selectedRoomDetails._id,
+  checkIn: formData.checkIn,
+  checkOut: formData.checkOut,
+  totalAmount,
+  paymentStatus: "paid",
+  paymentId: "mock_" + Date.now(),
+  guestsAdult: formData.guestsAdult,
+  guestsChild: formData.guestsChild,
+});
+
 
     if (response.data.success) {
       navigate("/reservation-success", {
