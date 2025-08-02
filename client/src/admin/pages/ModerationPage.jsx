@@ -15,6 +15,7 @@ const AddResort = () => {
     price: "",
     description: "",
     type: "",
+    ownerName: "", // ✅ Added owner name field
   });
 
   const [rooms, setRooms] = useState([
@@ -33,7 +34,6 @@ const AddResort = () => {
     setRooms(updatedRooms);
   };
 
-  // ✅ Fixed: Now creates a new object so React detects state changes
   const handleRoomAmenityToggle = (index, amenity) => {
     setRooms((prevRooms) =>
       prevRooms.map((room, i) =>
@@ -166,6 +166,7 @@ const AddResort = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input type="text" name="name" value={resort.name} onChange={handleChange} placeholder="Resort Name" required className="border px-3 py-2 rounded text-sm" />
             <input type="text" name="location" value={resort.location} onChange={handleChange} placeholder="Location" required className="border px-3 py-2 rounded text-sm" />
+            <input type="text" name="ownerName" value={resort.ownerName} onChange={handleChange} placeholder="Owner Name" required className="border px-3 py-2 rounded text-sm" /> {/* ✅ Owner name */}
             <input type="number" name="price" value={resort.price} onChange={handleChange} placeholder="Price per night" min="0" required className="border px-3 py-2 rounded text-sm" />
             <select name="type" value={resort.type} onChange={handleChange} required className="border px-3 py-2 rounded text-sm">
               <option value="">Select Resort Type</option>
