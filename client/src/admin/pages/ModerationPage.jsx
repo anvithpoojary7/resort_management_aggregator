@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 
 const API_BASE_URL = "http://localhost:8080";
+const AMENITY_OPTIONS = ["WiFi", "Pool", "Spa", "Parking", "Gym", "Bar", "Restaurant", "Beach Access"];
 
 const AddResort = () => {
   const navigate = useNavigate();
@@ -27,57 +28,43 @@ const AddResort = () => {
     setResort((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleAmenityChange = (e) => {
-    const arr = e.target.value.split(",").map((a) => a.trim()).filter(Boolean);
-    setResort((prev) => ({ ...prev, amenities: arr }));
-  };
-
   const handleRoomChange = (index, field, value) => {
     const updatedRooms = [...rooms];
     updatedRooms[index][field] = value;
     setRooms(updatedRooms);
   };
 
-const handleRoomImageChange = (index, fileList) => {
-  const acceptedFiles = [];
-  const rejectedFiles = [];
+  const handleRoomImageChange = (index, fileList) => {
+    const acceptedFiles = [];
+    const rejectedFiles = [];
 
-  for (let file of fileList) {
-    if (file.size <= 500 * 1024 && file.type.startsWith("image/")) {
-      acceptedFiles.push(file);
-    } else {
-      rejectedFiles.push(file);
-    }
-  }
-
-  setRooms((prevRooms) => {
-    const updatedRooms = [...prevRooms];
-    const existingImages = updatedRooms[index].roomImages || [];
-
-    const combined = [...existingImages, ...acceptedFiles];
-
-    // Deduplicate
-    const unique = combined.reduce((acc, curr) => {
-      const isDuplicate = acc.find(
-        (f) => f.name === curr.name && f.size === curr.size
-      );
-      return isDuplicate ? acc : [...acc, curr];
-    }, []);
-
-    if (unique.length > 5) {
-      alert("You can upload a maximum of 5 images per room.");
+    for (let file of fileList) {
+      if (file.size <= 500 * 1024 && file.type.startsWith("image/")) {
+        acceptedFiles.push(file);
+      } else {
+        rejectedFiles.push(file);
+      }
     }
 
-    // Trim to max 5
-    updatedRooms[index].roomImages = unique.slice(0, 5);
-    return updatedRooms;
-  });
+    setRooms((prevRooms) => {
+      const updatedRooms = [...prevRooms];
+      const existingImages = updatedRooms[index].roomImages || [];
+      const combined = [...existingImages, ...acceptedFiles];
+      const unique = combined.reduce((acc, curr) => {
+        const isDuplicate = acc.find((f) => f.name === curr.name && f.size === curr.size);
+        return isDuplicate ? acc : [...acc, curr];
+      }, []);
+      if (unique.length > 5) {
+        alert("You can upload a maximum of 5 images per room.");
+      }
+      updatedRooms[index].roomImages = unique.slice(0, 5);
+      return updatedRooms;
+    });
 
-  if (rejectedFiles.length > 0) {
-    alert("Some images were skipped because they exceed 500KB.");
-  }
-};
-
+    if (rejectedFiles.length > 0) {
+      alert("Some images were skipped because they exceed 500KB.");
+    }
+  };
 
   const removeRoomImage = (roomIndex, imageIndex) => {
     setRooms((prevRooms) => {
@@ -158,112 +145,133 @@ const handleRoomImageChange = (index, fileList) => {
 
   return (
     <div className="flex bg-gray-100 min-h-screen">
-  <Sidebar />
-  <div className="flex-1 max-w-4xl mx-auto px-4 py-8">
-    <h1 className="text-2xl font-semibold mb-4">Add New Resort</h1>
-    <p className="text-gray-500 mb-6 text-sm">Fill out the form below to submit a new resort.</p>
+      <Sidebar />
+      <div className="flex-1 max-w-4xl mx-auto px-4 py-8">
+        <h1 className="text-2xl font-semibold mb-4">Add New Resort</h1>
+        <p className="text-gray-500 mb-6 text-sm">Fill out the form below to submit a new resort.</p>
 
-    <form onSubmit={handleSubmit} className="space-y-5 bg-white p-6 rounded-lg shadow-sm border">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input type="text" name="name" value={resort.name} onChange={handleChange} placeholder="Resort Name" required className="border px-3 py-2 rounded text-sm" />
-        <input type="text" name="location" value={resort.location} onChange={handleChange} placeholder="Location" required className="border px-3 py-2 rounded text-sm" />
-        <input type="number" name="price" value={resort.price} onChange={handleChange} placeholder="Price per night" min="0" required className="border px-3 py-2 rounded text-sm" />
-        <input type="text" name="amenities" value={resort.amenities.join(", ")} onChange={handleAmenityChange} placeholder="WiFi, Pool, Spa..." className="border px-3 py-2 rounded text-sm" />
-        <select name="type" value={resort.type} onChange={handleChange} required className="border px-3 py-2 rounded text-sm">
-          <option value="">Select Resort Type</option>
-          <option>Beach</option>
-          <option>Mountain</option>
-          <option>City</option>
-          <option>Island</option>
-          <option>Adventure</option>
-          <option>Wellness</option>
-          <option>Other</option>
-        </select>
-      </div>
+        <form onSubmit={handleSubmit} className="space-y-5 bg-white p-6 rounded-lg shadow-sm border">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" name="name" value={resort.name} onChange={handleChange} placeholder="Resort Name" required className="border px-3 py-2 rounded text-sm" />
+            <input type="text" name="location" value={resort.location} onChange={handleChange} placeholder="Location" required className="border px-3 py-2 rounded text-sm" />
+            <input type="number" name="price" value={resort.price} onChange={handleChange} placeholder="Price per night" min="0" required className="border px-3 py-2 rounded text-sm" />
 
-      <textarea name="description" value={resort.description} onChange={handleChange} placeholder="Resort description..." required className="border px-3 py-2 rounded text-sm w-full h-24 resize-none" />
-
-      <div>
-        <label className="text-sm font-medium">Main Resort Image (max 500KB)</label>
-        <input
-          type="file"
-          accept="image/*"
-          required={!resortImage}
-          onChange={(e) => {
-            const file = e.target.files[0];
-            if (file && file.size <= 500 * 1024) {
-              setResortImage(file);
-            } else {
-              alert("Main resort image must be less than 500KB.");
-              e.target.value = "";
-            }
-          }}
-          className="border px-3 py-2 rounded text-sm mt-1 w-full"
-        />
-        {resortImage && (
-          <div className="relative w-fit mt-2">
-            <img
-              src={URL.createObjectURL(resortImage)}
-              alt="Preview"
-              className="w-32 h-24 object-cover rounded shadow-sm"
-            />
-            <button
-              type="button"
-              onClick={() => setResortImage(null)}
-              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center hover:bg-red-600"
-            >
-              ×
-            </button>
-            <p className="text-xs text-gray-500 mt-1">{(resortImage.size / 1024).toFixed(1)} KB</p>
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-4">
-        <h3 className="text-base font-medium">Room Details</h3>
-        {rooms.map((room, index) => (
-          <div key={index} className="p-4 bg-gray-50 rounded border space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input type="text" placeholder="Room Name" value={room.roomName} onChange={(e) => handleRoomChange(index, "roomName", e.target.value)} required className="border px-3 py-2 rounded text-sm" />
-              <input type="number" placeholder="Room Price" value={room.roomPrice} onChange={(e) => handleRoomChange(index, "roomPrice", e.target.value)} required className="border px-3 py-2 rounded text-sm" />
+            {/* 🌟 Beautified Amenities Buttons */}
+            <div className="md:col-span-2">
+              <label className="text-sm font-medium mb-2 block">Select Amenities</label>
+              <div className="flex flex-wrap gap-2">
+                {AMENITY_OPTIONS.map((amenity) => {
+                  const selected = resort.amenities.includes(amenity);
+                  return (
+                    <button
+                      key={amenity}
+                      type="button"
+                      className={`px-4 py-1 text-sm rounded-full border transition-all duration-200 ${
+                        selected
+                          ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
+                          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      }`}
+                      onClick={() => {
+                        setResort((prev) => {
+                          const updated = selected
+                            ? prev.amenities.filter((a) => a !== amenity)
+                            : [...prev.amenities, amenity];
+                          return { ...prev, amenities: updated };
+                        });
+                      }}
+                    >
+                      {amenity}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <textarea placeholder="Room Description" value={room.roomDescription} onChange={(e) => handleRoomChange(index, "roomDescription", e.target.value)} required className="w-full border px-3 py-2 rounded h-20 text-sm" />
-            <input type="file" multiple accept="image/*" onChange={(e) => handleRoomImageChange(index, e.target.files)} className="w-full border px-3 py-2 rounded text-sm" />
 
-            {room.roomImages.length > 0 && (
-              <ul className="text-sm space-y-2 mt-2">
-                {room.roomImages.map((img, imgIdx) => (
-                  <li key={imgIdx} className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <img src={URL.createObjectURL(img)} alt={`room-${index}-${imgIdx}`} className="w-14 h-14 object-cover rounded border" />
-                      <span className="text-xs text-gray-700">{img.name} - {(img.size / 1024).toFixed(1)} KB</span>
-                    </div>
-                    <button onClick={() => removeRoomImage(index, imgIdx)} type="button" className="text-red-500 text-xs hover:underline">Delete</button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <select name="type" value={resort.type} onChange={handleChange} required className="border px-3 py-2 rounded text-sm">
+              <option value="">Select Resort Type</option>
+              <option>Beach</option>
+              <option>Mountain</option>
+              <option>City</option>
+              <option>Island</option>
+              <option>Adventure</option>
+              <option>Wellness</option>
+              <option>Other</option>
+            </select>
+          </div>
 
-            {rooms.length > 2 && (
-              <button type="button" onClick={() => removeRoom(index)} className="text-red-600 text-xs hover:underline">
-                Remove Room
-              </button>
+          <textarea name="description" value={resort.description} onChange={handleChange} placeholder="Resort description..." required className="border px-3 py-2 rounded text-sm w-full h-24 resize-none" />
+
+          <div>
+            <label className="text-sm font-medium">Main Resort Image (max 500KB)</label>
+            <input
+              type="file"
+              accept="image/*"
+              required={!resortImage}
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file && file.size <= 500 * 1024) {
+                  setResortImage(file);
+                } else {
+                  alert("Main resort image must be less than 500KB.");
+                  e.target.value = "";
+                }
+              }}
+              className="border px-3 py-2 rounded text-sm mt-1 w-full"
+            />
+            {resortImage && (
+              <div className="relative w-fit mt-2">
+                <img src={URL.createObjectURL(resortImage)} alt="Preview" className="w-32 h-24 object-cover rounded shadow-sm" />
+                <button type="button" onClick={() => setResortImage(null)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center hover:bg-red-600">
+                  ×
+                </button>
+                <p className="text-xs text-gray-500 mt-1">{(resortImage.size / 1024).toFixed(1)} KB</p>
+              </div>
             )}
           </div>
-        ))}
-        <button type="button" onClick={addNewRoom} className="text-blue-600 text-sm hover:underline">
-          + Add Another Room
-        </button>
+
+          <div className="space-y-4">
+            <h3 className="text-base font-medium">Room Details</h3>
+            {rooms.map((room, index) => (
+              <div key={index} className="p-4 bg-gray-50 rounded border space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input type="text" placeholder="Room Name" value={room.roomName} onChange={(e) => handleRoomChange(index, "roomName", e.target.value)} required className="border px-3 py-2 rounded text-sm" />
+                  <input type="number" placeholder="Room Price" value={room.roomPrice} onChange={(e) => handleRoomChange(index, "roomPrice", e.target.value)} required className="border px-3 py-2 rounded text-sm" />
+                </div>
+                <textarea placeholder="Room Description" value={room.roomDescription} onChange={(e) => handleRoomChange(index, "roomDescription", e.target.value)} required className="w-full border px-3 py-2 rounded h-20 text-sm" />
+                <input type="file" multiple accept="image/*" onChange={(e) => handleRoomImageChange(index, e.target.files)} className="w-full border px-3 py-2 rounded text-sm" />
+
+                {room.roomImages.length > 0 && (
+                  <ul className="text-sm space-y-2 mt-2">
+                    {room.roomImages.map((img, imgIdx) => (
+                      <li key={imgIdx} className="flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                          <img src={URL.createObjectURL(img)} alt={`room-${index}-${imgIdx}`} className="w-14 h-14 object-cover rounded border" />
+                          <span className="text-xs text-gray-700">{img.name} - {(img.size / 1024).toFixed(1)} KB</span>
+                        </div>
+                        <button onClick={() => removeRoomImage(index, imgIdx)} type="button" className="text-red-500 text-xs hover:underline">Delete</button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {rooms.length > 2 && (
+                  <button type="button" onClick={() => removeRoom(index)} className="text-red-600 text-xs hover:underline">
+                    Remove Room
+                  </button>
+                )}
+              </div>
+            ))}
+            <button type="button" onClick={addNewRoom} className="text-blue-600 text-sm hover:underline">
+              + Add Another Room
+            </button>
+          </div>
+
+          <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700">
+            Submit Resort
+          </button>
+        </form>
       </div>
-
-      <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700">
-        Submit Resort
-      </button>
-    </form>
-  </div>
-</div>
-
-             
+    </div>
   );
 };
 
