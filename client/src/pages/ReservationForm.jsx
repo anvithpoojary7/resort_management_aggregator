@@ -7,12 +7,11 @@ const API_URL = process.env.NODE_ENV === 'production'
   : 'http://localhost:8080';
 
 const ReservationForm = () => {
-  const { id } = useParams();
+ const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const { resort, selectedRoom } = location.state || {};
   const rooms = selectedRoom ? [selectedRoom] : (resort?.rooms || []);
-  const defaultRoom = selectedRoom || rooms[0];
 
   const [formData, setFormData] = useState({
     name: '',
@@ -21,7 +20,7 @@ const ReservationForm = () => {
     guestsChild: 0,
     checkIn: '',
     checkOut: '',
-    roomType: defaultRoom?.roomName || '',
+    roomType: selectedRoom?.roomName || '',
   });
 
   useEffect(() => {
@@ -57,66 +56,84 @@ const ReservationForm = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const { checkIn, checkOut, guestsAdult, roomType } = formData;
+  const { checkIn, checkOut, guestsAdult, roomType } = formData;
 
-    if (!checkIn || !checkOut || guestsAdult < 1 || !roomType) {
-      alert("Fill all fields");
-      return;
-    }
+  if (!checkIn || !checkOut || guestsAdult < 1 || !roomType) {
+    alert("Fill all fields");
+    return;
+  }
 
-    if (new Date(checkOut) <= new Date(checkIn)) {
-      alert("Check-out must be after check-in");
-      return;
-    }
+  if (new Date(checkOut) <= new Date(checkIn)) {
+    alert("Check-out must be after check-in");
+    return;
+  }
 
-    const nights = calculateNights();
-    const selectedRoomDetails = rooms.find(room => room.roomName === roomType);
-    const pricePerNight = selectedRoomDetails?.roomPrice || 0;
-    const totalAmount = nights * pricePerNight;
+  const nights = calculateNights();
+  const selectedRoomDetails = rooms.find(room => room.roomName === roomType);
+  const pricePerNight = selectedRoomDetails?.roomPrice || 0;
+  const totalAmount = nights * pricePerNight;
 
-    try {
-      const userRes = await axios.get(`${API_URL}/api/auth/me`, { withCredentials: true });
-      const user = userRes.data.user;
+  try {
+    const userRes = await axios.get(`${API_URL}/api/auth/me`, { withCredentials: true });
+    const user = userRes.data.user;
 
-      const response = await axios.post(`${API_URL}/api/bookings`, {
-        user: user._id,
-        resort: resort._id,
-        room: selectedRoomDetails._id,
-        checkIn: formData.checkIn,
-        checkOut: formData.checkOut,
-        totalAmount,
-        paymentStatus: "paid",
-        paymentId: "mock_" + Date.now(),
-        guestsAdult: formData.guestsAdult,
-        guestsChild: formData.guestsChild,
+const token = localStorage.getItem('token'); // ✅ fetch JWT
+
+const response = await axios.post(
+  `${API_URL}/api/bookings`,
+  {
+    user: user._id,
+    resort: resort._id,
+    room: selectedRoomDetails._id,
+    checkIn: formData.checkIn,
+    checkOut: formData.checkOut,
+    totalAmount,
+    paymentStatus: "pending",
+    paymentId: "mock_" + Date.now(),
+    guestsAdult: formData.guestsAdult,
+    guestsChild: formData.guestsChild,
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${token}`, // ✅ attach token to header
+    },
+  }
+);
+
+
+    if (response.data.success) {
+      navigate("/reservation-success", {
+        state: {
+          resortName: resort.name,
+          resortImage: resort.images?.[0],
+          roomName: selectedRoomDetails.roomName,
+          roomImage: selectedRoomDetails.roomImages?.[0],
+          price: pricePerNight,
+          checkIn: formData.checkIn,
+          checkOut: formData.checkOut,
+          guestsAdult: formData.guestsAdult,
+          guestsChild: formData.guestsChild,
+        }
       });
-
-      if (response.data.success) {
-        navigate("/reservation-success", {
-          state: {
-            resortName: resort.name,
-            resortImage: resort.images?.[0],
-            roomName: selectedRoomDetails.roomName,
-            roomImage: selectedRoomDetails.roomImages?.[0],
-            price: pricePerNight,
-            checkIn: formData.checkIn,
-            checkOut: formData.checkOut,
-            guestsAdult: formData.guestsAdult,
-            guestsChild: formData.guestsChild,
-          }
-        });
-      } else {
-        alert("Booking failed");
-      }
-    } catch (err) {
-      console.error("Booking error:", err);
-      alert("Something went wrong");
+    } else {
+      alert("Booking failed");
     }
-  };
+  } catch (err) {
+  if (err.response?.status === 409 && err.response.data?.error) {
+    alert(err.response.data.error); 
+  } else {
+    console.error("Booking error:", err);
+    alert("Something went wrong");
+  }
+}
+
+};
+
 
   if (!resort || !rooms) return null;
+
 
   return (
     <div className="w-screen h-screen overflow-auto bg-white text-gray-800">
