@@ -245,26 +245,27 @@ const ReservationForm = () => {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium">Extra Beds</label>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleExtraBedChange(-1)}
-                  className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400"
-                >
-                
-                </button>
-                <span>{formData.extraBed}</span>
-                <button
-                  type="button"
-                  onClick={() => handleExtraBedChange(1)}
-                  className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400"
-                >
-                  +
-                </button>
-              </div>
-            </div>
+          <div>
+  <label className="block text-sm font-medium">Extra Beds</label>
+  <div className="flex items-center gap-4 mt-1">
+    <button
+      type="button"
+      onClick={() => handleExtraBedChange(-1)}
+      className="w-10 h-10 bg-gray-300 text-xl font-semibold rounded-full hover:bg-gray-400 transition duration-200"
+    >
+      −
+    </button>
+    <span className="text-lg font-medium">{formData.extraBed}</span>
+    <button
+      type="button"
+      onClick={() => handleExtraBedChange(1)}
+      className="w-10 h-10 bg-gray-300 text-xl font-semibold rounded-full hover:bg-gray-400 transition duration-200"
+    >
+      +
+    </button>
+  </div>
+</div>
+
 
             <div>
               <label className="block text-sm font-medium">Selected Room</label>
