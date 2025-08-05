@@ -88,7 +88,7 @@ const Notifications = () => {
     <div
       key={notification.id}
       className={`p-4 rounded-xl shadow-md border transition ${
-        notification.read
+        notification.isRead
           ? 'bg-gray-200 text-gray-700 border-gray-300'
           : 'bg-[#fbe8df] border-l-4 border-[#C97B63] text-gray-900'
       }`}

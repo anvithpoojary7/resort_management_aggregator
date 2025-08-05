@@ -93,7 +93,7 @@ conn.once('open', () => {
   const resortRoutesModule = require('./routes/resortRoutes');
   const userRoutes=require('./routes/userRoutes');
   const wishlistRoutes=require('./routes/wishlistRoutes');
-  const bookings=require('./routes/bookingsRoutes');
+  const bookings=require('./routes/bookingRoutes');
 
    // --- ADD THIS LINE FOR WISHLIST ROUTES ---
   app.use('/api/wishlist', wishlistRoutes);

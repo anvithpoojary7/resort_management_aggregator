@@ -23,24 +23,26 @@ export const NotificationProvider = ({ children }) => {
   }, [user]);
 
   // Mark all as read
-  const markAllAsRead = () => {
-    axios
-      .patch("/api/notifications/mark-all-read", {}, { withCredentials: true })
-      .then(() => {
-        setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-      })
-      .catch((err) => console.error("Error marking as read", err));
-  };
+const markAllAsRead = () => {
+  // Update UI immediately
+  setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
 
-  // Clear all notifications
-  const clearAllNotifications = () => {
-    axios
-      .delete("/api/notifications/clear-all", { withCredentials: true })
-      .then(() => {
-        setNotifications([]);
-      })
-      .catch((err) => console.error("Error clearing notifications", err));
-  };
+  // Try backend, but don't block UI
+  axios
+    .patch("/api/notifications/mark-all-read", {}, { withCredentials: true })
+    .catch((err) => console.error("Error marking as read", err));
+};
+
+// Clear all notifications
+const clearAllNotifications = () => {
+  // Update UI immediately
+  setNotifications([]);
+
+  // Try backend, but don't block UI
+  axios
+    .delete("/api/notifications/clear-all", { withCredentials: true })
+    .catch((err) => console.error("Error clearing notifications", err));
+};
 
   return (
     <NotificationContext.Provider
