@@ -7,7 +7,7 @@ const API_URL = process.env.NODE_ENV === 'production'
   : 'http://localhost:8080';
 
 const ReservationForm = () => {
- const { id } = useParams();
+  const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const { resort, selectedRoom } = location.state || {};
@@ -21,6 +21,7 @@ const ReservationForm = () => {
     checkIn: '',
     checkOut: '',
     roomType: selectedRoom?.roomName || '',
+    extraBed: 0,
   });
 
   useEffect(() => {
@@ -48,6 +49,13 @@ const ReservationForm = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleExtraBedChange = (delta) => {
+    setFormData((prev) => ({
+      ...prev,
+      extraBed: Math.max(0, prev.extraBed + delta),
+    }));
+  };
+
   const calculateNights = () => {
     const { checkIn, checkOut } = formData;
     if (!checkIn || !checkOut) return 0;
@@ -56,88 +64,86 @@ const ReservationForm = () => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const { checkIn, checkOut, guestsAdult, roomType } = formData;
+    const { checkIn, checkOut, guestsAdult, roomType } = formData;
 
-  if (!checkIn || !checkOut || guestsAdult < 1 || !roomType) {
-    alert("Fill all fields");
-    return;
-  }
+    if (!checkIn || !checkOut || guestsAdult < 1 || !roomType) {
+      alert("Fill all fields");
+      return;
+    }
 
-  if (new Date(checkOut) <= new Date(checkIn)) {
-    alert("Check-out must be after check-in");
-    return;
-  }
+    if (new Date(checkOut) <= new Date(checkIn)) {
+      alert("Check-out must be after check-in");
+      return;
+    }
 
-  const nights = calculateNights();
-  const selectedRoomDetails = rooms.find(room => room.roomName === roomType);
-  const pricePerNight = selectedRoomDetails?.roomPrice || 0;
-  const totalAmount = nights * pricePerNight;
+    const nights = calculateNights();
+    const selectedRoomDetails = rooms.find(room => room.roomName === roomType);
+    const pricePerNight = selectedRoomDetails?.roomPrice || 0;
+    const extraBedCost = formData.extraBed * 500; // Flat ₹500/bed/night (change if dynamic)
+    const totalAmount = (nights * pricePerNight) + extraBedCost;
 
-  try {
-    const userRes = await axios.get(`${API_URL}/api/auth/me`, { withCredentials: true });
-    const user = userRes.data.user;
+    try {
+      const userRes = await axios.get(`${API_URL}/api/auth/me`, { withCredentials: true });
+      const user = userRes.data.user;
 
-const token = localStorage.getItem('token'); // ✅ fetch JWT
+      const token = localStorage.getItem('token');
 
-const response = await axios.post(
-  `${API_URL}/api/bookings`,
-  {
-    user: user._id,
-    resort: resort._id,
-    room: selectedRoomDetails._id,
-    checkIn: formData.checkIn,
-    checkOut: formData.checkOut,
-    totalAmount,
-    paymentStatus: "pending",
-    paymentId: "mock_" + Date.now(),
-    guestsAdult: formData.guestsAdult,
-    guestsChild: formData.guestsChild,
-  },
-  {
-    headers: {
-      Authorization: `Bearer ${token}`, // ✅ attach token to header
-    },
-  }
-);
-
-
-    if (response.data.success) {
-      navigate("/reservation-success", {
-        state: {
-          resortName: resort.name,
-          resortImage: resort.images?.[0],
-          roomName: selectedRoomDetails.roomName,
-          roomImage: selectedRoomDetails.roomImages?.[0],
-          price: pricePerNight,
+      const response = await axios.post(
+        `${API_URL}/api/bookings`,
+        {
+          user: user._id,
+          resort: resort._id,
+          room: selectedRoomDetails._id,
           checkIn: formData.checkIn,
           checkOut: formData.checkOut,
+          totalAmount,
+          paymentStatus: "pending",
+          paymentId: "mock_" + Date.now(),
           guestsAdult: formData.guestsAdult,
           guestsChild: formData.guestsChild,
+          extraBed: formData.extraBed,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
-    } else {
-      alert("Booking failed");
+      );
+
+      if (response.data.success) {
+        navigate("/reservation-success", {
+          state: {
+            resortName: resort.name,
+            resortImage: resort.images?.[0],
+            roomName: selectedRoomDetails.roomName,
+            roomImage: selectedRoomDetails.roomImages?.[0],
+            price: pricePerNight,
+            checkIn: formData.checkIn,
+            checkOut: formData.checkOut,
+            guestsAdult: formData.guestsAdult,
+            guestsChild: formData.guestsChild,
+            extraBed: formData.extraBed,
+          }
+        });
+      } else {
+        alert("Booking failed");
+      }
+    } catch (err) {
+      if (err.response?.status === 409 && err.response.data?.error) {
+        alert(err.response.data.error);
+      } else {
+        console.error("Booking error:", err);
+        alert("Something went wrong");
+      }
     }
-  } catch (err) {
-  if (err.response?.status === 409 && err.response.data?.error) {
-    alert(err.response.data.error); 
-  } else {
-    console.error("Booking error:", err);
-    alert("Something went wrong");
-  }
-}
-
-};
-
+  };
 
   if (!resort || !rooms) return null;
 
-
   return (
     <div className="w-screen h-screen overflow-auto bg-white text-gray-800">
-      {/* Hero Header Image */}
       {resort.images?.[0] && (
         <div className="relative w-full h-[50vh]">
           <img
@@ -152,14 +158,10 @@ const response = await axios.post(
       )}
 
       <div className="px-6 py-8 max-w-screen-xl mx-auto">
-        {/* Room Preview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
             {rooms.map((room, idx) => (
-              <div
-                key={idx}
-                className="border rounded-xl p-4 shadow-md bg-white"
-              >
+              <div key={idx} className="border rounded-xl p-4 shadow-md bg-white">
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   {room.roomImages?.[0] && (
                     <img
@@ -241,6 +243,27 @@ const response = await axios.post(
                 onChange={handleChange}
                 className="w-full px-3 py-2 border rounded"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium">Extra Beds</label>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleExtraBedChange(-1)}
+                  className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400"
+                >
+                
+                </button>
+                <span>{formData.extraBed}</span>
+                <button
+                  type="button"
+                  onClick={() => handleExtraBedChange(1)}
+                  className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400"
+                >
+                  +
+                </button>
+              </div>
             </div>
 
             <div>
