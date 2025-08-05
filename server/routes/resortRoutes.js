@@ -14,11 +14,11 @@ module.exports = (gfs, upload, gridfsBucket) => {
   // ------------------------------
   router.post("/", uploadMw, async (req, res) => {
     const files = req.files || [];
-    const { name, location, price, description, amenities, type, rooms } = req.body;
+    const { name, location, price, description, type, rooms, ownerName } = req.body;
 
     try {
       // ✅ Required field validation
-      if (!name || !location || !price || !type) {
+      if (!name || !location || !price || !type || !ownerName) {
         return res.status(400).json({ message: "Required fields missing." });
       }
 
@@ -28,7 +28,7 @@ module.exports = (gfs, upload, gridfsBucket) => {
         return res.status(400).json({ message: "Main resort image required." });
       }
 
-      // ✅ Upload main resort image
+      // ✅ Upload main resort image to GridFS
       const uploadMainImagePromise = new Promise((resolve, reject) => {
         const { filename, path: tmpPath, mimetype } = resortImageFile;
         fs.createReadStream(tmpPath)
@@ -45,16 +45,17 @@ module.exports = (gfs, upload, gridfsBucket) => {
 
       const mainImageFilename = await uploadMainImagePromise;
 
-      // ✅ Create resort document (NO ownerId now)
+      // ✅ Create resort document first (empty rooms array for now)
       const resortDoc = await Resort.create({
         name,
         location,
+        ownerName,
         price,
         description,
-        amenities: amenities ? JSON.parse(amenities) : [],
         type,
         image: mainImageFilename,
         status: "approved",
+        rooms: [] // will push rooms after upload
       });
 
       // 📌 Send notifications to all users about new resort
@@ -72,18 +73,18 @@ module.exports = (gfs, upload, gridfsBucket) => {
         console.error("Failed to create notifications for new resort:", notifyErr);
       }
 
-      // ✅ Parse and upload room images
+      // ✅ Parse and upload room images with amenities
       const roomMeta = rooms ? JSON.parse(rooms) : [];
-      const roomCreationPromises = [];
+      const newRoomsArray = [];
 
-      roomMeta.forEach((roomData, roomIndex) => {
+      const roomCreationPromises = roomMeta.map((roomData, roomIndex) => {
         const roomImagesToUpload = files.filter(
           (f) => f.fieldname.startsWith(`roomImage_${roomIndex}_`)
         );
 
-        if (roomImagesToUpload.length < 2 || roomImagesToUpload.length > 5) {
+        if (roomImagesToUpload.length < 3 || roomImagesToUpload.length > 5) {
           console.warn(`Room ${roomIndex + 1} has an invalid number of images (${roomImagesToUpload.length}). Skipping.`);
-          return;
+          return Promise.resolve();
         }
 
         const currentRoomImages = [];
@@ -104,24 +105,35 @@ module.exports = (gfs, upload, gridfsBucket) => {
           });
         });
 
-        roomCreationPromises.push(
-          Promise.all(imageUploadPromises)
-            .then(async () => {
-              await Room.create({
-                resortId: resortDoc._id,
-                roomName: roomData.roomName,
-                roomPrice: roomData.roomPrice,
-                roomDescription: roomData.roomDescription,
-                roomImages: currentRoomImages,
-              });
-            })
-            .catch((err) => {
-              console.error(`Error processing room ${roomIndex + 1}:`, err);
-            })
-        );
+        return Promise.all(imageUploadPromises)
+          .then(() => {
+            const newRoomObj = {
+              roomName: roomData.roomName,
+              roomPrice: roomData.roomPrice,
+              roomDescription: roomData.roomDescription,
+              amenities: roomData.amenities || [],
+              roomImages: currentRoomImages
+            };
+
+            // Push into resort rooms array
+            newRoomsArray.push(newRoomObj);
+
+            // Still create in separate Room collection if needed
+            return Room.create({
+              resortId: resortDoc._id,
+              ...newRoomObj
+            });
+          })
+          .catch((err) => {
+            console.error(`Error processing room ${roomIndex + 1}:`, err);
+          });
       });
 
       await Promise.all(roomCreationPromises);
+
+      // ✅ Save resort with embedded rooms
+      resortDoc.rooms = newRoomsArray;
+      await resortDoc.save();
 
       res.status(201).json({ message: "Resort submitted!", resort: resortDoc });
 
@@ -141,15 +153,17 @@ module.exports = (gfs, upload, gridfsBucket) => {
       const resort = await Resort.findById(id);
       if (!resort) return res.status(404).json({ message: "Resort not found" });
 
-      const rooms = await Room.find({ resortId: id });
-      res.json({ resort, rooms });
+      // ✅ Return embedded rooms from resort, no need to query separately
+      res.json({ resort, rooms: resort.rooms || [] });
     } catch (err) {
       console.error("Error fetching resort details:", err);
       res.status(500).json({ message: "Server error" });
     }
   });
 
- 
+  // ------------------------------
+  // GET: All resorts
+  // ------------------------------
   router.get("/allresorts", async (req, res) => {
     try {
       const resorts = await Resort.find({}).sort({ createdAt: -1 });

@@ -36,23 +36,27 @@ const ResortDetail = () => {
   }, [id]);
 
   const handleBookNow = (room) => {
-    if (!isLoggedIn || !user) {
-      return navigate('/auth', { state: { from: `/resorts/${id}/reserve` } });
-    }
-  
-    if (user.role !== 'user') {
-      alert('Only users can book a resort. Please login with a user account.');
-      return;
-    }
-  
-    navigate(`/resorts/${id}/reserve`, {
-      state: {
-        resort: { ...resort, rooms }, // merge rooms into resort
-        selectedRoom: room
+  if (!isLoggedIn || !user) {
+    return navigate('/auth', { state: { from: `/resorts/${id}/reserve` } });
+  }
+
+  if (user.role !== 'user') {
+    alert('Only users can book a resort. Please login with a user account.');
+    return;
+  }
+
+  // ✅ Pass amenities with room data
+  navigate(`/resorts/${id}/reserve`, {
+    state: {
+      resort: { ...resort, rooms },
+      selectedRoom: {
+        ...room,
+        amenities: room.amenities || [] // ensure amenities exist
       }
-    });
-  };
-  
+    }
+  });
+};
+
 
   return (
     <div className="bg-gray-50 py-8 px-4 min-h-screen relative">
@@ -84,22 +88,7 @@ const ResortDetail = () => {
             </span>
           </div>
 
-          {/* Amenities */}
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-2">Amenities</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {resort.amenities.map((amenity, i) => (
-                <div
-                  key={i}
-                  className="bg-white rounded-md px-4 py-2 border border-gray-200 text-sm"
-                >
-                  {amenity}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Room Types */}
+          {/* ✅ Room Types with Amenities */}
           <div>
             <h2 className="text-xl font-semibold mb-2">Room Types</h2>
             <div className="grid gap-4">
@@ -117,14 +106,30 @@ const ResortDetail = () => {
                       <div className="text-green-600 mt-2 font-medium">
                         ₹{room.roomPrice} per night
                       </div>
-                      
+
+                      {/* Room Amenities */}
+                      {room.amenities && room.amenities.length > 0 && (
+                        <div className="mt-3">
+                          <h5 className="font-semibold text-sm mb-1">Amenities:</h5>
+                          <div className="flex flex-wrap gap-2">
+                            {room.amenities.map((amenity, idx) => (
+                              <span
+                                key={idx}
+                                className="px-3 py-1 bg-gray-100 rounded-full text-xs"
+                              >
+                                {amenity}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       <button
                         onClick={() => handleBookNow(room)}
-                        className="mt-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded transition"
+                        className="mt-4 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded transition"
                       >
-                      Book Now
+                        Book Now
                       </button>
-
                     </div>
                   </div>
                 </div>
