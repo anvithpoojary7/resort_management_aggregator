@@ -45,9 +45,9 @@ const Sidebar = () => {
           <NavLink to="/admin/users" className={activeClass}>
             <FaUsers className="text-lg" /> <span>Manage Resorts</span>
           </NavLink>
-          <NavLink to="/admin/analytics" className={activeClass}>
+          {/* <NavLink to="/admin/analytics" className={activeClass}>
             <FaChartBar className="text-lg" /> <span>Analytics</span>
-          </NavLink>
+          </NavLink> */}
         </nav>
       </div>
 

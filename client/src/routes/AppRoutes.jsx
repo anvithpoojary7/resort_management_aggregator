@@ -14,7 +14,7 @@ import DealDetails from '../components/DealDetails';
 import AmenityResortsList from '../pages/AmenityResortsList';
 import About from '../pages/About';
 import Notifications from '../pages/Notifications';
-import WishlistPage from '../pages/WishlistPage'; // Wishlist
+import WishlistPage from '../pages/WishlistPage';
 
 // Admin Pages
 import AdminLogin from '../admin/pages/AdminLogin';
@@ -22,7 +22,6 @@ import AdminDashboard from '../admin/pages/AdminDashboard';
 import ModerationPage from '../admin/pages/ModerationPage';
 import ViewUsers from '../admin/pages/ViewUsers';
 import AllBookings from '../admin/pages/AllBookings';
-import RevenueAnalytics from '../admin/pages/RevenueAnalytics';
 
 // Route Protection
 import ProtectedRoute from './ProtectedRoute';
@@ -103,14 +102,6 @@ const AppRoutes = () => (
         element={
           <ProtectedRoute role="admin">
             <AllBookings />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/analytics"
-        element={
-          <ProtectedRoute role="admin">
-            <RevenueAnalytics />
           </ProtectedRoute>
         }
       />
