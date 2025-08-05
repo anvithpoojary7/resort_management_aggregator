@@ -21,6 +21,7 @@ const ReservationForm = () => {
     checkIn: '',
     checkOut: '',
     roomType: selectedRoom?.roomName || '',
+    extraBed: 0,
   });
 
   useEffect(() => {
@@ -48,6 +49,13 @@ const ReservationForm = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleExtraBedChange = (delta) => {
+    setFormData((prev) => ({
+      ...prev,
+      extraBed: Math.max(0, prev.extraBed + delta),
+    }));
+  };
+
   const calculateNights = () => {
     const { checkIn, checkOut } = formData;
     if (!checkIn || !checkOut) return 0;
@@ -73,7 +81,8 @@ const ReservationForm = () => {
     const nights = calculateNights();
     const selectedRoomDetails = rooms.find(room => room.roomName === roomType);
     const pricePerNight = selectedRoomDetails?.roomPrice || 0;
-    const totalAmount = nights * pricePerNight;
+    const extraBedCost = formData.extraBed * 500; // Flat ₹500/bed/night (change if dynamic)
+    const totalAmount = (nights * pricePerNight) + extraBedCost;
 
     try {
       const userRes = await axios.get(`${API_URL}/api/auth/me`, { withCredentials: true });
@@ -94,6 +103,7 @@ const ReservationForm = () => {
           paymentId: "mock_" + Date.now(),
           guestsAdult: formData.guestsAdult,
           guestsChild: formData.guestsChild,
+          extraBed: formData.extraBed,
         },
         {
           headers: {
@@ -114,6 +124,7 @@ const ReservationForm = () => {
             checkOut: formData.checkOut,
             guestsAdult: formData.guestsAdult,
             guestsChild: formData.guestsChild,
+            extraBed: formData.extraBed,
           }
         });
       } else {
@@ -133,7 +144,6 @@ const ReservationForm = () => {
 
   return (
     <div className="w-screen h-screen overflow-auto bg-white text-gray-800">
-      {/* Hero Header Image */}
       {resort.images?.[0] && (
         <div className="relative w-full h-[50vh]">
           <img
@@ -148,14 +158,10 @@ const ReservationForm = () => {
       )}
 
       <div className="px-6 py-8 max-w-screen-xl mx-auto">
-        {/* Room Preview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
             {rooms.map((room, idx) => (
-              <div
-                key={idx}
-                className="border rounded-xl p-4 shadow-md bg-white"
-              >
+              <div key={idx} className="border rounded-xl p-4 shadow-md bg-white">
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   {room.roomImages?.[0] && (
                     <img
@@ -255,6 +261,28 @@ const ReservationForm = () => {
                 className="w-full px-3 py-2 border rounded"
               />
             </div>
+
+          <div>
+  <label className="block text-sm font-medium">Extra Beds</label>
+  <div className="flex items-center gap-4 mt-1">
+    <button
+      type="button"
+      onClick={() => handleExtraBedChange(-1)}
+      className="w-10 h-10 bg-gray-300 text-xl font-semibold rounded-full hover:bg-gray-400 transition duration-200"
+    >
+      −
+    </button>
+    <span className="text-lg font-medium">{formData.extraBed}</span>
+    <button
+      type="button"
+      onClick={() => handleExtraBedChange(1)}
+      className="w-10 h-10 bg-gray-300 text-xl font-semibold rounded-full hover:bg-gray-400 transition duration-200"
+    >
+      +
+    </button>
+  </div>
+</div>
+
 
             <div>
               <label className="block text-sm font-medium">Selected Room</label>
