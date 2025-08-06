@@ -15,6 +15,9 @@ import AmenityResortsList from '../pages/AmenityResortsList';
 import About from '../pages/About';
 import Notifications from '../pages/Notifications';
 import WishlistPage from '../pages/WishlistPage';
+import ConfirmAndPay from '../pages/ConfirmAndPay'
+import ReservationSucess from '../pages/ReservationSucess';
+
 
 // Admin Pages
 import AdminLogin from '../admin/pages/AdminLogin';
@@ -25,12 +28,11 @@ import AllBookings from '../admin/pages/AllBookings';
 
 // Route Protection
 import ProtectedRoute from './ProtectedRoute';
-import ReservationSuccess from '../pages/ReservationSuccess';
 
-// Scroll to top on route change
+
+
 import ScrollToTop from '../admin/components/ScrollToTop';
 
-// Admin path config
 const ADMIN_PATH = `/${process.env.REACT_APP_ADMIN_URL_PATH || 'admin-portal-secret/login'}`;
 
 const AppRoutes = () => (
@@ -48,8 +50,9 @@ const AppRoutes = () => (
       <Route path="/deal/:id" element={<DealDetails />} />
       <Route path="/amenity/:amenityName" element={<AmenityResortsList />} />
       <Route path="/about" element={<About />} />
-      <Route path="/reservation-success" element={<ReservationSuccess />} />
+      <Route path="/confirm-and-pay" element={<ConfirmAndPay />} />
       <Route path="/notifications" element={<Notifications />} />
+      <Route path="reservation-success" element={<ReservationSucess/>}/>
 
       {/* Reservation (Protected) */}
       <Route

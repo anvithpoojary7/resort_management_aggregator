@@ -1,12 +1,13 @@
 // pages/ConfirmAndPayPage.jsx
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const API_URL = process.env.NODE_ENV === 'production'
   ? 'https://resort-finder-2aqp.onrender.com'
   : 'http://localhost:8080';
 
-const ReservationSuccess = () => {
+const ConfirmAndPay = () => {
   const { state: reservation } = useLocation();
   const navigate = useNavigate();
 
@@ -18,14 +19,17 @@ const ReservationSuccess = () => {
   const {
     resortName,
     resortImage,
+    resortId,
     roomName,
     roomImage,
+    roomId,
     price,
     checkIn,
     checkOut,
     guestsAdult,
     guestsChild,
     extraBed,
+    totalAmount,
   } = reservation;
 
   const nights = (new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24);
@@ -34,9 +38,43 @@ const ReservationSuccess = () => {
   const taxes = Math.round((roomTotal + extraBedCost) * 0.1);
   const total = roomTotal + extraBedCost + taxes;
 
-  const handlePayment = () => {
-    // Here you could later integrate Razorpay or redirect to UPI gateway
-    navigate("/reservation-success", { state: reservation });
+  const handlePayment = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("You are not logged in");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const res = await axios.post(`${API_URL}/api/bookings`, {
+        resort: resortId,
+        room: roomId,
+        checkIn,
+        checkOut,
+        totalAmount: total,
+        guestsAdult,
+        guestsChild,
+        extraBed,
+        paymentStatus: "paid",
+        paymentId: "mock_" + Date.now(),
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
+
+      if (res.data.success) {
+        navigate("/reservation-success", { state: reservation });
+      } else {
+        alert("Booking failed. Try again.");
+      }
+    } catch (error) {
+      console.error("Booking error:", error);
+      alert("An error occurred during booking.");
+    }
   };
 
   return (
@@ -44,7 +82,7 @@ const ReservationSuccess = () => {
       <h1 className="text-3xl font-bold text-center mb-6">Confirm and Pay</h1>
 
       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left side */}
+        {/* Left Side */}
         <div className="md:col-span-2 space-y-6">
           <div className="border p-4 rounded-lg bg-pink-50 flex justify-between items-center">
             <div>
@@ -96,7 +134,7 @@ const ReservationSuccess = () => {
           </div>
         </div>
 
-        {/* Right side */}
+        {/* Right Side */}
         <div className="border p-4 rounded-lg shadow space-y-4">
           <div className="flex gap-4">
             <img
@@ -150,4 +188,4 @@ const ReservationSuccess = () => {
   );
 };
 
-export default ReservationSuccess;
+export default ConfirmAndPay;

@@ -89,30 +89,30 @@ if (overlappingBooking) {
     await newReservation.save();
     console.log("✅ Reservation saved");
 
-    const [user, resortDoc, roomDoc] = await Promise.all([
-      User.findById(userId),
-      Resort.findById(resort),
-      Room.findById(room),
-    ]);
+    // const [user, resortDoc, roomDoc] = await Promise.all([
+    //   User.findById(userId),
+    //   Resort.findById(resort),
+    //   Room.findById(room),
+    // ]);
 
-    if (!user || !resortDoc || !roomDoc) {
-      console.error("❌ Missing user/resort/room document:", { user, resortDoc, roomDoc });
-      return res.status(500).json({ error: "Something went wrong fetching booking details." });
-    }
+    // if (!user || !resortDoc || !roomDoc) {
+    //   console.error("❌ Missing user/resort/room document:", { user, resortDoc, roomDoc });
+    //   return res.status(500).json({ error: "Something went wrong fetching booking details." });
+    // }
 
-    await sendBookingConfirmation(
-      user.email,
-      user.name,
-      {
-        resortName: resortDoc.name,
-        roomName: roomDoc.roomName,
-        checkInDate: checkIn,
-        checkOutDate: checkOut,
-        adults: guestsAdult,
-        children: guestsChild,
-        totalPrice: totalAmount,
-      }
-    );
+    // await sendBookingConfirmation(
+    //   user.email,
+    //   user.name,
+    //   {
+    //     resortName: resortDoc.name,
+    //     roomName: roomDoc.roomName,
+    //     checkInDate: checkIn,
+    //     checkOutDate: checkOut,
+    //     adults: guestsAdult,
+    //     children: guestsChild,
+    //     totalPrice: totalAmount,
+    //   }
+ //   );
 
     console.log("✅ Booking confirmation email sent.");
     res.status(201).json({ success: true, message: "Booking successful", booking: newBooking });

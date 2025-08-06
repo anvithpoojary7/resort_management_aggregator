@@ -10,6 +10,7 @@ const ReservationForm = () => {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+
   const { resort, selectedRoom } = location.state || {};
   const rooms = selectedRoom ? [selectedRoom] : (resort?.rooms || []);
 
@@ -39,10 +40,8 @@ const ReservationForm = () => {
   }, []);
 
   useEffect(() => {
-    if (!resort) {
-      navigate('/');
-    }
-  }, [resort, rooms, navigate]);
+    if (!resort) navigate('/');
+  }, [resort, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -63,87 +62,53 @@ const ReservationForm = () => {
     return Math.max(nights, 0);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     const { checkIn, checkOut, guestsAdult, roomType } = formData;
 
     if (!checkIn || !checkOut || guestsAdult < 1 || !roomType) {
-      alert("Fill all fields");
+      alert("Please fill in all fields.");
       return;
     }
 
     if (new Date(checkOut) <= new Date(checkIn)) {
-      alert("Check-out must be after check-in");
+      alert("Check-out date must be after check-in.");
       return;
     }
 
     const nights = calculateNights();
     const selectedRoomDetails = rooms.find(room => room.roomName === roomType);
     const pricePerNight = selectedRoomDetails?.roomPrice || 0;
-    const extraBedCost = formData.extraBed * 500; // Flat ₹500/bed/night (change if dynamic)
+    const extraBedCost = formData.extraBed * 500;
     const totalAmount = (nights * pricePerNight) + extraBedCost;
 
-    try {
-      const userRes = await axios.get(`${API_URL}/api/auth/me`, { withCredentials: true });
-      const user = userRes.data.user;
-
-      const token = localStorage.getItem('token');
-
-      const response = await axios.post(
-        `${API_URL}/api/bookings`,
-        {
-          user: user._id,
-          resort: resort._id,
-          room: selectedRoomDetails._id,
-          checkIn: formData.checkIn,
-          checkOut: formData.checkOut,
-          totalAmount,
-          paymentStatus: "pending",
-          paymentId: "mock_" + Date.now(),
-          guestsAdult: formData.guestsAdult,
-          guestsChild: formData.guestsChild,
-          extraBed: formData.extraBed,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.data.success) {
-        navigate("/reservation-success", {
-          state: {
-            resortName: resort.name,
-            resortImage: resort.images?.[0],
-            roomName: selectedRoomDetails.roomName,
-            roomImage: selectedRoomDetails.roomImages?.[0],
-            price: pricePerNight,
-            checkIn: formData.checkIn,
-            checkOut: formData.checkOut,
-            guestsAdult: formData.guestsAdult,
-            guestsChild: formData.guestsChild,
-            extraBed: formData.extraBed,
-          }
-        });
-      } else {
-        alert("Booking failed");
-      }
-    } catch (err) {
-      if (err.response?.status === 409 && err.response.data?.error) {
-        alert(err.response.data.error);
-      } else {
-        console.error("Booking error:", err);
-        alert("Something went wrong");
-      }
-    }
+    navigate("/confirm-and-pay", {
+      state: {
+        resortName: resort.name,
+        resortImage: resort.images?.[0],
+        resortId: resort._id,
+        roomName: selectedRoomDetails.roomName,
+        roomImage: selectedRoomDetails.roomImages?.[0],
+        roomId: selectedRoomDetails._id,
+        price: pricePerNight,
+        checkIn: formData.checkIn,
+        checkOut: formData.checkOut,
+        guestsAdult: formData.guestsAdult,
+        guestsChild: formData.guestsChild,
+        extraBed: formData.extraBed,
+        extraBedCost,
+        nights,
+        totalAmount,
+      },
+    });
   };
 
-  if (!resort || !rooms) return null;
+  if (!resort || !rooms.length) return null;
 
   return (
-    <div className="w-screen h-screen overflow-auto bg-white text-gray-800">
+    <div className="w-full bg-white text-gray-800">
+
       {resort.images?.[0] && (
         <div className="relative w-full h-[50vh]">
           <img
@@ -159,6 +124,7 @@ const ReservationForm = () => {
 
       <div className="px-6 py-8 max-w-screen-xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* 🛏 Room Preview */}
           <div className="md:col-span-2 space-y-6">
             {rooms.map((room, idx) => (
               <div key={idx} className="border rounded-xl p-4 shadow-md bg-white">
@@ -181,35 +147,31 @@ const ReservationForm = () => {
                     ))}
                   </div>
                 </div>
-                <div>
-                  <h2 className="text-xl font-semibold mb-1">{room.roomName}</h2>
-                  <p className="text-sm text-gray-600">{room.roomDescription}</p>
-                  <div className="text-green-600 font-bold mt-2">
-                    ₹{room.roomPrice} / night
-                  </div>
-
-                  {/* ✅ Room Amenities */}
-                  {room.amenities && room.amenities.length > 0 && (
-                    <div className="mt-3">
-                      <h4 className="text-sm font-semibold mb-1">Amenities:</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {room.amenities.map((amenity, i) => (
-                          <span
-                            key={i}
-                            className="px-2 py-1 text-xs bg-gray-100 rounded border"
-                          >
-                            {amenity}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                <h2 className="text-xl font-semibold mb-1">{room.roomName}</h2>
+                <p className="text-sm text-gray-600">{room.roomDescription}</p>
+                <div className="text-green-600 font-bold mt-2">
+                  ₹{room.roomPrice} / night
                 </div>
+                {room.amenities?.length > 0 && (
+                  <div className="mt-3">
+                    <h4 className="text-sm font-semibold mb-1">Amenities:</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {room.amenities.map((amenity, i) => (
+                        <span
+                          key={i}
+                          className="px-2 py-1 text-xs bg-gray-100 rounded border"
+                        >
+                          {amenity}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
 
-          {/* Booking Form */}
+          {/* 📋 Reservation Form */}
           <form
             onSubmit={handleSubmit}
             className="border p-5 rounded-lg shadow-md bg-gray-50 space-y-4"
@@ -239,7 +201,7 @@ const ReservationForm = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Guests</label>
+              <label className="block text-sm font-medium">Adults</label>
               <input
                 type="number"
                 name="guestsAdult"
@@ -262,27 +224,29 @@ const ReservationForm = () => {
               />
             </div>
 
-          <div>
-  <label className="block text-sm font-medium">Extra Beds</label>
-  <div className="flex items-center gap-4 mt-1">
-    <button
-      type="button"
-      onClick={() => handleExtraBedChange(-1)}
-      className="w-10 h-10 bg-gray-300 text-xl font-semibold rounded-full hover:bg-gray-400 transition duration-200"
-    >
-      −
-    </button>
-    <span className="text-lg font-medium">{formData.extraBed}</span>
-    <button
-      type="button"
-      onClick={() => handleExtraBedChange(1)}
-      className="w-10 h-10 bg-gray-300 text-xl font-semibold rounded-full hover:bg-gray-400 transition duration-200"
-    >
-      +
-    </button>
-  </div>
-</div>
-
+            <div>
+              <label className="block text-sm font-medium">Extra Beds</label>
+              <div className="flex items-center gap-4 mt-1">
+                <button
+                  type="button"
+                  onClick={() => handleExtraBedChange(-1)}
+                  className="w-10 h-10 bg-gray-300 text-xl font-semibold rounded-full hover:bg-gray-400"
+                >
+                  −
+                </button>
+                <span className="text-lg font-medium">{formData.extraBed}</span>
+                <button
+                  type="button"
+                  onClick={() => handleExtraBedChange(1)}
+                  className="w-10 h-10 bg-gray-300 text-xl font-semibold rounded-full hover:bg-gray-400"
+                >
+                  +
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">
+                ₹{formData.extraBed * 500} (₹500 per bed/night)
+              </p>
+            </div>
 
             <div>
               <label className="block text-sm font-medium">Selected Room</label>
@@ -301,7 +265,7 @@ const ReservationForm = () => {
               type="submit"
               className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
             >
-              Confirm Reservation
+              Review & Continue
             </button>
           </form>
         </div>

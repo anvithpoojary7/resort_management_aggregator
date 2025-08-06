@@ -5,7 +5,7 @@ const roomSchema = new mongoose.Schema({
   roomPrice: { type: Number, required: true, min: 0 },
   roomDescription: { type: String, required: true },
   roomImages: { type: [String], default: [] },
-  amenities: { type: [String], default: [] } // amenities inside each room
+  amenities: { type: [String], default: [] } 
 });
 
 const resortSchema = new mongoose.Schema({
@@ -13,7 +13,8 @@ const resortSchema = new mongoose.Schema({
   location: { type: String, required: true, trim: true },
   ownerName: { type: String, required: true, trim: true },
   price: { type: Number, required: true, min: 0 },
-  image: { type: String, required: true },
+
+  image: { type: String, required: true }, 
   description: { type: String, required: true },
   type: {
     type: String,
