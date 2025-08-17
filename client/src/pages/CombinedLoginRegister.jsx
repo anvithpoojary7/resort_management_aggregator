@@ -133,7 +133,7 @@ const CombinedLoginRegister = () => {
       const { user } = result;
 
       const payload = {
-        name: user.displayName, // ✅ Send name during Google signup
+        name: user.displayName, 
         email: user.email,
       };
 
