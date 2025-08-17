@@ -80,7 +80,12 @@ const CombinedLoginRegister = () => {
           login(data.user);
           setTimeout(() => {
             setIsLoading(false);
-            navigate(redirectTo, { replace: true });
+           if (process.env.NODE_ENV === 'production') {
+  window.location.href = 'https://resort-management-aggregator.vercel.app/';
+} else {
+  navigate('/', { replace: true });
+}
+
           }, 800);
         } else {
           setIsLoading(false);
@@ -133,7 +138,7 @@ const CombinedLoginRegister = () => {
       const { user } = result;
 
       const payload = {
-        name: user.displayName, // ✅ Send name during Google signup
+        name: user.displayName, 
         email: user.email,
       };
 
@@ -154,10 +159,15 @@ const CombinedLoginRegister = () => {
         login(data.user);
         setTimeout(() => {
           setIsLoading(false);
-          navigate(redirectTo, { replace: true });
+      if (process.env.NODE_ENV === 'production') {
+  window.location.href = 'https://resort-management-aggregator.vercel.app/';
+} else {
+  navigate('/', { replace: true });
+}
+
         }, 800);
       } else if (res.status === 404) {
-        // No user found – try Google signup
+        
         res = await fetch(`${API_URL}/api/auth/google-signup`, {
           method: 'POST',
           credentials: 'include',
@@ -174,7 +184,12 @@ const CombinedLoginRegister = () => {
           login(data.user);
           setTimeout(() => {
             setIsLoading(false);
-            navigate(redirectTo, { replace: true });
+           if (process.env.NODE_ENV === 'production') {
+  window.location.href = 'https://resort-management-aggregator.vercel.app/';
+} else {
+  navigate('/', { replace: true });
+}
+
           }, 800);
         } else {
           setIsLoading(false);

@@ -43,7 +43,7 @@ const UserSchema = new mongoose.Schema(
       default: false,
     },
 
-    // ✅ Wishlist field added
+    
     wishlist: [
       {
         type: mongoose.Schema.Types.ObjectId,

@@ -29,9 +29,12 @@ const WishlistPage = () => {
     setLoading(true);
     setError(null);
     try {
-      // CORRECTED: Added backticks for the template literal string
+      const token = localStorage.getItem("token");
       const response = await axios.get(`${API_BASE_URL}/api/wishlist`, {
         withCredentials: true,
+        headers:{
+          Authorization:`Bearer ${token}`
+        }
       });
 
       setWishlistResorts(response.data);
@@ -58,8 +61,14 @@ const WishlistPage = () => {
     setLoadingWishlistToggle(true);
 
     try {
-      // CORRECTED: Added backticks for the template literal string
-      await axios.delete(`${API_BASE_URL}/api/wishlist/${resortId}`, { withCredentials: true });
+      const token=localStorage.getItem("token");
+      await axios.delete(`${API_BASE_URL}/api/wishlist/${resortId}`, 
+        { withCredentials: true ,
+           headers:{
+          Authorization:`Bearer ${token}`
+        }
+        }
+      );
       setWishlistResorts((prev) => prev.filter((resort) => resort._id !== resortId));
     } catch (err) {
       console.error('Error removing resort from wishlist:', err.response?.data?.message || err.message);
@@ -109,7 +118,7 @@ const WishlistPage = () => {
             Explore Resorts
           </button>
         </div>
-      ) : (
+      ) : ( 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {wishlistResorts.map((resort) => (
             <ResortCard

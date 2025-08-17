@@ -124,13 +124,27 @@ const ResortList = () => {
     const isCurrentlyWishlisted = wishlistIds.includes(resortId);
 
     try {
+       const token = localStorage.getItem("token");
       if (isCurrentlyWishlisted) {
         // CORRECTED: Added backticks for the template literal string
-        await axios.delete(`${API_BASE_URL}/api/wishlist/${resortId}`, { withCredentials: true });
+        await axios.delete(`${API_BASE_URL}/api/wishlist/${resortId}`, { withCredentials: true,
+           headers: {
+      Authorization: `Bearer ${token}`,
+    },
+         });
         setWishlistIds((prev) => prev.filter((id) => id !== resortId));
       } else {
         // CORRECTED: Added backticks for the template literal string
-        await axios.post(`${API_BASE_URL}/api/wishlist/${resortId}`, {}, { withCredentials: true });
+        await axios.post(`${API_BASE_URL}/api/wishlist/${resortId}`, {}, { withCredentials: true ,
+          headers: {
+      Authorization: `Bearer ${token}`,
+    },
+             
+        },
+
+
+
+        );
         setWishlistIds((prev) => [...prev, resortId]);
       }
     } catch (err) {
