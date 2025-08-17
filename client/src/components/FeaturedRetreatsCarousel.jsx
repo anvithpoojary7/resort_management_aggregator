@@ -51,10 +51,12 @@ const FeaturedRetreatsCarousel = () => {
   }, [isLoggedIn]);
 
   useEffect(() => {
+  if (isLoggedIn) {
     fetchWishlistStatus();
-  }, [fetchWishlistStatus]);
+  }
+}, [isLoggedIn, fetchWishlistStatus]);
+  
 
-  // Handle toggling wishlist status for a resort
   const handleToggleWishlist = async (resortId) => {
     if (!isLoggedIn) {
       alert('Please log in to add resorts to your wishlist!');
