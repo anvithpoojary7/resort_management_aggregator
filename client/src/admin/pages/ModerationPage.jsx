@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 
 const API_BASE_URL = "http://localhost:8080";
-const AMENITY_OPTIONS = ["WiFi", "Pool", "Spa", "Parking", "Gym", "Bar", "Restaurant", "Beach Access"];
+const AMENITY_OPTIONS = ["WiFi", "Pool", "Spa", "Gym", "Bar & Restaurant", "Beach Access","Pet friendly"];
 
 const AddResort = () => {
   const navigate = useNavigate();

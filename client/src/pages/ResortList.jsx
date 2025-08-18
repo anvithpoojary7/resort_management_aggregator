@@ -12,7 +12,7 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://resort-finder-2aqp.onrender.com'
   : 'http://localhost:8080';
 
-const AMENITIES = ['Pool', 'Wi-Fi', 'AC', 'Games', 'Spa', 'Yoga'];
+const AMENITIES = ["WiFi", "Pool", "Spa", "Gym", "Bar & Restaurant", "Beach Access","Pet friendly"];
 
 const ResortList = () => {
   const navigate = useNavigate();

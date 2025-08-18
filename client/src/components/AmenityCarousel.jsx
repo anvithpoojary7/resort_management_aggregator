@@ -3,33 +3,15 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const amenities = [
-  {
-    title: "Infinity Pool",
-    description: "Dive into luxury with our temperature-controlled infinity pool.",
-    image: "/a1.jpg",
-  },
-  {
-    title: "Wellness Programs",
-    description: "Balance your mind and body with curated wellness sessions.",
-    image: "/a2.jpg",
-  },
-  {
-    title: "Luxury Spa",
-    description: "Relax, unwind, and rejuvenate with signature therapies.",
-    image: "/a3.jpg",
-  },
-  {
-    title: "High-Speed Wi-Fi",
-    description: "Stay connected across the resort with seamless internet access.",
-    image: "/a4.jpg",
-  },
-  {
-    title: "Pet Friendly",
-    description: "Bring your furry friends along — we welcome pets with open paws.",
-    image: "/a5.jpg",
-  },
-
+  { title: "Infinity Pool", description: "Dive into luxury with our temperature-controlled infinity pool.", image: "/a1.jpg" },
+  { title: "Wellness Programs", description: "Balance your mind and body with curated wellness sessions.", image: "/a2.jpg" },
+  { title: "Luxury Spa", description: "Relax, unwind, and rejuvenate with signature therapies.", image: "/a3.jpg" },
+  { title: "WiFi", description: "Stay connected across the resort with seamless internet access.", image: "/a4.jpg" },
+  { title: "Pet friendly", description: "Bring your furry friends along — we welcome pets with open paws.", image: "/a5.jpg" },
+  { title: "Bar & Restaurant", description: "Savor exquisite meals and refreshing drinks at our in-house bar & restaurant.", image: "/a6.jpg" },
+  { title: "Beach Access", description: "Step directly onto pristine sands with our private beach access.", image: "/a7.jpg" },
 ];
+
 
 const AmenityCarousel = () => {
   const [current, setCurrent] = useState(0);
