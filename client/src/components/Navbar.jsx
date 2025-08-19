@@ -40,7 +40,7 @@ const Navbar = () => {
 
         {/* Right side buttons */}
         <div className="flex items-center gap-4">
-          <ProfileDropdown /> {/* ✅ handles sign-in & profile dropdown */}
+          <ProfileDropdown className="mr-4" /> {/* ✅ handles sign-in & profile dropdown */}
 
           <button
             ref={menuButtonRef}

@@ -22,9 +22,7 @@ const ResortSearchBar = () => {
   const wrapperRef = useRef(null);
   const navigate = useNavigate();
 
-  /* ---------------------------------- */
-  /* close popovers when clicking away  */
-  /* ---------------------------------- */
+  /* close popovers when clicking away */
   useEffect(() => {
     const close = (e) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
@@ -38,9 +36,7 @@ const ResortSearchBar = () => {
     return () => document.removeEventListener('mousedown', close);
   }, []);
 
-  /* ---------------------------------- */
-  /* build query + navigate to /resorts */
-  /* ---------------------------------- */
+  /* build query + navigate */
   const handleSearch = () => {
     const params = new URLSearchParams();
     const trimmed = query.trim();
@@ -49,7 +45,7 @@ const ResortSearchBar = () => {
     if (checkIn) params.set('checkIn', checkIn.toISOString());
     if (checkOut) params.set('checkOut', checkOut.toISOString());
     if (sortOrder) params.set('sort', sortOrder);
-    if (petFriendly) params.set('petFriendly', '1'); // backend currently ignores; keep for future
+    if (petFriendly) params.set('petFriendly', '1');
 
     if (adults > 0) params.set('adults', adults);
     if (children > 0) params.set('children', children);
@@ -58,7 +54,6 @@ const ResortSearchBar = () => {
     navigate(`/resorts?${params.toString()}`);
   };
 
-  /* optional: allow Enter key to trigger search when focusing destination input */
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -66,19 +61,16 @@ const ResortSearchBar = () => {
     }
   };
 
-  /* ---------------------------------- */
-  /* UI RENDER                          */
-  /* ---------------------------------- */
   return (
     <div className="flex flex-col items-center mt-6 z-50 relative" ref={wrapperRef}>
       <div
-        className="flex flex-wrap md:flex-nowrap items-center bg-white shadow-2xl rounded-full
+        className="flex flex-col md:flex-row flex-wrap items-stretch bg-white shadow-2xl rounded-2xl
                    border-[2px] border-gray-400 hover:border-blue-500 transition duration-300
                    px-4 py-3 gap-4 w-full max-w-5xl"
       >
         {/* Destination picker */}
         <div
-          className="relative flex-1 flex items-center gap-2 cursor-pointer"
+          className="relative w-full md:flex-1 flex items-center gap-2 cursor-pointer"
           onClick={() => {
             setShowDestinations(!showDestinations);
             setShowCheckIn(false);
@@ -87,7 +79,7 @@ const ResortSearchBar = () => {
           }}
         >
           <FaMapMarkerAlt className="text-gray-500" />
-          <div className="flex flex-col">
+          <div className="flex flex-col w-full">
             <p className="text-xs text-gray-500">Hotel</p>
             <input
               type="text"
@@ -124,7 +116,7 @@ const ResortSearchBar = () => {
 
         {/* Check-in */}
         <div
-          className="relative flex-1 flex items-center gap-2 cursor-pointer"
+          className="relative w-full md:flex-1 flex items-center gap-2 cursor-pointer"
           onClick={() => {
             setShowCheckIn(!showCheckIn);
             setShowCheckOut(false);
@@ -152,7 +144,7 @@ const ResortSearchBar = () => {
 
         {/* Check-out */}
         <div
-          className="relative flex-1 flex items-center gap-2 cursor-pointer"
+          className="relative w-full md:flex-1 flex items-center gap-2 cursor-pointer"
           onClick={() => {
             setShowCheckOut(!showCheckOut);
             setShowCheckIn(false);
@@ -180,7 +172,7 @@ const ResortSearchBar = () => {
 
         {/* Guests selector */}
         <div
-          className="relative flex-1 flex items-center gap-2 cursor-pointer"
+          className="relative w-full md:flex-1 flex items-center gap-2 cursor-pointer"
           onClick={() => {
             setGuestsOpen(!guestsOpen);
             setShowCheckIn(false);
@@ -236,7 +228,7 @@ const ResortSearchBar = () => {
                     checked={petFriendly}
                     onChange={() => setPetFriendly(!petFriendly)}
                   />
-                  Pet‑friendly Only
+                  Pet-friendly Only
                 </label>
               </div>
             </div>
@@ -247,7 +239,7 @@ const ResortSearchBar = () => {
         <select
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value)}
-          className="text-sm border border-gray-300 rounded-full px-4 py-2 bg-white
+          className="w-full md:w-auto text-sm border border-gray-300 rounded-full px-4 py-2 bg-white
                      shadow-sm hover:border-gray-500 focus:outline-none"
         >
           <option value="">Sort by Price</option>
@@ -259,7 +251,7 @@ const ResortSearchBar = () => {
         <button
           onClick={handleSearch}
           type="button"
-          className="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700"
+          className="w-full md:w-auto bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 flex justify-center"
         >
           <FaSearch />
         </button>
