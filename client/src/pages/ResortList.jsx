@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import 'react-datepicker/dist/react-datepicker.css';
 import axios from 'axios';
-
 import { FaMapMarkerAlt } from 'react-icons/fa';
 import MagicLoader from '../pages/MagicLoader';
 import ResortCard from '../components/ResortCard';
@@ -53,7 +52,6 @@ const ResortList = () => {
   useEffect(() => {
     const fetchAllLocations = async () => {
       try {
-        // CORRECTED: Added backticks for the template literal string
         const res = await fetch(`${API_BASE_URL}/api/resorts/allresorts`);
         if (!res.ok) throw new Error('Could not fetch locations');
         const allResortsData = await res.json();
@@ -71,13 +69,11 @@ const ResortList = () => {
     setErr(null);
     try {
       const qs = location.search.slice(1);
-      // CORRECTED: Added backticks for the template literal strings
       const url = qs
         ? `${API_BASE_URL}/api/filteresort/search?${qs}`
         : `${API_BASE_URL}/api/resorts/allresorts`;
 
       const res = await fetch(url);
-      // CORRECTED: Added backticks for the template literal string in the error message
       if (!res.ok) throw new Error(`HTTP Error ${res.status} on URL: ${url}`);
       setResorts(await res.json());
     } catch (e) {
@@ -98,7 +94,6 @@ const ResortList = () => {
       return;
     }
     try {
-      // CORRECTED: Added backticks for the template literal string
       const res = await axios.get(`${API_BASE_URL}/api/wishlist/status`, {
         withCredentials: true,
       });
@@ -124,27 +119,18 @@ const ResortList = () => {
     const isCurrentlyWishlisted = wishlistIds.includes(resortId);
 
     try {
-       const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token");
       if (isCurrentlyWishlisted) {
-        // CORRECTED: Added backticks for the template literal string
-        await axios.delete(`${API_BASE_URL}/api/wishlist/${resortId}`, { withCredentials: true,
-           headers: {
-      Authorization: `Bearer ${token}`,
-    },
-         });
+        await axios.delete(`${API_BASE_URL}/api/wishlist/${resortId}`, {
+          withCredentials: true,
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setWishlistIds((prev) => prev.filter((id) => id !== resortId));
       } else {
-        // CORRECTED: Added backticks for the template literal string
-        await axios.post(`${API_BASE_URL}/api/wishlist/${resortId}`, {}, { withCredentials: true ,
-          headers: {
-      Authorization: `Bearer ${token}`,
-    },
-             
-        },
-
-
-
-        );
+        await axios.post(`${API_BASE_URL}/api/wishlist/${resortId}`, {}, {
+          withCredentials: true,
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setWishlistIds((prev) => [...prev, resortId]);
       }
     } catch (err) {
@@ -157,7 +143,6 @@ const ResortList = () => {
 
   const updateUrlAndSearch = (overrides = {}) => {
     const p = new URLSearchParams();
-
     const locationToSearch = overrides.location !== undefined ? overrides.location : locFilter;
     const amenitiesToSearch = overrides.amenities !== undefined ? overrides.amenities : amenities;
 
@@ -170,7 +155,6 @@ const ResortList = () => {
     if (sort) p.set('sort', sort);
     amenitiesToSearch.forEach((a) => p.append('amenities', a));
 
-    // CORRECTED: Wrapped path in backticks to make it a valid string
     navigate(`/resorts?${p.toString()}`);
   };
 
@@ -226,103 +210,123 @@ const ResortList = () => {
   return (
     <section className="bg-gray-50 py-10 min-h-screen">
       <div className="max-w-7xl mx-auto px-4">
-        <form
-          onSubmit={handleSubmit}
-          className="mb-12 bg-white shadow-xl rounded-full px-6 py-5 flex items-center justify-between gap-4 border border-gray-200 relative"
-          ref={wrapperRef}
-        >
-          {/* Form content remains the same... */}
-          <div className="relative flex items-center flex-grow bg-white border border-gray-300 rounded-full shadow-sm px-6 py-4">
-            <FaMapMarkerAlt className="text-gray-500 text-xl mr-4" />
-            <input
-              type="text"
-              value={locFilter}
-              onChange={handleLocationChange}
-              placeholder="Search location..."
-              className="flex-grow bg-transparent focus:outline-none text-blue-800 font-semibold text-lg"
-              autoComplete="off"
-            />
-            {suggestions.length > 0 && (
-              <ul className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
-                {suggestions.map((sugg_location, index) => (
-                  sugg_location === '_NO_MATCH_' ? (
-                    <li
-                      key={index}
-                      className="px-6 py-3 text-gray-400 cursor-default"
-                    >
-                      No locations found
-                    </li>
-                  ) : (
-                    <li
-                      key={index}
-                      onClick={() => handleSuggestionClick(sugg_location)}
-                      className="px-6 py-3 cursor-pointer hover:bg-gray-100 text-gray-800"
-                    >
-                      {sugg_location}
-                    </li>
-                  )
-                ))}
-              </ul>
-            )}
 
-            <div
-              className="ml-4 relative cursor-pointer hover:text-blue-600"
-              onClick={() => setShowFilters(!showFilters)}
+       {/* Responsive Search Bar (layout-only update) */}
+<form
+  onSubmit={handleSubmit}
+  ref={wrapperRef}
+  className="
+    mb-8
+    grid grid-cols-1 md:grid-cols-[1fr_auto]
+    gap-3
+  "
+>
+  <div
+    className="
+      relative flex items-center
+      w-full
+      bg-white border border-gray-300 rounded-lg
+      px-4 py-2
+      shadow-sm
+    "
+  >
+    <FaMapMarkerAlt className="text-gray-500 text-lg mr-3" />
+    <input
+      type="text"
+      value={locFilter}
+      onChange={handleLocationChange}
+      placeholder="Search location..."
+      className="w-full bg-transparent focus:outline-none text-gray-800 text-base"
+      autoComplete="off"
+    />
+
+    {suggestions.length > 0 && (
+      <ul className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow z-50">
+        {suggestions.map((sugg_location, index) => (
+          sugg_location === '_NO_MATCH_' ? (
+            <li key={index} className="px-4 py-2 text-gray-400">
+              No locations found
+            </li>
+          ) : (
+            <li
+              key={index}
+              onClick={() => handleSuggestionClick(sugg_location)}
+              className="px-4 py-2 cursor-pointer hover:bg-gray-50"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" stroke="currentColor">
-                <path d="M3 4h18M3 10h18M3 16h18" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-              </svg>
-              {showFilters && (
-                <div className="absolute right-0 mt-4 w-72 bg-black border border-gray-800 rounded-xl shadow-xl p-4 z-50 space-y-5 text-white">
-                  <div>
-                    <label className="block text-sm font-semibold mb-1 text-white">Max Price (₹)</label>
-                    <input
-                      type="number"
-                      value={maxPrice}
-                      onChange={(e) => setMaxPrice(e.target.value)}
-                      placeholder="e.g. 4000"
-                      className="w-full px-3 py-2 border border-gray-600 rounded-md bg-zinc-900 text-white placeholder-gray-400"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-2">Amenities</label>
-                    <div className="flex flex-wrap gap-2">
-                      {AMENITIES.map((amenity) => {
-                        const lower = amenity.toLowerCase();
-                        const isSelected = amenities.includes(lower);
-                        return (
-                          <button
-                            key={amenity}
-                            type="button"
-                            onClick={() => toggleAmenity(amenity)}
-                            className={`px-4 py-1 border rounded-full text-sm font-medium ${
-                              isSelected
-                                ? 'bg-black text-white border-white'
-                                : 'border-gray-400 text-white hover:border-white hover:text-gray-200'
-                            }`}
-                          >
-                            {amenity}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              )}
+              {sugg_location}
+            </li>
+          )
+        ))}
+      </ul>
+    )}
+
+    {/* Filter icon */}
+    <div
+      className="ml-3 cursor-pointer text-gray-600 hover:text-blue-600"
+      onClick={() => setShowFilters(!showFilters)}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M3 10h18M3 16h18" />
+      </svg>
+
+      {showFilters && (
+        <div className="absolute right-0 mt-2 w-72 bg-gray-900 rounded-lg p-4 border border-gray-700 shadow-xl z-50">
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-white mb-1">Max Price (₹)</label>
+            <input
+              type="number"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              placeholder="4000"
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-white mb-1">Amenities</label>
+            <div className="flex flex-wrap gap-2">
+              {AMENITIES.map((amenity) => {
+                const lower = amenity.toLowerCase();
+                const isSelected = amenities.includes(lower);
+                return (
+                  <button
+                    key={amenity}
+                    type="button"
+                    onClick={() => toggleAmenity(amenity)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      isSelected
+                        ? 'bg-gray-200 text-gray-900'
+                        : 'bg-gray-800 text-white border border-gray-500'
+                    }`}
+                  >
+                    {amenity}
+                  </button>
+                );
+              })}
             </div>
           </div>
-          <button
-            type="submit"
-            className={`px-8 py-3 rounded-full font-bold transition-all duration-300 shadow-lg ${
-              locFilter || maxPrice || sort || adults > 0 || children > 0 || checkInDate || checkOutDate || amenities.length > 0
-                ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-blue-900'
-                : 'bg-gray-300 text-gray-600 cursor-not-allowed'
-            }`}
-          >
-            Search Resorts
-          </button>
-        </form>
+        </div>
+      )}
+    </div>
+  </div>
+
+  <button
+    type="submit"
+    className={`
+      w-full md:w-auto
+      px-5 py-2.5 rounded-lg font-semibold text-sm
+      transition
+      ${
+        locFilter || maxPrice || sort || adults > 0 || children > 0 ||
+        checkInDate || checkOutDate || amenities.length > 0
+          ? 'bg-blue-600 text-white hover:bg-blue-700'
+          : 'bg-gray-300 text-gray-600 cursor-not-allowed'
+      }
+    `}
+  >
+    Search Resorts
+  </button>
+</form>
+
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {resorts.length ? (

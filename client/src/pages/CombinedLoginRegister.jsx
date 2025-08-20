@@ -200,7 +200,8 @@ const CombinedLoginRegister = () => {
         </div>
       )}
 
-      <div className="min-h-screen bg-[#f6f9ff] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#fff3e9] to-[#fffdfb] flex items-center justify-center px-4">
+
         <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-md relative">
           <div className="flex justify-center mb-4">
             <div className="bg-blue-100 p-4 rounded-full">
