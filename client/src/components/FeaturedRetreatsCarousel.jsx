@@ -1,3 +1,4 @@
+// 📌 added: import useAuth already exists
 import React, { useState, useEffect, useCallback } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
@@ -8,9 +9,10 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE_URL = process.env.NODE_ENV === 'production'
-  ? 'https://resort-finder-2aqp.onrender.com'
-  : 'http://localhost:8080';
+const API_BASE_URL =
+  process.env.NODE_ENV === 'production'
+    ? 'https://resort-finder-2aqp.onrender.com'
+    : 'http://localhost:8080';
 
 const FeaturedRetreatsCarousel = () => {
   const [featuredResorts, setFeaturedResorts] = useState([]);
@@ -25,38 +27,55 @@ const FeaturedRetreatsCarousel = () => {
       try {
         const res = await fetch(`${API_BASE_URL}/api/resorts/admin/resorts`);
         const data = await res.json();
-        setFeaturedResorts(data.slice(0, 6));
+        setFeaturedResorts(Array.isArray(data) ? data.slice(0, 6) : []); // 📌 safe check
       } catch (err) {
         console.error('Error fetching featured resorts:', err);
+        setFeaturedResorts([]); // 📌 prevent blank crash
       }
     };
     fetchApprovedResorts();
   }, []);
 
-  // Fetch user's wishlist IDs on mount or login
+  // Fetch user's wishlist IDs
   const fetchWishlistStatus = useCallback(async () => {
     if (!isLoggedIn) {
       setWishlistIds([]);
       return;
     }
+
     try {
+      // 📌 added: token header for API auth
+      const token = localStorage.getItem('token');
+
       const res = await axios.get(`${API_BASE_URL}/api/wishlist/status`, {
-        withCredentials: true,
+        headers: {
+          Authorization: token ? `Bearer ${token}` : '', // 📌 attach JWT
+        },
+        withCredentials: true, // keep cookie fallback if server uses it
       });
-      setWishlistIds(res.data.map(id => id.toString()));
+
+      // 📌 safe check: ensure response is array
+      if (Array.isArray(res.data)) {
+        setWishlistIds(res.data.map((id) => id.toString()));
+      } else {
+        setWishlistIds([]);
+      }
     } catch (err) {
-      console.error('Error fetching wishlist status:', err.response?.data?.message || err.message);
-      setWishlistIds([]);
+      console.error(
+        'Error fetching wishlist status:',
+        err.response?.data?.message || err.message
+      );
+      setWishlistIds([]); // 📌 fallback instead of crash
     }
   }, [isLoggedIn]);
 
   useEffect(() => {
-  if (isLoggedIn) {
-    fetchWishlistStatus();
-  }
-}, [isLoggedIn, fetchWishlistStatus]);
-  
+    if (isLoggedIn) {
+      fetchWishlistStatus();
+    }
+  }, [isLoggedIn, fetchWishlistStatus]);
 
+  // Toggle wishlist
   const handleToggleWishlist = async (resortId) => {
     if (!isLoggedIn) {
       alert('Please log in to add resorts to your wishlist!');
@@ -67,18 +86,31 @@ const FeaturedRetreatsCarousel = () => {
     setLoadingWishlistToggle(true);
 
     const isCurrentlyWishlisted = wishlistIds.includes(resortId);
+    const token = localStorage.getItem('token'); // 📌 needed here too
 
     try {
       if (isCurrentlyWishlisted) {
-        await axios.delete(`${API_BASE_URL}/api/wishlist/${resortId}`, { withCredentials: true });
+        await axios.delete(`${API_BASE_URL}/api/wishlist/${resortId}`, {
+          headers: { Authorization: token ? `Bearer ${token}` : '' }, // 📌 attach token
+          withCredentials: true,
+        });
         setWishlistIds((prev) => prev.filter((id) => id !== resortId));
       } else {
-        // CORRECTED: Added backticks for the template literal string
-        await axios.post(`${API_BASE_URL}/api/wishlist/${resortId}`, {}, { withCredentials: true });
+        await axios.post(
+          `${API_BASE_URL}/api/wishlist/${resortId}`,
+          {},
+          {
+            headers: { Authorization: token ? `Bearer ${token}` : '' }, // 📌 attach token
+            withCredentials: true,
+          }
+        );
         setWishlistIds((prev) => [...prev, resortId]);
       }
     } catch (err) {
-      console.error('Error toggling wishlist:', err.response?.data?.message || err.message);
+      console.error(
+        'Error toggling wishlist:',
+        err.response?.data?.message || err.message
+      );
       alert('Failed to update wishlist. Please try again.');
     } finally {
       setLoadingWishlistToggle(false);
@@ -100,7 +132,9 @@ const FeaturedRetreatsCarousel = () => {
       <div className="max-w-7xl mx-auto px-4">
         <div className="relative mb-6 text-center">
           <h2 className="text-3xl font-semibold">Escape to These Stunning Retreats</h2>
-          <p className="text-gray-500">Luxury stays with top-notch amenities and scenic views</p>
+          <p className="text-gray-500">
+            Luxury stays with top-notch amenities and scenic views
+          </p>
           <span
             onClick={() => navigate('/resorts')}
             className="absolute right-0 top-0 text-yellow-600 hover:underline font-medium text-sm cursor-pointer"
@@ -131,14 +165,15 @@ const FeaturedRetreatsCarousel = () => {
                 <div className="relative group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition duration-300">
                   <div className="relative">
                     <img
-                      src={`${API_BASE_URL}/api/resorts/image/${encodeURIComponent(retreat.image)}`}
+                      src={`${API_BASE_URL}/api/resorts/image/${encodeURIComponent(
+                        retreat.image
+                      )}`}
                       alt={retreat.name}
                       className="w-full h-64 object-cover group-hover:brightness-75 transition duration-300"
                     />
                     <div className="absolute inset-x-0 bottom-0 opacity-0 group-hover:opacity-100 transition duration-300 flex justify-center mb-3">
                       <button
                         className="bg-yellow-400 text-white font-semibold px-4 py-1 rounded-full hover:bg-yellow-500 text-sm"
-                        // CORRECTED: Wrapped path in backticks to make it a valid string
                         onClick={() => navigate(`/resorts/${retreat._id}`)}
                       >
                         View Details
@@ -148,11 +183,16 @@ const FeaturedRetreatsCarousel = () => {
                       className="absolute top-3 right-3 text-xl p-1 bg-white/70 rounded-full cursor-pointer hover:scale-110 transition"
                       onClick={() => handleToggleWishlist(retreat._id.toString())}
                     >
-                      {loadingWishlistToggle && wishlistIds.includes(retreat._id.toString()) ? (
-                         <FaHeart className="text-gray-400 animate-pulse" />
+                      {loadingWishlistToggle &&
+                      wishlistIds.includes(retreat._id.toString()) ? (
+                        <FaHeart className="text-gray-400 animate-pulse" />
                       ) : (
                         <FaHeart
-                          className={wishlistIds.includes(retreat._id.toString()) ? 'text-red-500' : 'text-gray-400'}
+                          className={
+                            wishlistIds.includes(retreat._id.toString())
+                              ? 'text-red-500'
+                              : 'text-gray-400'
+                          }
                         />
                       )}
                     </div>
@@ -166,12 +206,19 @@ const FeaturedRetreatsCarousel = () => {
                       <FaMapMarkerAlt className="mr-1 text-red-400" />
                       <span>{retreat.location}</span>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">${retreat.price}/night</p>
-                    <div className="flex items-center mb-2">{renderStars(retreat.rating || 4)}</div>
+                    <p className="text-sm text-gray-600 mb-2">
+                      ${retreat.price}/night
+                    </p>
+                    <div className="flex items-center mb-2">
+                      {renderStars(retreat.rating || 4)}
+                    </div>
                     <div className="text-sm text-gray-500 flex flex-wrap gap-2">
                       {Array.isArray(retreat.amenities) &&
                         retreat.amenities.map((amenity, i) => (
-                          <span key={i} className="bg-gray-100 px-2 py-1 rounded-md">
+                          <span
+                            key={i}
+                            className="bg-gray-100 px-2 py-1 rounded-md"
+                          >
                             {amenity}
                           </span>
                         ))}
@@ -182,28 +229,6 @@ const FeaturedRetreatsCarousel = () => {
             ))
           )}
         </Swiper>
-
-        {/* Custom Styles for Pagination */}
-        <style>
-          {`
-            .swiper-pagination {
-              margin-top: 20px !important;
-              position: relative;
-              text-align: center;
-            }
-            .swiper-pagination-bullet {
-              background-color: black !important;
-              opacity: 0.5;
-              width: 10px;
-              height: 10px;
-              margin: 0 5px !important;
-            }
-            .swiper-pagination-bullet-active {
-              opacity: 1;
-              transform: scale(1.2);
-            }
-          `}
-        </style>
       </div>
     </section>
   );

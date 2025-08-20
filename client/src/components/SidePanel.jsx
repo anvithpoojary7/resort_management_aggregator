@@ -12,7 +12,7 @@ import { useNotifications } from '../context/NotificationContext';
 
 const SidePanel = ({ isOpen, setIsOpen, buttonRef }) => {
   const { notifications } = useNotifications();
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = Array.isArray(notifications) ? notifications.filter(n => !n.read).length : 0;
   const panelRef = useRef();
 
   /* ─── close when clicking outside ─── */
