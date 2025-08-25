@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import ResortTable from '../components/ResortTable';
 import Sidebar from '../components/Sidebar';
+// ✅ 1. ADD THE IMPORT FOR THE MODAL
+import EditResortModal from '../components/EditResortModal';
 
 const AdminResortTablePage = () => {
   const [resorts, setResorts] = useState([]);
   const [loading, setLoading] = useState(false);
+  // ✅ 2. ADD THE STATE TO MANAGE WHICH RESORT IS SELECTED
+  const [selectedResort, setSelectedResort] = useState(null);
 
   useEffect(() => {
     fetchResorts();
@@ -13,11 +17,13 @@ const AdminResortTablePage = () => {
   const fetchResorts = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8080/api/resorts/admin/resorts');
+      // Note: Make sure this URL is correct for fetching ALL resorts for the admin
+      const res = await fetch('http://localhost:8080/api/admin/resorts');
       const data = await res.json();
-      setResorts(data.filter((r) => r.status === 'approved'));
-    } catch (err) {
-      console.error('Failed to fetch resorts:', err);
+      // Assuming the data is an array of resorts and doesn't need filtering here
+      setResorts(data);
+    } catch (err)  {    console.error('Failed to fetch resorts:', err);
+     
     } finally {
       setLoading(false);
     }
@@ -37,11 +43,25 @@ const AdminResortTablePage = () => {
             {loading ? (
               <p className="text-center text-gray-500">Loading resorts...</p>
             ) : (
-              <ResortTable resorts={resorts} />
+              // ✅ 3. PASS THE REQUIRED PROPS TO THE TABLE
+              <ResortTable
+                resorts={resorts}
+                fetchResorts={fetchResorts}
+                onEdit={setSelectedResort}
+              />
             )}
           </div>
         </div>
       </main>
+
+      {/* ✅ 4. ADD THE MODAL AT THE END. IT WILL APPEAR WHEN A RESORT IS SELECTED. */}
+      {selectedResort && (
+        <EditResortModal
+          resort={selectedResort}
+          onClose={() => setSelectedResort(null)}
+          fetchResorts={fetchResorts}
+        />
+      )}
     </div>
   );
 };

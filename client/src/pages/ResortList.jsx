@@ -73,7 +73,7 @@ const ResortList = () => {
         ? `${API_BASE_URL}/api/filteresort/search?${qs}`
         : `${API_BASE_URL}/api/resorts/allresorts`;
 
-      const res = await fetch(url);
+     const res = await fetch(url, { cache: 'no-cache' });
       if (!res.ok) throw new Error(`HTTP Error ${res.status} on URL: ${url}`);
       setResorts(await res.json());
     } catch (e) {
