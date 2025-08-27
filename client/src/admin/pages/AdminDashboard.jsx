@@ -78,25 +78,12 @@ const AdminDashboard = () => {
           <QuickActions />
         </div>
 
-        {/* Resorts Table */}
-        <div className="mt-10">
-          <h2 className="text-xl font-semibold mb-4">Resorts</h2>
-          <ResortTable
-            resorts={resorts}
-            fetchResorts={fetchResorts}
-            onEdit={setSelectedResort} // This is the confirmed correct line
-          />
-        </div>
+      
+      
       </div>
 
-      {/* Edit Resort Modal */}
-      {selectedResort && (
-        <EditResortModal
-          resort={selectedResort}
-          onClose={() => setSelectedResort(null)}
-          fetchResorts={fetchResorts}
-        />
-      )}
+     
+     
     </div>
   );
 };
