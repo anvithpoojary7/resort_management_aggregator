@@ -123,5 +123,33 @@ if (overlappingBooking) {
   }
 });
 
+
+router.get("/check-availability", async (req, res) => {
+  try {
+    const { roomId, checkIn, checkOut } = req.query;
+
+    if (!roomId || !checkIn || !checkOut) {
+      return res.status(400).json({ available: false, message: "Missing params" });
+    }
+
+    // Find overlapping bookings
+    const overlapping = await Booking.findOne({
+      room: roomId,
+      $or: [
+        { checkIn: { $lt: checkOut }, checkOut: { $gt: checkIn } },
+      ],
+    });
+
+    if (overlapping) {
+      return res.json({ available: false });
+    }
+
+    res.json({ available: true });
+  } catch (err) {
+    console.error("Availability check error:", err);
+    res.status(500).json({ available: false, message: "Server error" });
+  }
+});
+
 module.exports = router;
 

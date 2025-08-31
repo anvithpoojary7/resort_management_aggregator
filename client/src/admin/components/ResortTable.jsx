@@ -1,22 +1,19 @@
-import React from 'react';
-import axios from 'axios';
+import React from "react";
+import axios from "axios";
 
-const ResortTable = ({ resorts, fetchResorts }) => {
+const ResortTable = ({ resorts, fetchResorts, onEdit }) => {
   const handleVisibilityToggle = async (id, visible) => {
     try {
-      // **CHANGE THIS LINE**
       await axios.patch(
-        `http://localhost:8080/api/admin/resorts/visibility/${id}`, // <-- Changed to 'resorts'
+        `http://localhost:8080/api/admin/resorts/visibility/${id}`,
         { isVisible: visible }
       );
-
-      alert(`Resort marked as ${visible ? 'Active' : 'Inactive'}`);
-      fetchResorts(); // ✅ reload data
+      alert(`Resort marked as ${visible ? "Active" : "Inactive"}`);
+      fetchResorts();
     } catch (error) {
-      console.error('Error updating visibility:', error);
+      console.error("Error updating visibility:", error);
     }
   };
-  
 
   return (
     <div className="overflow-x-auto">
@@ -26,7 +23,8 @@ const ResortTable = ({ resorts, fetchResorts }) => {
             <th className="py-3 px-4">Resort Details</th>
             <th className="py-3 px-4">Owner</th>
             <th className="py-3 px-4">Performance</th>
-            <th className="py-3 px-4">Visibility</th>
+            <th className="py-3 px-4">Actions</th>
+            <th className="py-3 px-4">Edit Resort</th>
           </tr>
         </thead>
         <tbody>
@@ -35,6 +33,7 @@ const ResortTable = ({ resorts, fetchResorts }) => {
               key={resort._id}
               className="border-b border-gray-200 last:border-b-0 hover:bg-gray-50"
             >
+              {/* Resort Details */}
               <td className="py-3 px-4">
                 <div className="flex items-center">
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3 bg-blue-100 text-blue-700">
@@ -46,36 +45,61 @@ const ResortTable = ({ resorts, fetchResorts }) => {
                   </div>
                 </div>
               </td>
+
+              {/* Owner */}
               <td className="py-3 px-4 text-gray-700 text-sm">
-                {resort.ownerId?.name || 'Unknown'}
+                {resort.ownerId?.name || "Unknown"}
               </td>
+
+              {/* Performance */}
               <td className="py-3 px-4 text-gray-700 text-sm">
                 <p>{resort.bookings || 0} bookings</p>
                 <p className="text-xs text-gray-500">
                   ₹{resort.revenue || 0} revenue
                 </p>
               </td>
+
+              {/* Actions */}
               <td className="py-3 px-4 space-x-2">
                 <span
                   className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
                     resort.visible
-                      ? 'bg-green-100 text-green-700 border border-green-400'
-                      : 'bg-red-100 text-red-700 border border-red-400'
+                      ? "bg-green-100 text-green-700 border border-green-400"
+                      : "bg-red-100 text-red-700 border border-red-400"
                   }`}
                 >
-                  {resort.visible ? 'Active' : 'Inactive'}
+                  {resort.visible ? "Active" : "Inactive"}
                 </span>
+
+                <div className="mt-2 space-x-2">
+                  <button
+                    className="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700 border border-green-400 hover:bg-green-200"
+                    onClick={() => handleVisibilityToggle(resort._id, true)}
+                  >
+                    Active
+                  </button>
+                  <button
+                    className="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-700 border border-red-400 hover:bg-red-200"
+                    onClick={() => handleVisibilityToggle(resort._id, false)}
+                  >
+                    Inactive
+                  </button>
+                </div>
+              </td>
+
+              {/* Edit Resort */}
+              <td className="py-3 px-4">
                 <button
-                  className="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700 border border-green-400"
-                  onClick={() => handleVisibilityToggle(resort._id, true)}
+                  className="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-700 border border-yellow-400 hover:bg-yellow-200"
+                  onClick={() => {
+                    if (onEdit) {
+                      onEdit(resort);
+                    } else {
+                      console.error("onEdit function was not passed to ResortTable!");
+                    }
+                  }}
                 >
-                  Active
-                </button>
-                <button
-                  className="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-700 border border-red-400"
-                  onClick={() => handleVisibilityToggle(resort._id, false)}
-                >
-                  Inactive
+                  Edit Resort
                 </button>
               </td>
             </tr>

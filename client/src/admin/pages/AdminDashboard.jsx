@@ -1,42 +1,57 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-import Sidebar from '../components/Sidebar';
-import DashboardCards from '../components/DashboardCards';
-import RevenueChart from '../components/RevenueChart';
-import UserGrowthChart from '../components/UserGrowthChart';
-import RecentActivity from '../components/RecentActivity';
-import QuickActions from '../components/QuickActions';
+import Sidebar from "../components/Sidebar";
+import DashboardCards from "../components/DashboardCards";
+import RevenueChart from "../components/RevenueChart";
+import UserGrowthChart from "../components/UserGrowthChart";
+import RecentActivity from "../components/RecentActivity";
+import QuickActions from "../components/QuickActions";
+import ResortTable from "../components/ResortTable";
+import EditResortModal from "../components/EditResortModal";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const [resorts, setResorts] = useState([]);
+  const [selectedResort, setSelectedResort] = useState(null);
 
-  // 🔐 Route Guard for admin
+  // 🔐 Route Guard
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    const user = JSON.parse(localStorage.getItem('user'));
+    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    const user = JSON.parse(localStorage.getItem("user"));
 
-    if (!isLoggedIn || !user || user.role !== 'admin') {
-      navigate('/admin/login', { replace: true });
+    if (!isLoggedIn || !user || user.role !== "admin") {
+      navigate("/admin/login", { replace: true });
     }
   }, [navigate]);
 
   // ⛔ Prevent back navigation
   useEffect(() => {
-    // Push the same route multiple times to the history stack
     for (let i = 0; i < 10; i++) {
-      window.history.pushState(null, '', '/admin/dashboard');
+      window.history.pushState(null, "", "/admin/dashboard");
     }
-
     const blockBack = () => {
-      window.history.pushState(null, '', '/admin/dashboard');
+      window.history.pushState(null, "", "/admin/dashboard");
     };
+    window.addEventListener("popstate", blockBack);
+    return () => window.removeEventListener("popstate", blockBack);
+  }, []);
 
-    window.addEventListener('popstate', blockBack);
+  // 📡 Fetch resorts
+  const fetchResorts = async () => {
+    try {
+      const { data } = await axios.get(
+        "http://localhost:8080/api/admin/resorts"
+      );
+      setResorts(data);
+    } catch (error) {
+      console.error("Error fetching resorts:", error);
+    }
+  };
 
-    return () => {
-      window.removeEventListener('popstate', blockBack);
-    };
+  useEffect(() => {
+    fetchResorts();
   }, []);
 
   return (
@@ -62,7 +77,13 @@ const AdminDashboard = () => {
           <RecentActivity />
           <QuickActions />
         </div>
+
+      
+      
       </div>
+
+     
+     
     </div>
   );
 };
