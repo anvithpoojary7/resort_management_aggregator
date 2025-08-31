@@ -23,8 +23,11 @@ export const AuthProvider = ({ children }) => {
     setAuthLoading(false); // ✅ Mark loading as done after checking
   }, []);
 
-  const login = (userData) => {
+  const login = (userData, token) => {
     localStorage.setItem('user', JSON.stringify(userData));
+    if (token) {
+      localStorage.setItem('token', token);
+    }
     setUser(userData);
     setIsLoggedIn(true);
   };

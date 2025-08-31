@@ -17,6 +17,7 @@ import Notifications from '../pages/Notifications';
 import WishlistPage from '../pages/WishlistPage';
 import ConfirmAndPay from '../pages/ConfirmAndPay'
 import ReservationSucess from '../pages/ReservationSucess';
+import TripsPage from '../pages/TripsPage';
 
 
 // Admin Pages
@@ -70,6 +71,16 @@ const AppRoutes = () => (
         element={
           <ProtectedRoute role="user">
             <WishlistPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Trips (Protected) */}
+      <Route
+        path="/trips"
+        element={
+          <ProtectedRoute role="user">
+            <TripsPage />
           </ProtectedRoute>
         }
       />

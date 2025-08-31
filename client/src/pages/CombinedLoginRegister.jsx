@@ -74,10 +74,7 @@ const CombinedLoginRegister = () => {
 
       if (res.ok) {
         if (mode === 'login') {
-          if (data.token) {
-            localStorage.setItem('token', data.token);
-          }
-          login(data.user);
+          login(data.user, data.token);
           setTimeout(() => {
             setIsLoading(false);
             navigate(redirectTo, { replace: true });
@@ -148,10 +145,7 @@ const CombinedLoginRegister = () => {
       let data = await res.json();
 
       if (res.ok) {
-        if (data.token) {
-          localStorage.setItem('token', data.token);
-        }
-        login(data.user);
+        login(data.user, data.token);
         setTimeout(() => {
           setIsLoading(false);
           navigate(redirectTo, { replace: true });
@@ -168,10 +162,7 @@ const CombinedLoginRegister = () => {
         data = await res.json();
 
         if (res.ok) {
-          if (data.token) {
-            localStorage.setItem('token', data.token);
-          }
-          login(data.user);
+          login(data.user, data.token);
           setTimeout(() => {
             setIsLoading(false);
             navigate(redirectTo, { replace: true });

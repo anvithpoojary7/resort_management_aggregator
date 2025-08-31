@@ -13,7 +13,7 @@ router.get('/my', authMiddleware, async (req, res) => {
     console.log("🔍 Fetching bookings for user:", req.user._id);
 
     const bookings = await Booking.find({ user: req.user._id })
-      .populate('resort', 'name images')
+      .populate('resort', 'name image')
       .populate('room', 'roomName roomImages roomPrice');
 
     console.log("✅ Bookings fetched:", bookings.length);

@@ -66,7 +66,7 @@ const SidePanel = ({ isOpen, setIsOpen, buttonRef }) => {
         {/* Trips */}
         <li>
           <Link
-            to="/resorts"
+            to="/trips"
             onClick={() => setIsOpen(false)}
             className="flex items-center hover:bg-white/10 p-2 rounded"
           >
