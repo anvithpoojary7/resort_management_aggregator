@@ -55,7 +55,7 @@ const AdminLogin = () => {
         // Store login state
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('user', JSON.stringify(data.user));
-
+        localStorage.setItem('token', data.token);
         // ✅ Push a new history entry and lock navigation in AdminDashboard
         navigate('/admin/dashboard', { replace: true });
       } else {

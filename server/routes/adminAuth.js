@@ -41,7 +41,7 @@ router.post('/', async (req, res) => {
         sameSite: 'strict',
         maxAge: 3 * 24 * 60 * 60 * 1000,
       })
-      .json({ message: 'Admin login successful', user: payload });
+      .json({ message: 'Admin login successful', user: payload, token });
   } catch (err) {
     console.error('Admin Login Error:', err);
     res.status(500).json({ message: 'Server error' });

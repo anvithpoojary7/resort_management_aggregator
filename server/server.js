@@ -110,6 +110,9 @@ conn.once('open', () => {
 
  app.use('/api/admin', adminRoutes);
 
+ const adminAnalytics = require('./routes/adminAnalytics');
+ app.use('/api/admin/analytics', adminAnalytics);
+
  app.use('/api/notifications', notificationRoutes);
 
  app.use('/api/bookings',bookings);
